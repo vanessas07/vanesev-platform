@@ -14,6 +14,9 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || process.env.CENTRAL_AUTH_SECRET || "vanesev_superadmin_auth_secret_key_32chars_min",
   baseURL: process.env.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://vanesev.com"),
   appName: "VANESEV",
+  emailAndPassword: {
+    enabled: true,
+  },
   trustedOrigins: [
     "https://vanesev.com",
     "https://www.vanesev.com",
