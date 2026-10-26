@@ -54,25 +54,12 @@ export default async function handler(req: any, res: any) {
         console.warn('[Gallery Table Init Note]:', ddlErr?.message);
       }
 
-      const rows = await sql`
-        SELECT 
-          id,
-          tenant_id as "tenantId",
-          name,
-          image_url as "imageUrl",
-          tag,
-          technique,
-          created_at as "createdAt"
-        FROM public.gallery_slides
-        WHERE tenant_id = ${tenantSlug}
-        ORDER BY created_at DESC
-        LIMIT 40;
+      const cols = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'gallery_slides';
       `;
-
-      return res.status(200).json({
-        slides: rows || [],
-        databaseConnected: true,
-      });
+      return res.status(200).json({ cols: cols.map((c: any) => c.column_name) });
     } catch (err: any) {
       console.error('[Neon Get Gallery Error]:', err);
       return res.status(500).json({ error: 'Error al consultar imágenes de la galería.', details: err?.message, stack: err?.stack });
