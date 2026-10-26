@@ -4,9 +4,10 @@ import {
   Globe, Plus, RefreshCw, ExternalLink, Sparkles, Send, Check, XCircle,
   Clock, Server, Database, HardDrive, GitBranch, ArrowUpRight, Users,
   MapPin, DollarSign, Crown, Eye, Terminal, Activity, Lock, QrCode, Crosshair,
-  Palette, Sliders, X
+  Palette, Sliders, X, LogOut
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CentralAuthGate } from './CentralAuthGate';
 import { DynamicQrManager } from './DynamicQrManager';
 import { CentralCompetitors } from './CentralCompetitors';
 import { SalonThemeStudio } from './SalonThemeStudio';
@@ -36,6 +37,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [editingTenantThemeSlug, setEditingTenantThemeSlug] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
 
   const [data, setData] = useState<any>({
     tenants: [],
@@ -104,7 +106,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
     setSyncing(true);
     try {
       const res = await fetch('/api/central');
+      if (res.status === 401) {
+        setAuthRequired(true);
+        setData(null);
+        return;
+      }
       if (res.ok) {
+        setAuthRequired(false);
         const json = await res.json();
         setData(json);
         if (json.docs?.length > 0 && !selectedDoc) {
@@ -116,6 +124,20 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
     } finally {
       setLoading(false);
       setSyncing(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth?scope=central', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+      setAuthRequired(true);
+      setData(null);
+    } catch (e) {
+      console.error('Error logging out:', e);
     }
   };
 
@@ -239,9 +261,21 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
     setShowTenantModal(false);
   };
 
-  const openIncidentsCount = (data.incidents || []).filter((i: any) => i.status !== 'resolved').length;
-  const pendingSessionsCount = (data.sessions || []).filter((s: any) => s.review_status === 'pending_review').length;
-  const pendingTasksCount = (data.tasks || []).filter((t: any) => t.status !== 'completed').length;
+  if (authRequired) {
+    return (
+      <CentralAuthGate
+        onAuthenticated={() => {
+          setAuthRequired(false);
+          fetchCentralState();
+        }}
+        onNavigateToSaaS={onNavigateToSaaSLanding}
+      />
+    );
+  }
+
+  const openIncidentsCount = (data?.incidents || []).filter((i: any) => i.status !== 'resolved').length;
+  const pendingSessionsCount = (data?.sessions || []).filter((s: any) => s.review_status === 'pending_review').length;
+  const pendingTasksCount = (data?.tasks || []).filter((t: any) => t.status !== 'completed').length;
 
   const CENTRAL_HEADINGS: Record<string, { title: string; subtitle: string }> = {
     overview: {
@@ -379,6 +413,14 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <p className="text-[11px] font-bold text-[#18181B]">karc0 &bull; Super-Admin</p>
                 <p className="text-[9px] text-[#10B981] font-semibold">● Neon DB Live</p>
               </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="ml-1 text-[#A1A1AA] hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
+                title="Cerrar Sesión de Central"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </header>

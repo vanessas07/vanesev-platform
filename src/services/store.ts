@@ -914,7 +914,7 @@ export class AppStore {
 
     // 2. Consulta a /api/client-auth con protección anti-enumeración
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check', phone: cleanPhone })
@@ -950,7 +950,7 @@ export class AppStore {
   }> {
     const cleanPhone = phone.replace(/\D/g, '');
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', phone: cleanPhone, pin })
@@ -1008,7 +1008,7 @@ export class AppStore {
   }> {
     const cleanPhone = phone.replace(/\D/g, '');
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'request_reset', phone: cleanPhone })
@@ -1035,7 +1035,7 @@ export class AppStore {
   }> {
     const cleanPhone = phone.replace(/\D/g, '');
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset_password', phone: cleanPhone, code, newPin })
@@ -1075,7 +1075,7 @@ export class AppStore {
     account?: ClientAccount;
   }> {
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'oauth_login', provider, email, name, providerId })
@@ -1124,7 +1124,7 @@ export class AppStore {
   }> {
     const cleanPhone = data.phone.replace(/\D/g, '');
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1172,7 +1172,7 @@ export class AppStore {
   }> {
     const cleanPhone = data.phone.replace(/\D/g, '');
     try {
-      const res = await fetch('/api/client-auth', {
+      const res = await fetch('/api/auth?scope=clienta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1349,7 +1349,7 @@ Hola Andrea, ¿tienes este cupo disponible para confirmarme? ¡Muchas gracias! �
     message?: string;
   }> {
     try {
-      const res = await fetch('/api/admin-auth', {
+      const res = await fetch('/api/auth?scope=admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', email, password })
@@ -1371,7 +1371,7 @@ Hola Andrea, ¿tienes este cupo disponible para confirmarme? ¡Muchas gracias! �
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin-auth', {
+      const res = await fetch('/api/auth?scope=admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'verify_2fa', email, code })
@@ -1394,7 +1394,7 @@ Hola Andrea, ¿tienes este cupo disponible para confirmarme? ¡Muchas gracias! �
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin-auth', {
+      const res = await fetch('/api/auth?scope=admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'request_reset', email })
@@ -1411,7 +1411,7 @@ Hola Andrea, ¿tienes este cupo disponible para confirmarme? ¡Muchas gracias! �
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin-auth', {
+      const res = await fetch('/api/auth?scope=admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset_password', email, code, newPassword })

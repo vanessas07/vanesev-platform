@@ -1,0 +1,47 @@
+name: VANESEV Visual Audit (Playwright Cloud VM 7GB)
+
+on:
+  push:
+    branches: [ "staging" ]
+  workflow_dispatch:
+
+jobs:
+  responsive-visual-audit:
+    name: Multi-Viewport Responsive Audit (375px & 1366px)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS with Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies in Cloud VM
+        run: |
+          npm ci --legacy-peer-deps || npm install
+          npx playwright install --with-deps chromium
+
+      - name: Production Bundle Build
+        run: npm run build
+
+      - name: Start Preview Server
+        run: |
+          npx vite preview --port 4173 &
+          npx wait-on http://localhost:4173 --timeout 30000
+
+      - name: Execute Automated Visual Audit
+        run: node scripts/visual-audit.cjs
+        env:
+          AUDIT_BASE_URL: http://localhost:4173
+
+      - name: Upload Visual Audit Screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsive-screenshots-audit
+          path: artifacts/screenshots/
+          retention-days: 14

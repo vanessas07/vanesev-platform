@@ -1,6 +1,7 @@
 // Vercel Serverless Function: /api/central
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
 import { neon } from '@neondatabase/serverless';
+import { validateSuperadminSession } from './_auth.ts';
 
 function getDb() {
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -12,7 +13,18 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  const origin = req.headers.origin || '';
+  if (
+    origin.endsWith('vanesev.com') ||
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1')
+  ) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://vanesev.com');
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PATCH,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -51,6 +63,12 @@ export default async function handler(req: any, res: any) {
           sql`SELECT * FROM public.studio_zones WHERE tenant_id = ${tId} AND is_active = true ORDER BY sort_order ASC`,
         ]);
         return res.status(200).json({ tenant, services, staff, zones });
+      }
+
+      // Security Check: Full Central Dashboard requires valid Superadmin session
+      const auth = await validateSuperadminSession(req, sql);
+      if (!auth.valid) {
+        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
       }
 
       // Full Central Dashboard Snapshot for karc0
@@ -110,6 +128,12 @@ export default async function handler(req: any, res: any) {
 
     // ─── POST: Create / Mutate Records in Central or Salon Admin V2 ───────────
     if (req.method === 'POST') {
+      // Security Check: All Central mutations require valid Superadmin session
+      const auth = await validateSuperadminSession(req, sql);
+      if (!auth.valid) {
+        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
+      }
+
       const bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const action = bodyObj.action;
       const payload = bodyObj.payload || bodyObj;
