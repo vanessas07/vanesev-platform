@@ -518,7 +518,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             {/* 3 Quick Proof Metrics */}
             <div className="mt-8 pt-6 border-t border-[#161214]/10 grid grid-cols-3 gap-4 max-w-lg">
               <div>
-                <p className="font-display text-2xl sm:text-3xl font-bold text-[#161214]">0%</p
+                <p className="font-display text-2xl sm:text-3xl font-bold text-[#161214]">0%</p>
                 <p className="text-[11px] font-semibold text-[#574B4F]">Comisión por cita</p>
               </div>
               <div>

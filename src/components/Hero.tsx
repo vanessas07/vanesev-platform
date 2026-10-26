@@ -75,7 +75,7 @@ const NAIL_DESIGN_SLIDES: NailDesignSlide[] = [
 export const Hero: React.FC<HeroProps> = ({ onOpenBooking, gallerySlides }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Use dynamic gallery slides passed from store/DB, fallback to local
   const slides = (gallerySlides && gallerySlides.length > 0) 
