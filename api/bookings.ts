@@ -59,7 +59,10 @@ export default async function handler(req: any, res: any) {
         });
       }
 
-      const cleanTenant = String(tenantId || 'andrea-nails').trim().toLowerCase();
+      if (!tenantId || !String(tenantId).trim()) {
+        return res.status(400).json({ error: 'Parámetro tenantId requerido para registrar la cita.' });
+      }
+      const cleanTenant = String(tenantId).trim().toLowerCase();
       const cleanPhone = String(clientPhone).replace(/\D/g, '');
       const cleanName = String(clientName).trim().slice(0, 80);
       const cleanEmail = clientEmail ? String(clientEmail).trim().toLowerCase().slice(0, 80) : '';

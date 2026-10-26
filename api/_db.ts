@@ -18,7 +18,10 @@ export async function executeWithTenantRls<T = any>(
 ): Promise<T[]> {
   const sql = getDb();
   if (!sql) throw new Error('Neon Database connection not configured.');
-  const cleanTenant = String(tenantId || 'andrea-nails').trim().toLowerCase();
+  if (!tenantId || !String(tenantId).trim()) {
+    throw new Error('Parámetro tenantId requerido para RLS.');
+  }
+  const cleanTenant = String(tenantId).trim().toLowerCase();
 
   try {
     const [, , rows] = await sql.transaction([

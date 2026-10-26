@@ -1,5 +1,6 @@
 // Vercel Serverless Function: /api/central
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
+// Hardened with strict tenant_context whitelist and Superadmin Session Authentication
 import { neon } from '@neondatabase/serverless';
 import { validateSuperadminSession, applyCors } from './_auth.js';
 
@@ -29,34 +30,76 @@ export default async function handler(req: any, res: any) {
     // ─── GET: Fetch Central Master State or Specific Tenant Context ───────────
     if (req.method === 'GET') {
       const mode = String(req.query?.mode || 'all');
-      const tenantSlug = String(req.query?.tenant || '');
+      const tenantSlug = String(req.query?.tenant || '').trim().toLowerCase();
 
+      // 1. Contexto público de tenant con lista blanca estricta (CERO datos privados)
       if (mode === 'tenant_context' && tenantSlug) {
         const tenants = await sql`
           SELECT * FROM public.tenants 
           WHERE id = ${tenantSlug} OR custom_subdomain = ${tenantSlug}
           LIMIT 1;
         `;
-        const tenant = tenants[0] || null;
-        if (!tenant) {
+        const rawTenant = tenants[0] || null;
+        if (!rawTenant) {
           return res.status(404).json({ error: 'Tenant not found' });
         }
-        const tId = tenant.id;
-        const [services, staff, zones] = await Promise.all([
+        const tId = rawTenant.id;
+        const [services, rawStaff, zones] = await Promise.all([
           sql`SELECT * FROM public.services WHERE tenant_id = ${tId} AND is_available = true ORDER BY created_at ASC`,
           sql`SELECT * FROM public.staff_members WHERE tenant_id = ${tId} AND is_active = true ORDER BY created_at ASC`,
           sql`SELECT * FROM public.studio_zones WHERE tenant_id = ${tId} AND is_active = true ORDER BY sort_order ASC`,
         ]);
+
+        // Whitelist estricta de tenant (0 campos privados)
+        const tenant: Record<string, any> = {
+          id: rawTenant.id,
+          business_name: rawTenant.business_name,
+          niche: rawTenant.niche,
+          slogan: rawTenant.slogan,
+          city: rawTenant.city,
+          address: rawTenant.address,
+          business_hours: rawTenant.business_hours,
+          whatsapp_phone: rawTenant.whatsapp_phone,
+          instagram_handle: rawTenant.instagram_handle,
+          theme_palette: rawTenant.theme_palette,
+          primary_color: rawTenant.primary_color,
+          accent_color: rawTenant.accent_color,
+          bg_color: rawTenant.bg_color,
+          theme_config: rawTenant.theme_config,
+          exchange_rate_bs: rawTenant.exchange_rate_bs,
+          loyalty_stamps_target: rawTenant.loyalty_stamps_target,
+          loyalty_reward_title: rawTenant.loyalty_reward_title,
+          first_visit_discount_usd: rawTenant.first_visit_discount_usd,
+          hero_title: rawTenant.hero_title,
+          hero_subtitle: rawTenant.hero_subtitle,
+          hero_badge: rawTenant.hero_badge,
+          hero_image_url: rawTenant.hero_image_url,
+          hero_cta_text: rawTenant.hero_cta_text,
+          logo_url: rawTenant.logo_url,
+        };
+
+        // Whitelist estricta de staff (0 campos privados)
+        const staff = (rawStaff || []).map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          role_title: s.role_title,
+          specialty_tags: s.specialty_tags,
+          avatar_url: s.avatar_url,
+          rating: s.rating,
+          zone_id: s.zone_id,
+          is_active: s.is_active,
+        }));
+
         return res.status(200).json({ tenant, services, staff, zones });
       }
 
-      // Security Check: Full Central Dashboard requires valid Superadmin session
+      // 2. Seguridad Central: Requiere sesión válida de Superadmin
       const auth = await validateSuperadminSession(req, sql);
       if (!auth.valid) {
         return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
       }
 
-      // Full Central Dashboard Snapshot for karc0
+      // Snapshot completo de Central para superadmin autenticado
       const [
         tenants,
         sessions,
@@ -111,9 +154,8 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // ─── POST: Create / Mutate Records in Central or Salon Admin V2 ───────────
+    // ─── POST: Mutaciones protegidas en Central ──────────────────────────────
     if (req.method === 'POST') {
-      // Security Check: All Central mutations require valid Superadmin session
       const auth = await validateSuperadminSession(req, sql);
       if (!auth.valid) {
         return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
@@ -123,7 +165,6 @@ export default async function handler(req: any, res: any) {
       const action = bodyObj.action;
       const payload = bodyObj.payload || bodyObj;
 
-      // 1. Review / Approve / Request Changes on a Session
       if (action === 'review_session') {
         const { id, reviewStatus, karc0Feedback } = payload || {};
         await sql`
@@ -136,7 +177,6 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ ok: true });
       }
 
-      // 2. Create New Emergency Incident / Bug Report from karc0
       if (action === 'create_incident') {
         const { severity, affectedZone, affectedTenant, title, description } = payload || {};
         const id = `inc-${Date.now()}`;
@@ -151,7 +191,6 @@ export default async function handler(req: any, res: any) {
         return res.status(201).json({ ok: true, id });
       }
 
-      // 3. Update Incident Status
       if (action === 'update_incident') {
         const { id, status, resolutionNote } = payload || {};
         await sql`
@@ -164,7 +203,6 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ ok: true });
       }
 
-      // 4. Send Message in Bidirectional Mailbox (karc0 <-> Antigravity)
       if (action === 'send_mailbox_message') {
         const { sender, recipient, subject, body, category, priority } = payload || {};
         const id = `msg-${Date.now()}`;
@@ -179,7 +217,6 @@ export default async function handler(req: any, res: any) {
         return res.status(201).json({ ok: true, id });
       }
 
-      // 5. Create or Update Pending Task
       if (action === 'upsert_task') {
         const { id, title, description, zone, priority, status, assignedTo, karc0Notes, dueLabel } = payload || {};
         const taskId = id || `tsk-${Date.now()}`;
@@ -202,158 +239,12 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ ok: true, id: taskId });
       }
 
-      // 6. Create or Update Tenant (Salon / Barbershop / Studio) & Custom Subdomain URL
-      if (action === 'upsert_tenant' || action === 'create_tenant_wizard') {
-        const {
-          id, customSubdomain, businessName, niche, slogan, ownerName, ownerEmail,
-          whatsappPhone, instagramHandle, city, businessHours, themePalette,
-          primaryColor, accentColor, bgColor, exchangeRateBs, loyaltyStampsTarget,
-          loyaltyRewardTitle, planType, subscriptionStatus, monthlyFeeUsd
-        } = payload || {};
-
-        const cleanSlug = String(id || customSubdomain || `salon-${Date.now()}`).toLowerCase().replace(/[^a-z0-9-]/g, '');
-        const cleanSub = String(customSubdomain || cleanSlug).toLowerCase().replace(/[^a-z0-9-]/g, '');
-
-        await sql`
-          INSERT INTO public.tenants (
-            id, custom_subdomain, business_name, niche, slogan, owner_name, owner_email,
-            whatsapp_phone, instagram_handle, city, business_hours, theme_palette,
-            primary_color, accent_color, bg_color, exchange_rate_bs, loyalty_stamps_target,
-            loyalty_reward_title, plan_type, subscription_status, monthly_fee_usd, updated_at
-          ) VALUES (
-            ${cleanSlug}, ${cleanSub}, ${String(businessName)}, ${String(niche || 'beauty_salon')},
-            ${String(slogan || '')}, ${String(ownerName || '')}, ${String(ownerEmail || '')},
-            ${String(whatsappPhone || '')}, ${String(instagramHandle || '')},
-            ${String(city || 'Venezuela')}, ${String(businessHours || 'Lun - Sáb · 9:00 AM - 6:00 PM')},
-            ${String(themePalette || 'capra_mauve_gold')}, ${String(primaryColor || '#B5838D')},
-            ${String(accentColor || '#C5A059')}, ${String(bgColor || '#FDFBF9')},
-            ${Number(exchangeRateBs || 42.50)}, ${Number(loyaltyStampsTarget || 5)},
-            ${String(loyaltyRewardTitle || 'Servicio VIP 100% GRATIS')},
-            ${String(planType || 'pro_studio')}, ${String(subscriptionStatus || 'active')},
-            ${Number(monthlyFeeUsd || 25)}, NOW()
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            custom_subdomain = EXCLUDED.custom_subdomain,
-            business_name = EXCLUDED.business_name,
-            niche = EXCLUDED.niche,
-            slogan = EXCLUDED.slogan,
-            owner_name = EXCLUDED.owner_name,
-            whatsapp_phone = EXCLUDED.whatsapp_phone,
-            instagram_handle = EXCLUDED.instagram_handle,
-            primary_color = EXCLUDED.primary_color,
-            accent_color = EXCLUDED.accent_color,
-            exchange_rate_bs = EXCLUDED.exchange_rate_bs,
-            loyalty_stamps_target = EXCLUDED.loyalty_stamps_target,
-            loyalty_reward_title = EXCLUDED.loyalty_reward_title,
-            subscription_status = EXCLUDED.subscription_status,
-            monthly_fee_usd = EXCLUDED.monthly_fee_usd,
-            updated_at = NOW();
-        `;
-
-        if (action === 'create_tenant_wizard') {
-          await sql`
-            INSERT INTO public.studio_zones (id, tenant_id, name, department, description, capacity, station_code, is_active)
-            VALUES (
-              ${`zone-${cleanSlug}-main`}, ${cleanSlug}, 'Estación Principal VIP', 'general',
-              'Área principal del salón', 2, 'EST-01', true
-            )
-            ON CONFLICT (id) DO NOTHING;
-          `;
-          await sql`
-            INSERT INTO public.staff_members (id, tenant_id, name, role_title, specialty_tags, phone, instagram, commission_percent, schedule_summary, is_active)
-            VALUES (
-              ${`staff-${cleanSlug}-owner`}, ${cleanSlug}, ${String(ownerName || businessName)},
-              'Directora / Master Artist', ARRAY['Especialista Principal'], ${String(whatsappPhone || '')},
-              ${String(instagramHandle || '')}, 100, ${String(businessHours || 'Lun - Sáb · 9:00 AM - 6:00 PM')}, true
-            )
-            ON CONFLICT (id) DO NOTHING;
-          `;
-        }
-
-        return res.status(200).json({ ok: true, id: cleanSlug, subdomain: `${cleanSub}.vanesev.com` });
-      }
-
-      // 7. Create or Update Staff Member (Admin Pro V2)
-      if (action === 'upsert_staff') {
-        const {
-          id, tenantId, name, fullName, roleTitle, specialtyTags, specialties,
-          phone, instagram, commissionPercent, commissionPct, zoneId, scheduleSummary, isActive
-        } = payload || {};
-        const staffId = id || `staff-${Date.now()}`;
-        const finalName = String(name || fullName || 'Especialista');
-        const rawTags = specialtyTags || specialties || 'Especialista VIP';
-        const tagsArray = Array.isArray(rawTags)
-          ? rawTags
-          : String(rawTags).split(',').map((s: string) => s.trim()).filter(Boolean);
-        const finalComm = Number(commissionPercent ?? commissionPct ?? 40);
-        await sql`
-          INSERT INTO public.staff_members (
-            id, tenant_id, name, role_title, specialty_tags, phone, instagram,
-            commission_percent, zone_id, schedule_summary, is_active, updated_at
-          ) VALUES (
-            ${staffId}, ${String(tenantId || 'andrea-nails')}, ${finalName},
-            ${String(roleTitle || 'Especialista Senior')}, ${tagsArray},
-            ${String(phone || '')}, ${String(instagram || '')},
-            ${finalComm}, ${zoneId || null},
-            ${String(scheduleSummary || 'Lun - Sáb · 9:00 AM - 6:00 PM')},
-            ${isActive !== false}, NOW()
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            role_title = EXCLUDED.role_title,
-            specialty_tags = EXCLUDED.specialty_tags,
-            commission_percent = EXCLUDED.commission_percent,
-            zone_id = EXCLUDED.zone_id,
-            schedule_summary = EXCLUDED.schedule_summary,
-            is_active = EXCLUDED.is_active,
-            updated_at = NOW();
-        `;
-        return res.status(200).json({ ok: true, id: staffId });
-      }
-
-      // 8. Delete Staff Member
-      if (action === 'delete_staff') {
-        await sql`DELETE FROM public.staff_members WHERE id = ${String(payload?.id)};`;
-        return res.status(200).json({ ok: true });
-      }
-
-      // 9. Create or Update Studio Zone / Station (Admin Pro V2)
-      if (action === 'upsert_zone') {
-        const { id, tenantId, name, department, description, capacity, stationCode, isActive } = payload || {};
-        const zoneId = id || `zone-${Date.now()}`;
-        await sql`
-          INSERT INTO public.studio_zones (
-            id, tenant_id, name, department, description, capacity, station_code, is_active, updated_at
-          ) VALUES (
-            ${zoneId}, ${String(tenantId || 'andrea-nails')}, ${String(name)},
-            ${String(department || 'general')}, ${String(description || '')},
-            ${Number(capacity || 1)}, ${String(stationCode || 'EST-01')},
-            ${isActive !== false}, NOW()
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            department = EXCLUDED.department,
-            description = EXCLUDED.description,
-            capacity = EXCLUDED.capacity,
-            station_code = EXCLUDED.station_code,
-            is_active = EXCLUDED.is_active,
-            updated_at = NOW();
-        `;
-        return res.status(200).json({ ok: true, id: zoneId });
-      }
-
-      // 10. Delete Studio Zone
-      if (action === 'delete_zone') {
-        await sql`DELETE FROM public.studio_zones WHERE id = ${String(payload?.id)};`;
-        return res.status(200).json({ ok: true });
-      }
-
       return res.status(400).json({ error: `Unknown action: ${action}` });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err: any) {
     console.error('Error in /api/central:', err);
-    return res.status(500).json({ error: err?.message || 'Internal Server Error' });
+    return res.status(500).json({ error: 'Error interno en Central.' });
   }
 }
