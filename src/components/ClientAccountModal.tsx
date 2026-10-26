@@ -273,42 +273,12 @@ export const ClientAccountModal: React.FC<ClientAccountModalProps> = ({
     }
   };
 
-  // ─── OAUTH CON GOOGLE Y APPLE ─────────────────────────────────────────────
-  const handleOAuthTrigger = async (provider: 'google' | 'apple') => {
-    setStatusMessage(null);
-    setOauthProvider(provider);
-
-    // Prompt simple para prueba o vinculación de cuenta
-    const defaultEmail = provider === 'google' ? 'clienta.andrea@gmail.com' : 'clienta.apple@icloud.com';
-    const emailPrompt = window.prompt(
-      `Conectar con ${provider === 'google' ? 'Google' : 'Apple'}:\nIngresa tu correo verificado para continuar:`,
-      defaultEmail
-    );
-
-    if (!emailPrompt || !emailPrompt.includes('@')) return;
-
-    const cleanEmail = emailPrompt.trim().toLowerCase();
-    const suggestedName = cleanEmail.split('@')[0].replace('.', ' ');
-    const formattedName = suggestedName.charAt(0).toUpperCase() + suggestedName.slice(1);
-
-    setIsSubmitting(true);
-    const res = await AppStore.oauthLoginRemote(provider, cleanEmail, formattedName);
-    setIsSubmitting(false);
-
-    if (res.success) {
-      if (res.isExisting && res.account) {
-        // Ya tenía ficha vinculada
-        setActiveAccount(res.account);
-        loadClientBookings(res.account.phone);
-      } else {
-        // Primera vez con Google/Apple: Asignar WhatsApp y Contraseña en BD
-        setOauthEmail(cleanEmail);
-        setOauthName(formattedName);
-        setViewMode('oauth_completion');
-      }
-    } else {
-      setStatusMessage({ type: 'error', text: res.error || 'Error al conectar con el proveedor.' });
-    }
+  // ─── OAUTH (DESHABILITADO HASTA BLOQUE 6) ─────────────────────────────────
+  const handleOAuthTrigger = async (_provider: 'google' | 'apple') => {
+    setStatusMessage({
+      type: 'error',
+      text: 'El acceso con Google/Apple se encuentra temporalmente deshabilitado por mantenimiento de seguridad.'
+    });
   };
 
   // ─── COMPLETAR FICHA POST-OAUTH ───────────────────────────────────────────
@@ -554,33 +524,6 @@ export const ClientAccountModal: React.FC<ClientAccountModalProps> = ({
           ) : viewMode === 'login' ? (
             /* ══════ VISTA 1: LOGIN HABITUAL ══════ */
             <div className="space-y-5">
-              
-              {/* Botones Nativos de OAuth */}
-              <div className="space-y-2.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-warm-600 block text-center">
-                  Acceso Rápido con un Toque
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleOAuthTrigger('google')}
-                    disabled={isSubmitting}
-                    className="w-full py-2.5 px-4 bg-white hover:bg-warm-50 text-warm-900 rounded-2xl border border-sage-300 text-xs font-bold flex items-center justify-center gap-2.5 shadow-xs transition-all hover:border-sage-400"
-                  >
-                    <GoogleIcon className="w-4 h-4 shrink-0" />
-                    <span>Continuar con Google</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Separador */}
-              <div className="relative flex items-center justify-center">
-                <div className="border-t border-sage-200 w-full"></div>
-                <span className="bg-white px-3 text-[11px] font-semibold text-warm-500 uppercase tracking-wider shrink-0">
-                  o con tu teléfono y contraseña
-                </span>
-              </div>
-
               {/* Formulario de Login */}
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
