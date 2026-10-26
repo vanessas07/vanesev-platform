@@ -273,7 +273,7 @@ export const ClientAccountModal: React.FC<ClientAccountModalProps> = ({
     }
   };
 
-  // ─── OAUTH CON GOOGLE Y APPLE ─────────────────────────────────────────────
+  // ─── OAUTH (DESHABILITADO HASTA BLOQUE 6) ─────────────────────────────────
   const handleOAuthTrigger = async (_provider: 'google' | 'apple') => {
     setStatusMessage({
       type: 'error',
@@ -525,7 +525,10 @@ export const ClientAccountModal: React.FC<ClientAccountModalProps> = ({
           ) : viewMode === 'login' ? (
             /* ══════ VISTA 1: LOGIN HABITUAL ══════ */
             <div className="space-y-5">
+<<<<<<< HEAD
               
+=======
+>>>>>>> main
               {/* Formulario de Login */}
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
