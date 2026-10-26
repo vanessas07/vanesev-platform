@@ -130,7 +130,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="karc.0194@gmail.com"
+                    placeholder="superadmin@vanesev.com"
                     className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-[#52525B] focus:outline-none focus:border-[#F26A3D] transition-colors"
                   />
                 </div>

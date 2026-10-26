@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '../.env.local');
 if (fs.existsSync(envPath)) {
   const content = fs.readFileSync(envPath, 'utf8');
-  content.split('\n').forEach(line => {
+  content.split(/\r?\n/).forEach(line => {
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
@@ -80,8 +80,14 @@ async function runTests() {
   console.log('       RUNNING VANESEV BLOQUE 1 SECURITY TEST SUITE (11 CASES)  ');
   console.log('================================================================\n');
 
-  const testEmail = 'karc.0194@gmail.com';
-  const testPassword = 'TestSuperAdminPass2026!';
+  const testEmail = process.env.TEST_SUPERADMIN_EMAIL;
+  const testPassword = process.env.TEST_SUPERADMIN_PASSWORD;
+
+  if (!testEmail || !testPassword) {
+    throw new Error(
+      'FATAL: Variables de entorno obligatorias TEST_SUPERADMIN_EMAIL o TEST_SUPERADMIN_PASSWORD no configuradas. Por seguridad, no se admiten credenciales en el repositorio.'
+    );
+  }
   const results = [];
 
   // Fetch superadmin to get TOTP secret and recovery codes

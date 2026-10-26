@@ -68,7 +68,7 @@ async function main() {
     console.error('ERROR: Faltan las variables de entorno obligatorias SUPERADMIN_EMAIL o SUPERADMIN_PASSWORD.');
     console.error('Por seguridad, la contraseña NUNCA se pasa por línea de comandos (--password=).');
     console.error('Uso seguro en PowerShell:');
-    console.error('  $env:SUPERADMIN_EMAIL="karc.0194@gmail.com"; $env:SUPERADMIN_PASSWORD="..."; node scripts/create-superadmin.cjs; Remove-Item Env:\\SUPERADMIN_PASSWORD');
+    console.error('  $env:SUPERADMIN_EMAIL="superadmin@vanesev.com"; $env:SUPERADMIN_PASSWORD="..."; node scripts/create-superadmin.cjs; Remove-Item Env:\\SUPERADMIN_PASSWORD');
     process.exit(1);
   }
 
