@@ -145,7 +145,6 @@ export default async function handler(req: any, res: any) {
           ${zoneId || null}, ${defaultStaffId || null}, ${available}, ${cleanTags}, NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
-          tenant_id = EXCLUDED.tenant_id,
           name = EXCLUDED.name,
           category = EXCLUDED.category,
           price_usd = EXCLUDED.price_usd,
@@ -160,7 +159,8 @@ export default async function handler(req: any, res: any) {
           default_staff_id = EXCLUDED.default_staff_id,
           is_available = EXCLUDED.is_available,
           tags = EXCLUDED.tags,
-          updated_at = NOW();
+          updated_at = NOW()
+        WHERE public.services.tenant_id = EXCLUDED.tenant_id;
       `;
 
       return res.status(200).json({

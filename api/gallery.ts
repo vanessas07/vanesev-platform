@@ -88,12 +88,12 @@ export default async function handler(req: any, res: any) {
         INSERT INTO public.gallery_slides (id, tenant_id, title, subtitle, category, image_url, is_active)
         VALUES (${slideId}, ${tenantSlug}, ${finalTitle}, ${finalSubtitle}, ${finalCategory}, ${finalImage}, true)
         ON CONFLICT (id) DO UPDATE SET
-          tenant_id = EXCLUDED.tenant_id,
           title = EXCLUDED.title,
           subtitle = EXCLUDED.subtitle,
           category = EXCLUDED.category,
           image_url = EXCLUDED.image_url,
-          is_active = EXCLUDED.is_active;
+          is_active = EXCLUDED.is_active
+        WHERE public.gallery_slides.tenant_id = EXCLUDED.tenant_id;
       `;
 
       return res.status(200).json({
