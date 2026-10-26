@@ -85,6 +85,19 @@ async function runAudit() {
             // Ignorar elementos fuera del viewport superior o inferior
             if (rect.bottom < 0 || rect.top > window.innerHeight * 2.5) continue;
 
+            // Ignorar elementos dentro de un contenedor con scroll o recorte horizontal legítimo (carruseles, pills tabs con overflow-x: auto/scroll/hidden)
+            let isInsideScrollContainer = false;
+            let parent = el.parentElement;
+            while (parent && parent !== document.body && parent !== document.documentElement) {
+              const pStyle = window.getComputedStyle(parent);
+              if (['auto', 'scroll', 'hidden'].includes(pStyle.overflowX) || ['auto', 'scroll', 'hidden'].includes(pStyle.overflow)) {
+                isInsideScrollContainer = true;
+                break;
+              }
+              parent = parent.parentElement;
+            }
+            if (isInsideScrollContainer) continue;
+
             // Tolerancia de 1.5px por sub-píxeles
             if (rect.right > viewportWidth + 1.5 && rect.left < viewportWidth) {
               offenders.push({
