@@ -26,29 +26,20 @@ export default async function handler(req: any, res: any) {
     });
   }
 
-  const tenantSlug = queryTenant === 'capra' ? 'capra-studio' : queryTenant === 'andrea' ? 'andrea-nails' : queryTenant;
-  const isAndrea = tenantSlug === 'andrea-nails';
+  const tenantSlug = queryTenant === 'capra' ? 'capra-studio' : queryTenant;
 
-  let name = tenantSlug === 'capra-studio'
-    ? 'Capra Studio · Salón de Belleza & Academy'
-    : isAndrea
-    ? 'Andrea Labrador Nails Studio'
-    : `Salón ${tenantSlug}`;
-  let shortName = tenantSlug === 'capra-studio' ? 'Capra Studio' : isAndrea ? 'Andrea Nails' : tenantSlug.slice(0, 18);
-  let themeColor = tenantSlug === 'capra-studio' ? '#9E475B' : isAndrea ? '#16291F' : '#9E475B';
-  let bgColor = tenantSlug === 'capra-studio' ? '#FAF7F2' : isAndrea ? '#FBF9F6' : '#FAF7F2';
-  let description = tenantSlug === 'capra-studio'
-    ? 'Cejas, Pestañas, Estilismo, Maquillaje Profesional, Uñas y Cursos Capra Academy — By María Capra.'
-    : isAndrea
-    ? 'Catálogo interactivo, reservas online y tarjeta de fidelización VIP de 5 sellos.'
-    : 'Reserva online, catálogo de servicios y tarjeta de fidelización VIP.';
-  const startUrl = isAndrea ? '/andrea-nails' : `/m/${tenantSlug}`;
+  let name = `Salón ${tenantSlug}`;
+  let shortName = tenantSlug.slice(0, 18);
+  let themeColor = '#5B2A6E';
+  let bgColor = '#FAF7F2';
+  let description = 'Reserva online, catálogo de servicios y tarjeta de fidelización VIP.';
+  const startUrl = `/m/${tenantSlug}`;
 
   const sql = getDb();
   if (sql) {
     try {
       const rows = await sql`
-        SELECT business_name, custom_subdomain, primary_color, secondary_color, slogan
+        SELECT business_name, custom_subdomain, primary_color, secondary_color, slogan, bg_color
         FROM public.tenants
         WHERE id = ${tenantSlug} OR custom_subdomain = ${tenantSlug}
         LIMIT 1;
@@ -58,37 +49,22 @@ export default async function handler(req: any, res: any) {
         name = t.business_name || name;
         shortName = String(t.business_name || shortName).slice(0, 18);
         themeColor = t.primary_color || themeColor;
-        bgColor = t.secondary_color || bgColor;
-        if (t.slogan) description = t.slogan;
+        bgColor = t.bg_color || bgColor;
+        description = t.slogan || description;
       }
     } catch {
-      // Fallback seguro del salón específico
+      // Fallback seguro si la base de datos no responde
     }
   }
 
-  const icons = isAndrea
-    ? [
-        {
-          src: '/images/esmaltado-semipermanente.png',
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'any maskable',
-        },
-        {
-          src: '/images/nivelacion-rubber.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable',
-        },
-      ]
-    : [
-        {
-          src: '/favicon.svg',
-          sizes: 'any',
-          type: 'image/svg+xml',
-          purpose: 'any maskable',
-        },
-      ];
+  const icons = [
+    {
+      src: '/favicon.svg',
+      sizes: 'any',
+      type: 'image/svg+xml',
+      purpose: 'any maskable',
+    },
+  ];
 
   const manifest = {
     name,
@@ -105,4 +81,3 @@ export default async function handler(req: any, res: any) {
 
   return res.status(200).json(manifest);
 }
-

@@ -1,5 +1,6 @@
 // Vercel Serverless Function: /api/services
 // Manages catalog services in Neon Serverless Postgres with PostgreSQL 18 RLS enforcement
+// Strict multi-tenant isolation: tenant parameter is required; zero cross-tenant default fallback.
 import { getDb, executeWithTenantRls } from './_db.js';
 
 export default async function handler(req: any, res: any) {
@@ -20,12 +21,17 @@ export default async function handler(req: any, res: any) {
 
   // ─── GET: Listar servicios del catálogo (Con Aislamiento RLS en Postgres 18) ─
   if (req.method === 'GET') {
+    const rawTenant = req.query?.tenant;
+    if (!rawTenant || !String(rawTenant).trim()) {
+      return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+    }
+    const tenantSlug = String(rawTenant).trim().toLowerCase();
+
     if (!sql) {
       return res.status(200).json({ services: [], databaseConnected: false });
     }
 
     try {
-      const tenantSlug = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : 'andrea-nails';
       const rows = await executeWithTenantRls(tenantSlug, (tx) => tx`
         SELECT 
           id,
@@ -111,12 +117,17 @@ export default async function handler(req: any, res: any) {
         tags,
       } = req.body || {};
 
+      const rawTenant = tenantId || req.query?.tenant;
+      if (!rawTenant || !String(rawTenant).trim()) {
+        return res.status(400).json({ error: 'Parámetro tenantId requerido.' });
+      }
+
       if (!name || !category || priceUSD === undefined) {
         return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, categoría, precio).' });
       }
 
       const serviceId = id || ('srv_' + Date.now());
-      const cleanTenant = String(tenantId || 'andrea-nails').trim().toLowerCase();
+      const cleanTenant = String(rawTenant).trim().toLowerCase();
       const cleanPrice = Number(priceUSD) || 10;
       const cleanDuration = Number(durationMinutes) || 60;
       const cleanTags = Array.isArray(tags) ? tags : ['Servicio VIP'];
@@ -134,6 +145,7 @@ export default async function handler(req: any, res: any) {
           ${zoneId || null}, ${defaultStaffId || null}, ${available}, ${cleanTags}, NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
+          tenant_id = EXCLUDED.tenant_id,
           name = EXCLUDED.name,
           category = EXCLUDED.category,
           price_usd = EXCLUDED.price_usd,
@@ -170,13 +182,18 @@ export default async function handler(req: any, res: any) {
 
     try {
       const { id } = req.query || req.body || {};
+      const rawTenant = req.query?.tenant || req.body?.tenantId;
       if (!id) {
         return res.status(400).json({ error: 'ID de servicio requerido.' });
       }
+      if (!rawTenant || !String(rawTenant).trim()) {
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+      }
+      const cleanTenant = String(rawTenant).trim().toLowerCase();
 
       await sql`
         DELETE FROM public.services 
-        WHERE id = ${id};
+        WHERE id = ${id} AND tenant_id = ${cleanTenant};
       `;
 
       return res.status(200).json({ success: true, deletedId: id });

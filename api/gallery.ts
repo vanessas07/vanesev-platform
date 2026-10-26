@@ -1,12 +1,6 @@
 // Vercel Serverless Function: /api/gallery
-// Manages carousel gallery images in Neon Serverless Postgres
-import { neon } from '@neondatabase/serverless';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
+// Manages carousel gallery images in Neon Serverless Postgres with strict tenant isolation
+import { getDb } from './_db.js';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -22,42 +16,61 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const sql = getDb();
+  // 1. Verificación obligatoria de tenant: sin tenant responde 400
+  const rawTenant = req.query?.tenant || (req.body && req.body.tenantId);
+  if (!rawTenant || !String(rawTenant).trim()) {
+    return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+  }
+  const tenantSlug = String(rawTenant).trim().toLowerCase();
 
-  // ─── GET: Listar imágenes del carrusel ─────────────────────────────────────
-  if (req.method === 'GET') {
-    if (!sql) {
+  const sql = getDb();
+  if (!sql) {
+    if (req.method === 'GET') {
       return res.status(200).json({ slides: [], databaseConnected: false });
     }
+    return res.status(500).json({ error: 'Base de datos no disponible.' });
+  }
 
+  // ─── GET: Listar imágenes del carrusel filtradas estrictamente por tenant_id ─
+  if (req.method === 'GET') {
     try {
-      // Garantizar que la tabla exista
-      await sql`
-        CREATE TABLE IF NOT EXISTS public.gallery_slides (
-          id VARCHAR(100) PRIMARY KEY,
-          name VARCHAR(120) NOT NULL,
-          image_url TEXT NOT NULL,
-          tag VARCHAR(100),
-          technique VARCHAR(120),
-          created_at TIMESTAMPTZ DEFAULT NOW()
-        );
-      `;
+      try {
+        await sql`
+          CREATE TABLE IF NOT EXISTS public.gallery_slides (
+            id VARCHAR(100) PRIMARY KEY,
+            tenant_id VARCHAR(50),
+            name VARCHAR(120) NOT NULL,
+            image_url TEXT NOT NULL,
+            tag VARCHAR(100),
+            technique VARCHAR(120),
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );
+        `;
+        await sql`
+          ALTER TABLE public.gallery_slides 
+          ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(50);
+        `;
+      } catch (ddlErr: any) {
+        console.warn('[Gallery Table Init Note]:', ddlErr?.message);
+      }
 
       const rows = await sql`
         SELECT 
           id,
+          tenant_id as "tenantId",
           name,
           image_url as "imageUrl",
           tag,
           technique,
           created_at as "createdAt"
         FROM public.gallery_slides
+        WHERE tenant_id = ${tenantSlug}
         ORDER BY created_at DESC
         LIMIT 40;
       `;
 
       return res.status(200).json({
-        slides: rows,
+        slides: rows || [],
         databaseConnected: true,
       });
     } catch (err: any) {
@@ -66,20 +79,17 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Añadir o actualizar imagen ──────────────────────────────────────
+  // ─── POST: Añadir o actualizar imagen por salón ────────────────────────────
   if (req.method === 'POST') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { id, name, imageUrl, tag, technique } = req.body || {};
       if (!name || !imageUrl) {
         return res.status(400).json({ error: 'Nombre e imagen son obligatorios.' });
       }
 
-      // Validar límite máximo de 40 imágenes
-      const countRes = await sql`SELECT COUNT(*) as count FROM public.gallery_slides;`;
+      const countRes = await sql`
+        SELECT COUNT(*) as count FROM public.gallery_slides WHERE tenant_id = ${tenantSlug};
+      `;
       const currentCount = Number(countRes[0]?.count) || 0;
       if (currentCount >= 40) {
         return res.status(400).json({ error: 'Límite de 40 imágenes alcanzado. Elimina alguna para subir una nueva.' });
@@ -91,9 +101,10 @@ export default async function handler(req: any, res: any) {
       const cleanTech = technique ? String(technique).trim().slice(0, 120) : '';
 
       await sql`
-        INSERT INTO public.gallery_slides (id, name, image_url, tag, technique)
-        VALUES (${slideId}, ${cleanName}, ${imageUrl}, ${cleanTag}, ${cleanTech})
+        INSERT INTO public.gallery_slides (id, tenant_id, name, image_url, tag, technique)
+        VALUES (${slideId}, ${tenantSlug}, ${cleanName}, ${imageUrl}, ${cleanTag}, ${cleanTech})
         ON CONFLICT (id) DO UPDATE SET
+          tenant_id = EXCLUDED.tenant_id,
           name = EXCLUDED.name,
           image_url = EXCLUDED.image_url,
           tag = EXCLUDED.tag,
@@ -102,7 +113,7 @@ export default async function handler(req: any, res: any) {
 
       return res.status(200).json({
         success: true,
-        slide: { id: slideId, name: cleanName, imageUrl, tag: cleanTag, technique: cleanTech }
+        slide: { id: slideId, tenantId: tenantSlug, name: cleanName, imageUrl, tag: cleanTag, technique: cleanTech }
       });
     } catch (err: any) {
       console.error('[Neon Save Gallery Error]:', err);
@@ -110,12 +121,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── DELETE: Eliminar imagen por ID ───────────────────────────────────────
+  // ─── DELETE: Eliminar imagen por ID y tenant_id ───────────────────────────
   if (req.method === 'DELETE') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { id } = req.query || req.body || {};
       if (!id) {
@@ -124,7 +131,7 @@ export default async function handler(req: any, res: any) {
 
       await sql`
         DELETE FROM public.gallery_slides 
-        WHERE id = ${id};
+        WHERE id = ${id} AND tenant_id = ${tenantSlug};
       `;
 
       return res.status(200).json({ success: true, deletedId: id });
