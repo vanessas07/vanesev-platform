@@ -39,6 +39,7 @@ async function runAudit() {
       deviceScaleFactor: 2,
     });
     const page = await context.newPage();
+    page.on('pageerror', (err) => console.log(`[PAGE ERROR ${vp.name}]: ${err.message}`));
 
     for (const route of ROUTES) {
       const url = `${BASE_URL}${route.path}`;

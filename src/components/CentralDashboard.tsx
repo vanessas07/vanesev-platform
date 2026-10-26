@@ -100,15 +100,30 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
         return;
       }
       if (res.ok) {
-        setAuthRequired(false);
-        const json = await res.json();
-        setData(json);
-        if (json.docs?.length > 0 && !selectedDoc) {
-          setSelectedDoc(json.docs[0]);
+        try {
+          const json = await res.json();
+          if (json && typeof json === 'object' && Array.isArray(json.tenants)) {
+            setData(json);
+            setAuthRequired(false);
+            if (json.docs?.length > 0 && !selectedDoc) {
+              setSelectedDoc(json.docs[0]);
+            }
+          } else {
+            setAuthRequired(true);
+            setData(null);
+          }
+        } catch {
+          setAuthRequired(true);
+          setData(null);
         }
+      } else {
+        setAuthRequired(true);
+        setData(null);
       }
     } catch (e) {
       console.error('Error loading Central:', e);
+      setAuthRequired(true);
+      setData(null);
     } finally {
       setLoading(false);
       setSyncing(false);
@@ -305,7 +320,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   };
 
   const currentHeading = CENTRAL_HEADINGS[activeTab] || CENTRAL_HEADINGS.overview;
-  const tenantsCount = Math.max(2, (data.tenants || []).length);
+  const tenantsCount = Math.max(2, (data?.tenants || []).length);
 
   return (
     <div className="min-h-screen bg-[#E6E6EB] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
