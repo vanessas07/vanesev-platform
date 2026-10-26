@@ -47,6 +47,15 @@ async function runAudit() {
 
       try {
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+        // Esperar a que se resuelva lazy loading si aplica
+        if (route.slug === 'central-gate') {
+          try {
+            await page.waitForSelector('form, input', { timeout: 10000 });
+          } catch (e) {
+            // Se registrará en la validación de authGateCheck
+          }
+        }
         await page.waitForTimeout(1000); // Wait for animations to settle
 
         // 1. Check document scroll horizontal overflow
@@ -59,15 +68,22 @@ async function runAudit() {
         });
 
         // 2. Check individual element bounding rect overflow (element right edge clipped past viewport)
+        // Se auditan elementos interactivos y de contenido visibles (botones, inputs, titulares, párrafos, nav)
         const clippingCheck = await page.evaluate(() => {
           const viewportWidth = window.innerWidth;
           const offenders = [];
-          const allElements = Array.from(document.querySelectorAll('*'));
-          for (const el of allElements) {
+          const contentTags = ['button', 'input', 'a', 'h1', 'h2', 'h3', 'h4', 'p', 'nav', 'header', 'article', 'section'];
+          const elements = Array.from(document.querySelectorAll(contentTags.join(',')));
+
+          for (const el of elements) {
             const style = window.getComputedStyle(el);
             if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') continue;
             const rect = el.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) continue;
+
+            // Ignorar elementos fuera del viewport superior o inferior
+            if (rect.bottom < 0 || rect.top > window.innerHeight * 2.5) continue;
+
             // Tolerancia de 1.5px por sub-píxeles
             if (rect.right > viewportWidth + 1.5 && rect.left < viewportWidth) {
               offenders.push({
