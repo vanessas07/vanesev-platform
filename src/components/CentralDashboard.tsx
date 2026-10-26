@@ -37,21 +37,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [editingTenantThemeSlug, setEditingTenantThemeSlug] = useState<string | null>(null);
-  const [authRequired, setAuthRequired] = useState(false);
+  const [authRequired, setAuthRequired] = useState(true);
 
-  const [data, setData] = useState<any>({
-    tenants: [],
-    sessions: [],
-    tasks: [],
-    incidents: [],
-    mailbox: [],
-    roadmap: [],
-    docs: [],
-    staff: [],
-    zones: [],
-    bookingStats: [],
-    infrastructure: {},
-  });
+  const [data, setData] = useState<any>(null);
 
   // Session feedback state
   const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});

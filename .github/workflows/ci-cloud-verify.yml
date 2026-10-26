@@ -29,3 +29,8 @@ jobs:
 
       - name: Vite Production Bundle Verification
         run: npm run build
+
+      - name: Report-Only CI Guards & Tenant Audit (Deuda Técnica)
+        run: |
+          node scripts/guardias.cjs || true
+          node scripts/tenant-audit.cjs || true

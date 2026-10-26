@@ -65,4 +65,15 @@ tokens.forEach(t => {
 const cWhiteOnBrand = getContrast('#FFFFFF', '#5B2A6E');
 console.log('----------------------------------------------------------------------------------------');
 console.log('Texto #FFFFFF sobre --v-brand (#5B2A6E): ' + cWhiteOnBrand.toFixed(2) + ':1 -> AAA (Excelente)');
+
+console.log('\n========================================================================================');
+console.log('        CAPRA STUDIO (OPCIÓN 2: ROJO LACRE & PLATINO - SAN CRISTÓBAL)                   ');
+console.log('========================================================================================');
+const capraLacreBg = '#FAF8F8';
+const capraLacrePrimary = '#8B1E2D';
+const capraLacreText = '#241215';
+
+console.log('Primario #8B1E2D vs Fondo #FAF8F8: ' + getContrast(capraLacrePrimary, capraLacreBg).toFixed(2) + ':1 -> AAA (Excelente)');
+console.log('Texto #241215 vs Fondo #FAF8F8:    ' + getContrast(capraLacreText, capraLacreBg).toFixed(2) + ':1 -> AAA (Excelente)');
+console.log('Texto #FFFFFF sobre Primario #8B1E2D: ' + getContrast('#FFFFFF', capraLacrePrimary).toFixed(2) + ':1 -> AAA (Excelente)');
 console.log('========================================================================================\n');

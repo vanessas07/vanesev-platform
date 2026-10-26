@@ -194,7 +194,7 @@ Para que karc0 elija la identidad definitiva sin que parezca un catálogo genér
 | Opción | Familia Estética | Color Primario | Acento / Filete | Fondo Luminoso | Superficie | Texto Tinta | Tipografía |
 |---|---|---|---|---|---|---|---|
 | **1. Salvia & Platino** | Botánica Botica de Lujo / Frescura Clínica | `#2B5948` (Verde salvia imperial) | `#D3DCD6` (Platino salvia) | `#F7F9F8` (Porcelana fría) | `#FFFFFF` | `#1A2A22` (Bosque noche) | `Cinzel` + `Plus Jakarta Sans` |
-| **2. Ámbar & Champagne Frío** | Solar Noble / Alta Costura de Estudio | `#8A6518` (Oro ámbar pulido) | `#E5DFD1` (Arena fina) | `#FAFAF7` (Perla lino) | `#FFFFFF` | `#2B2519` (Carbón ámbar) | `Playfair Display` + `Inter` |
+| **2. Rojo Lacre & Platino** | Carmín de Autor / Rubí Alta Costura | `#8B1E2D` (Rojo lacre imperial) | `#D8DADF` (Platino neutro) | `#FAF8F8` (Porcelana lacre) | `#FFFFFF` | `#241215` (Tinta lacre noche) | `Playfair Display` + `Inter` |
 | **3. Cobalto Couture** | Zafiro Imperial / Joyería Europea | `#1B3B6F` (Azul zafiro corte) | `#D4DEE9` (Acero satinado) | `#F6F8FB` (Hielo zafiro) | `#FFFFFF` | `#111E33` (Zafiro noche) | `Italiana` + `Montserrat` |
 | **4. Grafito Perla** | Titanio Editorial / Galería Suiza | `#2C3038` (Grafito de autor) | `#DFE1E5` (Platino neutro) | `#F9F9FA` (Nieve titanio) | `#FFFFFF` | `#181A1F` (Tinta mineral) | `DM Serif Display` + `Outfit` |
 

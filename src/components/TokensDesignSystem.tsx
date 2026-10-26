@@ -20,7 +20,7 @@ import {
 
 export const TokensDesignSystem: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'tokens' | 'typography' | 'web_copy' | 'bocetos' | 'capra_themes' | 'motion' | 'audit'>('tokens');
-  const [capraThemeSelected, setCapraThemeSelected] = useState<'salvia' | 'ambar' | 'cobalto' | 'grafito'>('salvia');
+  const [capraThemeSelected, setCapraThemeSelected] = useState<'salvia' | 'lacre' | 'cobalto' | 'grafito'>('salvia');
 
   // Tokens oficiales VANESEV "Ciruela imperial" (Fondo Claro)
   const tokens = [
@@ -512,19 +512,19 @@ export const TokensDesignSystem: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setCapraThemeSelected('ambar')}
+                onClick={() => setCapraThemeSelected('lacre')}
                 className={`p-4 rounded-2xl border text-left transition-all ${
-                  capraThemeSelected === 'ambar'
-                    ? 'border-[#8A6518] bg-[#8A6518]/5 shadow-sm ring-2 ring-[#8A6518]/20'
+                  capraThemeSelected === 'lacre'
+                    ? 'border-[#8B1E2D] bg-[#8B1E2D]/5 shadow-sm ring-2 ring-[#8B1E2D]/20'
                     : 'border-[#E4E2EA] bg-white hover:bg-[#F4F2F7]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-sm text-[#24152B]">2. Ámbar & Champagne</span>
-                  {capraThemeSelected === 'ambar' && <CheckCircle2 className="w-4 h-4 text-[#8A6518]" />}
+                  <span className="font-bold text-sm text-[#24152B]">2. Rojo Lacre & Platino</span>
+                  {capraThemeSelected === 'lacre' && <CheckCircle2 className="w-4 h-4 text-[#8B1E2D]" />}
                 </div>
                 <p className="text-xs text-[#6E6478]">
-                  Oro ámbar noble (#8A6518) + Arena pulida (#E5DFD1) + Fondo Perla lino (#FAFAF7). Luz de alta costura (sin marrón).
+                  Rojo lacre imperial (#8B1E2D) + Platino neutro (#D8DADF) + Fondo Porcelana lacre (#FAF8F8). Carmín de alta costura (sin rosa ni marrón).
                 </p>
               </button>
 
@@ -567,7 +567,7 @@ export const TokensDesignSystem: React.FC = () => {
             {(() => {
               const themesConfig = {
                 salvia: { primary: '#2B5948', accent: '#D3DCD6', bg: '#F7F9F8', text: '#1A2A22', font: 'Cinzel, serif', name: 'Salvia & Platino' },
-                ambar: { primary: '#8A6518', accent: '#E5DFD1', bg: '#FAFAF7', text: '#2B2519', font: 'Playfair Display, serif', name: 'Ámbar & Champagne Frío' },
+                lacre: { primary: '#8B1E2D', accent: '#D8DADF', bg: '#FAF8F8', text: '#241215', font: 'Playfair Display, serif', name: 'Rojo Lacre & Platino' },
                 cobalto: { primary: '#1B3B6F', accent: '#D4DEE9', bg: '#F6F8FB', text: '#111E33', font: 'Italiana, serif', name: 'Cobalto Couture' },
                 grafito: { primary: '#2C3038', accent: '#DFE1E5', bg: '#F9F9FA', text: '#181A1F', font: 'DM Serif Display, serif', name: 'Grafito Perla' },
               };
