@@ -16,7 +16,7 @@ import {
   getAuthSecret,
   validateSuperadminSession,
   applyCors,
-} from './_auth.ts';
+} from './_auth.js';
 
 function getDb() {
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;

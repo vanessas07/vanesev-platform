@@ -1,7 +1,7 @@
 // Vercel Serverless Function: /api/central
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
 import { neon } from '@neondatabase/serverless';
-import { validateSuperadminSession, applyCors } from './_auth.ts';
+import { validateSuperadminSession, applyCors } from './_auth.js';
 
 function getDb() {
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;

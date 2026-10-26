@@ -28,5 +28,7 @@ dist-ssr
 
 # Internal Operational Docs & Sensitive PDFs
 *.pdf
+artifacts/
+
 Doc operativos/
 *.docx

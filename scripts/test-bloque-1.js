@@ -30,7 +30,7 @@ if (process.env.DATABASE_URL_STAGING) {
 }
 
 import { neon } from '@neondatabase/serverless';
-import { computeTOTP } from '../api/_auth.ts';
+import { computeTOTP } from '../api/_auth.js';
 import authHandler from '../api/auth.ts';
 import centralHandler from '../api/central.ts';
 

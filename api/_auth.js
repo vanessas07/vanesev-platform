@@ -8,11 +8,11 @@ import { neon } from '@neondatabase/serverless';
 const RFC4648_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 // Base32 Decoder for TOTP
-export function base32Decode(str: string): Buffer {
-  const clean = str.toUpperCase().replace(/=+$/, '').replace(/\s+/g, '');
+export function base32Decode(str) {
+  const clean = String(str).toUpperCase().replace(/=+$/, '').replace(/\s+/g, '');
   let bits = 0;
   let value = 0;
-  const output: number[] = [];
+  const output = [];
   for (let i = 0; i < clean.length; i++) {
     const idx = RFC4648_ALPHABET.indexOf(clean[i]);
     if (idx === -1) continue;
@@ -27,7 +27,7 @@ export function base32Decode(str: string): Buffer {
 }
 
 // RFC 6238 TOTP computation
-export function computeTOTP(secret: string, counter: number): string {
+export function computeTOTP(secret, counter) {
   const buf = Buffer.alloc(8);
   buf.writeBigInt64BE(BigInt(counter));
   const key = base32Decode(secret);
@@ -42,7 +42,7 @@ export function computeTOTP(secret: string, counter: number): string {
 }
 
 // Verify TOTP token with +/- 1 time-step window (30s steps)
-export function verifyTOTP(secret: string, token: string, window = 1): boolean {
+export function verifyTOTP(secret, token, window = 1) {
   if (!secret || !token) return false;
   const cleanToken = String(token).trim();
   if (cleanToken.length !== 6) return false;
@@ -56,14 +56,14 @@ export function verifyTOTP(secret: string, token: string, window = 1): boolean {
 }
 
 // Scrypt Password Hashing with Salt
-export function hashPassword(password: string, salt?: string): { hash: string; salt: string } {
+export function hashPassword(password, salt) {
   const s = salt || crypto.randomBytes(16).toString('hex');
   const h = crypto.scryptSync(password, s, 64).toString('hex');
   return { hash: h, salt: s };
 }
 
 // Timing-safe password verification
-export function verifyPassword(password: string, hash: string, salt: string): boolean {
+export function verifyPassword(password, hash, salt) {
   try {
     const h = crypto.scryptSync(password, salt, 64).toString('hex');
     const bufA = Buffer.from(hash, 'hex');
@@ -76,7 +76,7 @@ export function verifyPassword(password: string, hash: string, salt: string): bo
 }
 
 // Standard Signed JWT (HS256)
-export function signJwt(payload: Record<string, any>, secret: string, expiresInSeconds: number): string {
+export function signJwt(payload, secret, expiresInSeconds) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
   const fullPayload = { ...payload, iat: now, exp: now + expiresInSeconds };
@@ -89,7 +89,7 @@ export function signJwt(payload: Record<string, any>, secret: string, expiresInS
   return `${b64Header}.${b64Payload}.${signature}`;
 }
 
-export function verifyJwt(token: string, secret: string): { valid: boolean; payload?: any; error?: string } {
+export function verifyJwt(token, secret) {
   try {
     if (!token) return { valid: false, error: 'Token missing' };
     const parts = token.split('.');
@@ -110,16 +110,16 @@ export function verifyJwt(token: string, secret: string): { valid: boolean; payl
       return { valid: false, error: 'Token expired' };
     }
     return { valid: true, payload };
-  } catch (err: any) {
+  } catch (err) {
     return { valid: false, error: err.message };
   }
 }
 
 // Cookie Helpers
-export function parseCookies(req: any): Record<string, string> {
+export function parseCookies(req) {
   const header = req.headers?.cookie || '';
-  const result: Record<string, string> = {};
-  header.split(';').forEach((item: string) => {
+  const result = {};
+  header.split(';').forEach((item) => {
     const [rawKey, ...rawVal] = item.trim().split('=');
     if (rawKey) {
       result[rawKey] = decodeURIComponent(rawVal.join('='));
@@ -128,17 +128,7 @@ export function parseCookies(req: any): Record<string, string> {
   return result;
 }
 
-export function serializeCookie(
-  name: string,
-  value: string,
-  options: {
-    maxAge?: number;
-    httpOnly?: boolean;
-    secure?: boolean;
-    sameSite?: 'Strict' | 'Lax' | 'None';
-    path?: string;
-  } = {}
-): string {
+export function serializeCookie(name, value, options = {}) {
   const parts = [`${name}=${encodeURIComponent(value)}`];
   if (options.maxAge !== undefined) parts.push(`Max-Age=${options.maxAge}`);
   if (options.httpOnly) parts.push('HttpOnly');
@@ -149,7 +139,7 @@ export function serializeCookie(
 }
 
 // CORS Whitelist Filter: Only exact *.vanesev.com or localhost in non-production
-export function applyCors(req: any, res: any): void {
+export function applyCors(req, res) {
   const origin = (req.headers?.origin || '').trim();
   const isVanesev = /^https:\/\/([a-z0-9-]+\.)?vanesev\.com$/.test(origin);
   const isLocalDev =
@@ -168,7 +158,7 @@ export function applyCors(req: any, res: any): void {
 }
 
 // Secret Resolution - ZERO FALLBACKS (Throws fatal error if missing)
-export function requireEnv(name: string): string {
+export function requireEnv(name) {
   const val = process.env[name];
   if (!val || !val.trim()) {
     throw new Error(`FATAL: Variable de entorno obligatoria '${name}' no está configurada.`);
@@ -176,7 +166,7 @@ export function requireEnv(name: string): string {
   return val.trim();
 }
 
-export function getAuthSecret(scope: 'central' | 'admin' | 'staff' | 'clienta' = 'central'): string {
+export function getAuthSecret(scope = 'central') {
   switch (scope) {
     case 'central':
       return requireEnv('CENTRAL_AUTH_SECRET');
@@ -192,10 +182,7 @@ export function getAuthSecret(scope: 'central' | 'admin' | 'staff' | 'clienta' =
 }
 
 // Superadmin Session Validator for Central APIs
-export async function validateSuperadminSession(
-  req: any,
-  sqlInstance?: any
-): Promise<{ valid: boolean; user?: any; error?: string }> {
+export async function validateSuperadminSession(req, sqlInstance) {
   try {
     const cookies = parseCookies(req);
     const token =
@@ -247,7 +234,7 @@ export async function validateSuperadminSession(
     }
 
     return { valid: true, user: { id: user.id, email: user.email } };
-  } catch (err: any) {
+  } catch (err) {
     return { valid: false, error: err.message || 'Error validando sesión de superadmin' };
   }
 }
