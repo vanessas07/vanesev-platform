@@ -34,44 +34,42 @@ export default async function handler(req: any, res: any) {
   // ─── GET: Listar imágenes del carrusel filtradas estrictamente por tenant_id ─
   if (req.method === 'GET') {
     try {
-      try {
-        await sql`
-          CREATE TABLE IF NOT EXISTS public.gallery_slides (
-            id VARCHAR(100) PRIMARY KEY,
-            tenant_id VARCHAR(50),
-            name VARCHAR(120) NOT NULL,
-            image_url TEXT NOT NULL,
-            tag VARCHAR(100),
-            technique VARCHAR(120),
-            created_at TIMESTAMPTZ DEFAULT NOW()
-          );
-        `;
-        await sql`
-          ALTER TABLE public.gallery_slides 
-          ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(50);
-        `;
-      } catch (ddlErr: any) {
-        console.warn('[Gallery Table Init Note]:', ddlErr?.message);
-      }
-
-      const cols = await sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'gallery_slides';
+      const rows = await sql`
+        SELECT 
+          id,
+          tenant_id as "tenantId",
+          title as "name",
+          subtitle as "technique",
+          category as "tag",
+          image_url as "imageUrl",
+          sort_order as "sortOrder",
+          is_active as "isActive",
+          created_at as "createdAt"
+        FROM public.gallery_slides
+        WHERE tenant_id = ${tenantSlug}
+        ORDER BY sort_order ASC, created_at DESC
+        LIMIT 40;
       `;
-      return res.status(200).json({ cols: cols.map((c: any) => c.column_name) });
+
+      return res.status(200).json({
+        slides: rows || [],
+        databaseConnected: true,
+      });
     } catch (err: any) {
       console.error('[Neon Get Gallery Error]:', err);
-      return res.status(500).json({ error: 'Error al consultar imágenes de la galería.', details: err?.message, stack: err?.stack });
+      return res.status(500).json({ error: 'Error al consultar imágenes de la galería.' });
     }
   }
 
   // ─── POST: Añadir o actualizar imagen por salón ────────────────────────────
   if (req.method === 'POST') {
     try {
-      const { id, name, imageUrl, tag, technique } = req.body || {};
-      if (!name || !imageUrl) {
-        return res.status(400).json({ error: 'Nombre e imagen son obligatorios.' });
+      const { id, name, imageUrl, tag, technique, title, subtitle, category } = req.body || {};
+      const finalTitle = String(title || name || '').trim().slice(0, 120);
+      const finalImage = String(imageUrl || '').trim();
+
+      if (!finalTitle || !finalImage) {
+        return res.status(400).json({ error: 'Nombre/título e imagen son obligatorios.' });
       }
 
       const countRes = await sql`
@@ -83,24 +81,32 @@ export default async function handler(req: any, res: any) {
       }
 
       const slideId = id || `slide_${Date.now()}`;
-      const cleanName = String(name).trim().slice(0, 120);
-      const cleanTag = tag ? String(tag).trim().slice(0, 100) : 'Diseño Real';
-      const cleanTech = technique ? String(technique).trim().slice(0, 120) : '';
+      const finalSubtitle = String(subtitle || technique || '').trim().slice(0, 120);
+      const finalCategory = String(category || tag || 'Diseño Real').trim().slice(0, 100);
 
       await sql`
-        INSERT INTO public.gallery_slides (id, tenant_id, name, image_url, tag, technique)
-        VALUES (${slideId}, ${tenantSlug}, ${cleanName}, ${imageUrl}, ${cleanTag}, ${cleanTech})
+        INSERT INTO public.gallery_slides (id, tenant_id, title, subtitle, category, image_url, is_active)
+        VALUES (${slideId}, ${tenantSlug}, ${finalTitle}, ${finalSubtitle}, ${finalCategory}, ${finalImage}, true)
         ON CONFLICT (id) DO UPDATE SET
           tenant_id = EXCLUDED.tenant_id,
-          name = EXCLUDED.name,
+          title = EXCLUDED.title,
+          subtitle = EXCLUDED.subtitle,
+          category = EXCLUDED.category,
           image_url = EXCLUDED.image_url,
-          tag = EXCLUDED.tag,
-          technique = EXCLUDED.technique;
+          is_active = EXCLUDED.is_active;
       `;
 
       return res.status(200).json({
         success: true,
-        slide: { id: slideId, tenantId: tenantSlug, name: cleanName, imageUrl, tag: cleanTag, technique: cleanTech }
+        slide: {
+          id: slideId,
+          tenantId: tenantSlug,
+          name: finalTitle,
+          technique: finalSubtitle,
+          tag: finalCategory,
+          imageUrl: finalImage,
+          isActive: true
+        }
       });
     } catch (err: any) {
       console.error('[Neon Save Gallery Error]:', err);
