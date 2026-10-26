@@ -77,14 +77,18 @@ CREATE TABLE IF NOT EXISTS "invitation" (
     "role" TEXT,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "expiresAt" TIMESTAMP NOT NULL,
-    "inviterId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE
+    "inviterId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS "twoFactor" (
     "id" TEXT PRIMARY KEY,
     "secret" TEXT NOT NULL,
     "backupCodes" TEXT NOT NULL,
-    "userId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE
+    "userId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+    "verified" BOOLEAN DEFAULT FALSE,
+    "failedVerificationCount" INTEGER DEFAULT 0,
+    "lockedUntil" TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS "rateLimit" (

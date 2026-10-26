@@ -35,6 +35,11 @@ export const auth = betterAuth({
       },
     },
   },
+  advanced: {
+    database: {
+      validateSchema: false,
+    },
+  },
   plugins: [
     organization({
       allowUserToCreateOrganization: true,
