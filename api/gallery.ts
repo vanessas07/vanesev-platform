@@ -75,7 +75,7 @@ export default async function handler(req: any, res: any) {
       });
     } catch (err: any) {
       console.error('[Neon Get Gallery Error]:', err);
-      return res.status(500).json({ error: 'Error al consultar imágenes de la galería.' });
+      return res.status(500).json({ error: 'Error al consultar imágenes de la galería.', details: err?.message, stack: err?.stack });
     }
   }
 
