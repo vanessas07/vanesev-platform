@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Palette,
   Type,
-  Layout,
-  Sparkles,
+  Layout,
   Smartphone,
   ShieldCheck,
   CheckCircle2,
@@ -21,7 +20,7 @@ import {
 
 export const TokensDesignSystem: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'tokens' | 'typography' | 'web_copy' | 'bocetos' | 'capra_themes' | 'motion' | 'audit'>('tokens');
-  const [capraThemeSelected, setCapraThemeSelected] = useState<'opcion1' | 'opcion2'>('opcion1');
+  const [capraThemeSelected, setCapraThemeSelected] = useState<'salvia' | 'ambar' | 'cobalto' | 'grafito'>('salvia');
 
   // Tokens oficiales VANESEV "Ciruela imperial" (Fondo Claro)
   const tokens = [
@@ -29,15 +28,15 @@ export const TokensDesignSystem: React.FC = () => {
     { name: '--v-surface', hex: '#FFFFFF', role: 'Superficie de tarjetas y modales', contrast: 'Base', level: 'Base', isLight: true },
     { name: '--v-surface-2', hex: '#F4F2F7', role: 'Zonas alternas, hover y sidebars', contrast: '1.05:1 vs bg', level: 'Estructural', isLight: true },
     { name: '--v-line', hex: '#E4E2EA', role: 'Bordes finos de 1px y separadores platino', contrast: '1.2:1 vs bg', level: 'Estructural', isLight: true },
-    { name: '--v-ink', hex: '#24152B', role: 'Texto titular y lectura principal (tinta ciruela)', contrast: '14.8:1 vs bg', level: 'AAA', isLight: false },
-    { name: '--v-muted', hex: '#6E6478', role: 'Texto secundario, metadatos y ayudas', contrast: '4.9:1 vs bg', level: 'AA', isLight: false },
-    { name: '--v-brand', hex: '#5B2A6E', role: 'Ciruela imperial: CTA principal y acentos', contrast: '7.4:1 vs bg', level: 'AAA', isLight: false },
-    { name: '--v-brand-hover', hex: '#4A2159', role: 'Hover / activo del botón CTA', contrast: '9.5:1 vs bg', level: 'AAA', isLight: false },
+    { name: '--v-ink', hex: '#24152B', role: 'Texto titular y lectura principal (tinta ciruela)', contrast: '16.58:1 vs bg', level: 'AAA', isLight: false },
+    { name: '--v-muted', hex: '#6E6478', role: 'Texto secundario, metadatos y ayudas', contrast: '5.37:1 vs bg', level: 'AA', isLight: false },
+    { name: '--v-brand', hex: '#5B2A6E', role: 'Ciruela imperial: CTA principal y acentos', contrast: '10.08:1 vs bg', level: 'AAA', isLight: false },
+    { name: '--v-brand-hover', hex: '#4A2159', role: 'Hover / activo del botón CTA', contrast: '12.21:1 vs bg', level: 'AAA', isLight: false },
     { name: '--v-brand-soft', hex: '#EEE7F2', role: 'Chips activos, selección sutil', contrast: '1.15:1 vs bg', level: 'Decorativo', isLight: true },
-    { name: '--v-platinum', hex: '#B9BCC6', role: 'Filetes platino de lujo y separadores', contrast: '1.8:1 vs bg', level: 'Estructural', isLight: true },
-    { name: '--v-ok', hex: '#1F7A5A', role: 'Confirmación, citas agendadas, éxito', contrast: '4.8:1 vs bg', level: 'AA', isLight: false },
-    { name: '--v-warn', hex: '#B26A00', role: 'Avisos de agenda, límites próximos', contrast: '4.6:1 vs bg', level: 'AA', isLight: false },
-    { name: '--v-danger', hex: '#B3261E', role: 'Alertas críticas, cancelaciones', contrast: '5.2:1 vs bg', level: 'AA', isLight: false },
+    { name: '--v-platinum', hex: '#B9BCC6', role: 'Filetes platino de lujo y separadores', contrast: '1.82:1 vs bg', level: 'Estructural', isLight: true },
+    { name: '--v-ok', hex: '#1F7A5A', role: 'Confirmación, citas agendadas, éxito', contrast: '5.06:1 vs bg', level: 'AA', isLight: false },
+    { name: '--v-warn', hex: '#B26A00', role: 'Avisos de agenda, límites próximos', contrast: '4.07:1 vs bg', level: 'AA', isLight: false },
+    { name: '--v-danger', hex: '#B3261E', role: 'Alertas críticas, cancelaciones', contrast: '6.28:1 vs bg', level: 'AA', isLight: false },
   ];
 
   return (
@@ -485,99 +484,131 @@ export const TokensDesignSystem: React.FC = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-2xl font-serif font-semibold text-[#24152B]">
-                2 Opciones de Tema de Autor para Capra Studio
+                4 Opciones de Tema de Autor para Capra Studio (San Cristóbal)
               </h2>
               <p className="text-xs text-[#6E6478] mt-1 max-w-3xl">
-                Capra Studio (@caprastudio_ de María Giovanna Capra) debe tener identidad visual 100% propia, guardada en Neon
-                y totalmente diferenciada de la Ciruela imperial de VANESEV y del verde de Andrea Nails. karc0 elige la opción final.
+                Capra Studio (@caprastudio_ de María Giovanna Capra, en San Cristóbal, Táchira) debe tener identidad visual 100% propia, guardada en Neon
+                y totalmente diferenciada de la Ciruela imperial de VANESEV y del verde de Andrea Nails. 4 familias claras, sin marrón, sin crema y sin ciruela. karc0 elige la opción final.
               </p>
             </div>
 
-            {/* Selector de Opción */}
-            <div className="flex gap-4">
+            {/* Selector de 4 Opciones */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
-                onClick={() => setCapraThemeSelected('opcion1')}
-                className={`flex-1 p-4 rounded-2xl border text-left transition-all ${
-                  capraThemeSelected === 'opcion1'
-                    ? 'border-[#9E6B7A] bg-[#9E6B7A]/5 shadow-sm ring-2 ring-[#9E6B7A]/20'
+                onClick={() => setCapraThemeSelected('salvia')}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  capraThemeSelected === 'salvia'
+                    ? 'border-[#2B5948] bg-[#2B5948]/5 shadow-sm ring-2 ring-[#2B5948]/20'
                     : 'border-[#E4E2EA] bg-white hover:bg-[#F4F2F7]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-sm text-[#24152B]">Opción 1: Velvet Champagne & Mauve</span>
-                  {capraThemeSelected === 'opcion1' && <CheckCircle2 className="w-4 h-4 text-[#9E6B7A]" />}
+                  <span className="font-bold text-sm text-[#24152B]">1. Salvia & Platino</span>
+                  {capraThemeSelected === 'salvia' && <CheckCircle2 className="w-4 h-4 text-[#2B5948]" />}
                 </div>
                 <p className="text-xs text-[#6E6478]">
-                  Mauve cálido (#9E6B7A) + Champagne satinado (#D4AF37) + Fondo Lino suave (#FAF7F5). Tipografía Cinzel + Plus Jakarta Sans.
+                  Verde salvia imperial (#2B5948) + Platino (#D3DCD6) + Fondo Porcelana salvia (#F7F9F8). Botánica clínica de lujo.
                 </p>
               </button>
 
               <button
-                onClick={() => setCapraThemeSelected('opcion2')}
-                className={`flex-1 p-4 rounded-2xl border text-left transition-all ${
-                  capraThemeSelected === 'opcion2'
-                    ? 'border-[#A85A48] bg-[#A85A48]/5 shadow-sm ring-2 ring-[#A85A48]/20'
+                onClick={() => setCapraThemeSelected('ambar')}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  capraThemeSelected === 'ambar'
+                    ? 'border-[#8A6518] bg-[#8A6518]/5 shadow-sm ring-2 ring-[#8A6518]/20'
                     : 'border-[#E4E2EA] bg-white hover:bg-[#F4F2F7]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-sm text-[#24152B]">Opción 2: Warm Terra & Pearl Bronze</span>
-                  {capraThemeSelected === 'opcion2' && <CheckCircle2 className="w-4 h-4 text-[#A85A48]" />}
+                  <span className="font-bold text-sm text-[#24152B]">2. Ámbar & Champagne</span>
+                  {capraThemeSelected === 'ambar' && <CheckCircle2 className="w-4 h-4 text-[#8A6518]" />}
                 </div>
                 <p className="text-xs text-[#6E6478]">
-                  Terracota sedosa (#A85A48) + Bronce perlado (#C29B7F) + Fondo Perla cálida (#FDFBF7). Tipografía Playfair Display + Inter.
+                  Oro ámbar noble (#8A6518) + Arena pulida (#E5DFD1) + Fondo Perla lino (#FAFAF7). Luz de alta costura (sin marrón).
+                </p>
+              </button>
+
+              <button
+                onClick={() => setCapraThemeSelected('cobalto')}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  capraThemeSelected === 'cobalto'
+                    ? 'border-[#1B3B6F] bg-[#1B3B6F]/5 shadow-sm ring-2 ring-[#1B3B6F]/20'
+                    : 'border-[#E4E2EA] bg-white hover:bg-[#F4F2F7]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm text-[#24152B]">3. Cobalto Couture</span>
+                  {capraThemeSelected === 'cobalto' && <CheckCircle2 className="w-4 h-4 text-[#1B3B6F]" />}
+                </div>
+                <p className="text-xs text-[#6E6478]">
+                  Azul zafiro (#1B3B6F) + Filete acero (#D4DEE9) + Fondo Hielo zafiro (#F6F8FB). Estatus joyero europeo.
+                </p>
+              </button>
+
+              <button
+                onClick={() => setCapraThemeSelected('grafito')}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  capraThemeSelected === 'grafito'
+                    ? 'border-[#2C3038] bg-[#2C3038]/5 shadow-sm ring-2 ring-[#2C3038]/20'
+                    : 'border-[#E4E2EA] bg-white hover:bg-[#F4F2F7]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm text-[#24152B]">4. Grafito Perla</span>
+                  {capraThemeSelected === 'grafito' && <CheckCircle2 className="w-4 h-4 text-[#2C3038]" />}
+                </div>
+                <p className="text-xs text-[#6E6478]">
+                  Titanio grafito (#2C3038) + Platino neutro (#DFE1E5) + Fondo Nieve titanio (#F9F9FA). Galería editorial suiza.
                 </p>
               </button>
             </div>
 
             {/* Live Interactive Preview Card for Capra Studio */}
-            <div
-              className="rounded-3xl p-6 sm:p-8 border shadow-sm transition-all"
-              style={{
-                backgroundColor: capraThemeSelected === 'opcion1' ? '#FAF7F5' : '#FDFBF7',
-                borderColor: capraThemeSelected === 'opcion1' ? '#E8DFD8' : '#EAE2D8',
-                color: capraThemeSelected === 'opcion1' ? '#2D2327' : '#241E1D',
-              }}
-            >
-              <div className="max-w-md mx-auto bg-white rounded-3xl p-6 border shadow-sm space-y-4" style={{ borderColor: capraThemeSelected === 'opcion1' ? '#E8DFD8' : '#EAE2D8' }}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3
-                      className="text-xl font-bold tracking-tight"
-                      style={{
-                        fontFamily: capraThemeSelected === 'opcion1' ? 'Cinzel, serif' : 'Playfair Display, serif',
-                        color: capraThemeSelected === 'opcion1' ? '#9E6B7A' : '#A85A48',
-                      }}
-                    >
-                      CAPRA STUDIO
-                    </h3>
-                    <p className="text-[11px] text-gray-500">By María Giovanna Capra · San Cristóbal</p>
-                  </div>
-                  <span
-                    className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white"
-                    style={{ backgroundColor: capraThemeSelected === 'opcion1' ? '#9E6B7A' : '#A85A48' }}
-                  >
-                    Atelier VIP
-                  </span>
-                </div>
+            {(() => {
+              const themesConfig = {
+                salvia: { primary: '#2B5948', accent: '#D3DCD6', bg: '#F7F9F8', text: '#1A2A22', font: 'Cinzel, serif', name: 'Salvia & Platino' },
+                ambar: { primary: '#8A6518', accent: '#E5DFD1', bg: '#FAFAF7', text: '#2B2519', font: 'Playfair Display, serif', name: 'Ámbar & Champagne Frío' },
+                cobalto: { primary: '#1B3B6F', accent: '#D4DEE9', bg: '#F6F8FB', text: '#111E33', font: 'Italiana, serif', name: 'Cobalto Couture' },
+                grafito: { primary: '#2C3038', accent: '#DFE1E5', bg: '#F9F9FA', text: '#181A1F', font: 'DM Serif Display, serif', name: 'Grafito Perla' },
+              };
+              const curr = themesConfig[capraThemeSelected];
+              return (
+                <div
+                  className="rounded-3xl p-6 sm:p-8 border shadow-sm transition-all"
+                  style={{ backgroundColor: curr.bg, borderColor: curr.accent, color: curr.text }}
+                >
+                  <div className="max-w-md mx-auto bg-white rounded-3xl p-6 border shadow-sm space-y-4" style={{ borderColor: curr.accent }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight" style={{ fontFamily: curr.font, color: curr.primary }}>
+                          CAPRA STUDIO
+                        </h3>
+                        <p className="text-[11px] text-gray-500">By María Giovanna Capra · San Cristóbal (Táchira)</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: curr.primary }}>
+                        {curr.name}
+                      </span>
+                    </div>
 
-                <div className="p-4 rounded-2xl border space-y-2" style={{ backgroundColor: capraThemeSelected === 'opcion1' ? '#FAF7F5' : '#FDFBF7', borderColor: capraThemeSelected === 'opcion1' ? '#E8DFD8' : '#EAE2D8' }}>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-xs">Brow Lamination + Botox Nutritivo</span>
-                    <span className="font-bold text-xs" style={{ color: capraThemeSelected === 'opcion1' ? '#9E6B7A' : '#A85A48' }}>$20 USD</span>
+                    <div className="p-4 rounded-2xl border space-y-2" style={{ backgroundColor: curr.bg, borderColor: curr.accent }}>
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-xs">Brow Lamination + Botox Nutritivo</span>
+                        <span className="font-bold text-xs" style={{ color: curr.primary }}>$20 USD</span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 leading-snug">
+                        Reestructuración de cejas rebeldes con efecto pluma y alineación direccional de vello.
+                      </p>
+                      <button
+                        className="w-full mt-2 py-2 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-xs"
+                        style={{ backgroundColor: curr.primary }}
+                      >
+                        Reservar con Especialista
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-gray-600 leading-snug">
-                    Reestructuración de cejas rebeldes con efecto pluma y alineación direccional de vello.
-                  </p>
-                  <button
-                    className="w-full mt-2 py-2 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-xs"
-                    style={{ backgroundColor: capraThemeSelected === 'opcion1' ? '#9E6B7A' : '#A85A48' }}
-                  >
-                    Reservar con Especialista
-                  </button>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         )}
 

@@ -622,7 +622,29 @@ export const App: React.FC = () => {
   );
 
   // ─── PÁGINA INTERACTIVA: /__tokens (SISTEMA DE TOKENS CIRUELA IMPERIAL) ───
+  // ─── PÁGINA INTERACTIVA: /__tokens (SISTEMA DE TOKENS CIRUELA IMPERIAL) ───
   if (isTokensRoute) {
+    const isProductionHost =
+      window.location.hostname === 'vanesev.com' ||
+      window.location.hostname === 'www.vanesev.com';
+
+    if (isProductionHost) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#FBFAFC] text-[#24152B] p-6 font-sans">
+          <div className="max-w-md text-center">
+            <h1 className="text-6xl font-serif font-light mb-4 text-[#5B2A6E]">404</h1>
+            <p className="text-lg text-[#6E6478] mb-6">Página no encontrada.</p>
+            <a
+              href="/"
+              className="inline-block px-5 py-2.5 bg-[#5B2A6E] text-white rounded-lg text-sm font-medium hover:bg-[#4A2159] transition-colors"
+            >
+              Volver al inicio
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     return <TokensDesignSystem />;
   }
 

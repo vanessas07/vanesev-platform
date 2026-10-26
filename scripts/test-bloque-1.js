@@ -329,9 +329,19 @@ async function runTests() {
     });
     await centralHandler(req, res);
     const r = getResult();
-    const ok = r.status === 200 && r.data?.tenant?.id === 'capra-studio';
-    results.push({ caseId: 11, name: 'GET /api/central?mode=tenant_context público', expected: 200, actual: r.status, pass: ok });
-    console.log(`[Case 11] Tenant Context público -> Status: ${r.status}, Tenant: ${r.data?.tenant?.name} [${ok ? 'PASS' : 'FAIL'}]`);
+    const forbiddenFields = [
+      'owner_email', 'owner_name', 'plan_type', 'subscription_status',
+      'monthly_fee_usd', 'is_lifetime_free', 'payment_methods_config',
+      'phone', 'email', 'commission_percent'
+    ];
+    const tenantKeys = Object.keys(r.data?.tenant || {});
+    const staffKeys = (r.data?.staff || []).flatMap(s => Object.keys(s));
+    const leakedTenant = tenantKeys.filter(k => forbiddenFields.includes(k));
+    const leakedStaff = staffKeys.filter(k => forbiddenFields.includes(k));
+    const hasForbidden = leakedTenant.length > 0 || leakedStaff.length > 0;
+    const ok = r.status === 200 && r.data?.tenant?.id === 'capra-studio' && Boolean(r.data?.tenant?.business_name) && !hasForbidden;
+    results.push({ caseId: 11, name: 'GET /api/central?mode=tenant_context público (0 datos prohibidos)', expected: 200, actual: r.status, pass: ok });
+    console.log(`[Case 11] Tenant Context público -> Status: ${r.status}, Tenant: ${r.data?.tenant?.business_name}, Forbidden: ${leakedTenant.length + leakedStaff.length} [${ok ? 'PASS' : 'FAIL'}]`);
   }
 
   console.log('\n================================================================');
