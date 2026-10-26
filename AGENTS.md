@@ -58,7 +58,7 @@ El sistema opera bajo 5 zonas con aislamiento absoluto:
 
 ## 5. Integración con Memoria Local Compartida (`mem.cjs`)
 Por directriz del usuario karc0 (verificada en `RULE[user_global]`):
-- Al iniciar cualquier tarea: `node --no-warnings C:\Users\karc0\.claude\memoria\mem.cjs resumen --p dkitchen`
+- Al iniciar cualquier tarea: `node --no-warnings C:\Users\karc0\.claude\memoria\mem.cjs resumen --p vanesev`
 - Al finalizar cualquier tarea: registrar `hecho`, `pendiente` o `leccion` con `--agente <nombre>`.
 - Prohibido almacenar contraseñas, tokens de Neon o credenciales en texto plano.
 

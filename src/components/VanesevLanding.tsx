@@ -494,7 +494,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               </button>
             </div>
 
-            {/* Direct Sub-Links (DKitchen Funnel Pattern) */}
+            {/* Direct Sub-Links */}
             <p className="mt-6 text-xs sm:text-sm text-[#574B4F]">
               ¿Solo quieres la carta digital QR?{" "}
               <button
@@ -1971,7 +1971,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         </div>
       </footer>
 
-      {/* ─── FLOATING WHATSAPP COMMERCIAL BUTTON (BOTTOM-LEFT LIKE DKITCHEN) ─── */}
+      {/* ─── FLOATING WHATSAPP COMMERCIAL BUTTON (BOTTOM-LEFT) ─── */}
       <a
         href="https://wa.me/584223794800?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20VANESEV%20para%20mi%20sal%C3%B3n%20de%20belleza."
         target="_blank"
