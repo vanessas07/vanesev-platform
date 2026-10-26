@@ -367,6 +367,12 @@ export default async function handler(req: any, res: any) {
     // 3. SCOPE: CLIENTA (Compatibility bridge for client_accounts)
     // =========================================================================
     if (scope === 'clienta') {
+      if (action === 'oauth_login' || action === 'oauth_complete') {
+        return res.status(410).json({
+          error: 'OAuth endpoint deprecated and disabled. Native Google/Apple server verification will be implemented in Bloque 6.'
+        });
+      }
+
       const phone = String(body.phone || '').replace(/\D/g, '');
       if (action === 'check') {
         const clients = await sql`
@@ -383,6 +389,6 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: `Scope no soportado: ${scope}` });
   } catch (err: any) {
     console.error('Error in /api/auth:', err);
-    return res.status(500).json({ error: 'Error interno en autenticación.', details: err.message });
+    return res.status(500).json({ error: 'Error interno en autenticación.' });
   }
 }

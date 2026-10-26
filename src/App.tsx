@@ -16,6 +16,7 @@ import { PWAInstallModal } from './components/PWAInstallModal';
 import { LegalModals, LegalModalType } from './components/LegalModals';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { CapraStudioExperience } from './components/CapraStudioExperience';
+import { TokensDesignSystem } from './components/TokensDesignSystem';
 import { AppStore } from './services/store';
 import { ServiceItem, PromoOffer, GallerySlide } from './types';
 
@@ -277,6 +278,12 @@ export const App: React.FC = () => {
     const hash = window.location.hash.toLowerCase();
     const search = new URLSearchParams(window.location.search);
 
+    const isTokens =
+      path.startsWith('/__tokens') ||
+      path.startsWith('/tokens') ||
+      hash === '#tokens' ||
+      search.has('tokens');
+
     const isCentral =
       path.startsWith('/central') ||
       hash === '#central' ||
@@ -321,10 +328,11 @@ export const App: React.FC = () => {
         search.get('zone') === 'saas' ||
         !hasExplicitSalon);
 
-    return { isCentral, isSaasLanding, isAdmin: isAdmin && hasExplicitSalon, tenant };
+    return { isTokens, isCentral, isSaasLanding: !isTokens && isSaasLanding, isAdmin: isAdmin && hasExplicitSalon, tenant };
   };
 
   const initialRoute = resolveInitialRoute();
+  const [isTokensRoute, setIsTokensRoute] = useState(initialRoute.isTokens);
   const [isCentralRoute, setIsCentralRoute] = useState(initialRoute.isCentral);
   const [isSaasRoute, setIsSaasRoute] = useState(initialRoute.isSaasLanding);
   const [activeTenant, setActiveTenant] = useState<string>(initialRoute.tenant);
@@ -612,6 +620,11 @@ export const App: React.FC = () => {
       </div>
     </div>
   );
+
+  // ─── PÁGINA INTERACTIVA: /__tokens (SISTEMA DE TOKENS CIRUELA IMPERIAL) ───
+  if (isTokensRoute) {
+    return <TokensDesignSystem />;
+  }
 
   // ─── ZONA 2: VANESEV CENTRAL (SUPER-ADMIN COMMAND CENTER FOR KARC0) ───────
   if (isCentralRoute) {
