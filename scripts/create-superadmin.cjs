@@ -61,12 +61,14 @@ function getConnectionString() {
 }
 
 async function main() {
-  const email = process.env.SUPERADMIN_EMAIL || process.argv.find(a => a.startsWith('--email='))?.split('=')[1];
-  const password = process.env.SUPERADMIN_PASSWORD || process.argv.find(a => a.startsWith('--password='))?.split('=')[1];
+  const email = process.env.SUPERADMIN_EMAIL;
+  const password = process.env.SUPERADMIN_PASSWORD;
 
   if (!email || !password) {
-    console.error('ERROR: Missing SUPERADMIN_EMAIL or SUPERADMIN_PASSWORD environment variables.');
-    console.error('Example: $env:SUPERADMIN_EMAIL="karc.0194@gmail.com"; $env:SUPERADMIN_PASSWORD="..."; node scripts/create-superadmin.cjs');
+    console.error('ERROR: Faltan las variables de entorno obligatorias SUPERADMIN_EMAIL o SUPERADMIN_PASSWORD.');
+    console.error('Por seguridad, la contraseña NUNCA se pasa por línea de comandos (--password=).');
+    console.error('Uso seguro en PowerShell:');
+    console.error('  $env:SUPERADMIN_EMAIL="karc.0194@gmail.com"; $env:SUPERADMIN_PASSWORD="..."; node scripts/create-superadmin.cjs; Remove-Item Env:\\SUPERADMIN_PASSWORD');
     process.exit(1);
   }
 

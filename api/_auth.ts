@@ -148,18 +148,47 @@ export function serializeCookie(
   return parts.join('; ');
 }
 
-// Secret Resolution
+// CORS Whitelist Filter: Only exact *.vanesev.com or localhost in non-production
+export function applyCors(req: any, res: any): void {
+  const origin = (req.headers?.origin || '').trim();
+  const isVanesev = /^https:\/\/([a-z0-9-]+\.)?vanesev\.com$/.test(origin);
+  const isLocalDev =
+    process.env.VERCEL_ENV !== 'production' &&
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+  if (isVanesev || isLocalDev) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PATCH,DELETE');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+  }
+}
+
+// Secret Resolution - ZERO FALLBACKS (Throws fatal error if missing)
+export function requireEnv(name: string): string {
+  const val = process.env[name];
+  if (!val || !val.trim()) {
+    throw new Error(`FATAL: Variable de entorno obligatoria '${name}' no está configurada.`);
+  }
+  return val.trim();
+}
+
 export function getAuthSecret(scope: 'central' | 'admin' | 'staff' | 'clienta' = 'central'): string {
-  if (scope === 'central') {
-    return process.env.CENTRAL_AUTH_SECRET || process.env.ADMIN_AUTH_SECRET || 'vanesev-central-master-secret-fallback-2026';
+  switch (scope) {
+    case 'central':
+      return requireEnv('CENTRAL_AUTH_SECRET');
+    case 'admin':
+      return requireEnv('ADMIN_AUTH_SECRET');
+    case 'staff':
+      return requireEnv('STAFF_AUTH_SECRET');
+    case 'clienta':
+      return requireEnv('CLIENT_AUTH_SECRET');
+    default:
+      throw new Error(`Scope desconocido: ${scope}`);
   }
-  if (scope === 'admin') {
-    return process.env.ADMIN_AUTH_SECRET || 'vanesev-admin-secret-fallback-2026';
-  }
-  if (scope === 'staff') {
-    return process.env.STAFF_AUTH_SECRET || process.env.ADMIN_AUTH_SECRET || 'vanesev-staff-secret-fallback-2026';
-  }
-  return process.env.CLIENT_AUTH_SECRET || 'vanesev-client-secret-fallback-2026';
 }
 
 // Superadmin Session Validator for Central APIs
@@ -191,7 +220,11 @@ export async function validateSuperadminSession(
     }
 
     // Connect to database to verify session version and active status
-    const sql = sqlInstance || neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || '');
+    const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!sqlInstance && !dbUrl) {
+      throw new Error('FATAL: Variable DATABASE_URL no está configurada.');
+    }
+    const sql = sqlInstance || neon(dbUrl);
     const users = await sql`
       SELECT id, email, session_version, failed_attempts, locked_until
       FROM public.system_superadmins

@@ -242,6 +242,19 @@ async function runTests() {
   // Case 9: Verificación con código de recuperación (un solo uso)
   // ---------------------------------------------------------------------------
   {
+    // Inject a single-use test recovery code for deterministic testing
+    const testRecoveryCode = 'TEST-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+    const testHash = crypto.createHash('sha256').update(testRecoveryCode).digest('hex');
+    await sql`
+      UPDATE public.system_superadmins
+      SET recovery_codes = jsonb_set(
+        COALESCE(recovery_codes, '[]'::jsonb),
+        '{0}',
+        ${JSON.stringify({ hash: testHash, used: false, used_at: null })}::jsonb
+      )
+      WHERE email = ${testEmail};
+    `;
+
     // Generate new tempToken
     const { req: lReq, res: lRes, getResult: lGet } = createMockReqRes({
       method: 'POST',
@@ -251,11 +264,11 @@ async function runTests() {
     await authHandler(lReq, lRes);
     const recTempToken = lGet().data?.tempToken;
 
-    // Use recovery code #1 (YSPU-NGBL)
+    // Use recovery code
     const { req, res, getResult } = createMockReqRes({
       method: 'POST',
       query: { scope: 'central' },
-      body: { action: 'verify_2fa', tempToken: recTempToken, code: 'YSPU-NGBL' },
+      body: { action: 'verify_2fa', tempToken: recTempToken, code: testRecoveryCode },
     });
     await authHandler(req, res);
     const r = getResult();
@@ -265,7 +278,7 @@ async function runTests() {
     const { req: rReq, res: rRes, getResult: rGet } = createMockReqRes({
       method: 'POST',
       query: { scope: 'central' },
-      body: { action: 'verify_2fa', tempToken: recTempToken, code: 'YSPU-NGBL' },
+      body: { action: 'verify_2fa', tempToken: recTempToken, code: testRecoveryCode },
     });
     await authHandler(rReq, rRes);
     const rReused = rGet();

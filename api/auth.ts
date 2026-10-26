@@ -15,11 +15,14 @@ import {
   parseCookies,
   getAuthSecret,
   validateSuperadminSession,
+  applyCors,
 } from './_auth.ts';
 
 function getDb() {
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!connectionString) return null;
+  if (!connectionString) {
+    throw new Error('FATAL: Variable DATABASE_URL no está configurada.');
+  }
   return neon(connectionString);
 }
 
@@ -34,24 +37,9 @@ function getClientIp(req: any): string {
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  const origin = req.headers.origin || '';
-  if (
-    origin.endsWith('vanesev.com') ||
-    origin.includes('localhost') ||
-    origin.includes('127.0.0.1')
-  ) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://vanesev.com');
-  }
-
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
+  // Strict CORS filter: exact *.vanesev.com or localhost outside production
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
