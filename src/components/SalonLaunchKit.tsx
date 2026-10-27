@@ -251,12 +251,12 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
   return (
     <div className="space-y-8">
       {/* Guía corta de sección */}
-      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#24152B]/10 flex items-start gap-3.5 print:hidden">
-        <div className="p-2 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] shrink-0 mt-0.5">
+      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start gap-3.5 print:hidden">
+        <div className="p-2 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] shrink-0 mt-0.5">
           <HelpCircle className="w-4 h-4" />
         </div>
         <div className="text-xs text-[#6E6478] leading-relaxed">
-          <p className="font-bold text-[#24152B] text-sm mb-0.5">Kit de Lanzamiento & Cartelería Oficial</p>
+          <p className="font-bold text-[#1A1020] text-sm mb-0.5">Kit de Lanzamiento & Cartelería Oficial</p>
           <p>
             Genera automáticamente las piezas físicas para recepción, espejos de tocador y tarjetas de visita,
             además de las creatividades digitales en alta resolución (1080 px) para historias y publicaciones de Instagram.
@@ -266,11 +266,11 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
       </div>
 
       {/* Barra de acciones print & download */}
-      <div className="p-4 rounded-2xl bg-white border border-[#24152B]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
+      <div className="p-4 rounded-2xl bg-white border border-[#1A1020]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
-          <span className="text-xs font-bold text-[#24152B] block">Piezas Listas para Producción</span>
+          <span className="text-xs font-bold text-[#1A1020] block">Piezas Listas para Producción</span>
           <span className="text-[11px] text-[#6E6478]">
-            Destino configurado: <strong className="text-[#5B2A6E] font-mono">{targetUrl}</strong>
+            Destino configurado: <strong className="text-[#4A1F5C] font-mono">{targetUrl}</strong>
           </span>
         </div>
 
@@ -278,7 +278,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
           <button
             type="button"
             onClick={imprimirKit}
-            className="px-4 py-2 rounded-full bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2"
+            className="px-4 py-2 rounded-full bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Imprimir Piezas Físicas (A5, Tarjeta, Pegatina)</span>
@@ -337,7 +337,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
         {/* PIEZA 2 & 3: Tarjeta de visita (85x55 mm) y Pegatina redonda (60 mm) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto print-page-break">
           {/* Tarjeta de visita 85 x 55 mm */}
-          <div className="p-5 rounded-2xl bg-white border border-[#24152B]/15 shadow-sm space-y-3">
+          <div className="p-5 rounded-2xl bg-white border border-[#1A1020]/15 shadow-sm space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A3E4A] block print:hidden">
               Pieza 2: Tarjeta de Visita (85 × 55 mm)
             </span>
@@ -347,7 +347,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
                   CARTA EXCLUSIVA
                 </span>
                 <p className="font-serif font-bold text-lg leading-tight text-white">{salonNombre}</p>
-                <p className="text-[10px] text-stone-300 leading-tight">Escanea para consultar disponibilidad y tarifas.</p>
+                <p className="text-[10px] text-[#6E6478] leading-tight">Escanea para consultar disponibilidad y tarifas.</p>
                 <p className="text-[9px] text-[#C5A059] font-mono">{targetUrl.replace('https://', '')}</p>
               </div>
               <div className="w-24 h-24 p-1.5 bg-white rounded-lg shrink-0 flex items-center justify-center">
@@ -357,7 +357,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
           </div>
 
           {/* Pegatina redonda 60 mm */}
-          <div className="p-5 rounded-2xl bg-white border border-[#24152B]/15 shadow-sm space-y-3">
+          <div className="p-5 rounded-2xl bg-white border border-[#1A1020]/15 shadow-sm space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A3E4A] block print:hidden">
               Pieza 3: Pegatina Redonda (Diámetro 60 mm)
             </span>
@@ -377,10 +377,10 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
       </div>
 
       {/* ── SECCIÓN 2: CREATIVIDADES DIGITALES PARA REDES SOCIALES ── */}
-      <div className="space-y-4 print:hidden pt-4 border-t border-[#24152B]/10">
+      <div className="space-y-4 print:hidden pt-4 border-t border-[#1A1020]/10">
         <div>
-          <h4 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-            <Smartphone className="w-4 h-4 text-[#5B2A6E]" />
+          <h4 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+            <Smartphone className="w-4 h-4 text-[#4A1F5C]" />
             <span>Creatividades Digitales para Redes Sociales</span>
           </h4>
           <p className="text-xs text-[#6E6478] mt-0.5">
@@ -390,11 +390,11 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pieza 4: Historia de Instagram (1080x1920) */}
-          <div className="p-5 rounded-2xl bg-white border border-[#24152B]/10 space-y-3 flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-white border border-[#1A1020]/10 space-y-3 flex flex-col justify-between">
             <div>
-              <span className="text-xs font-bold text-[#24152B] block">Historia de Instagram (1080 × 1920 PNG)</span>
+              <span className="text-xs font-bold text-[#1A1020] block">Historia de Instagram (1080 × 1920 PNG)</span>
               <p className="text-[11px] text-[#6E6478]">Formato vertical ideal para historias destacadas o publicaciones temporales.</p>
-              <div className="mt-3 p-3 bg-stone-100 rounded-xl flex items-center justify-center overflow-hidden max-h-[300px]">
+              <div className="mt-3 p-3 bg-[#F4F2F7] rounded-xl flex items-center justify-center overflow-hidden max-h-[300px]">
                 <canvas ref={storyCanvasRef} className="w-auto h-[260px] rounded-lg shadow-sm" />
               </div>
             </div>
@@ -402,7 +402,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
               type="button"
               onClick={descargarStory}
               disabled={downloadingStory}
-              className="w-full mt-2 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-2 py-2.5 rounded-xl bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{downloadingStory ? 'Generando PNG...' : 'Descargar Historia PNG (1080 × 1920)'}</span>
@@ -410,11 +410,11 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
           </div>
 
           {/* Pieza 5: Post de Instagram (1080x1080) */}
-          <div className="p-5 rounded-2xl bg-white border border-[#24152B]/10 space-y-3 flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-white border border-[#1A1020]/10 space-y-3 flex flex-col justify-between">
             <div>
-              <span className="text-xs font-bold text-[#24152B] block">Post de Instagram (1080 × 1080 PNG)</span>
+              <span className="text-xs font-bold text-[#1A1020] block">Post de Instagram (1080 × 1080 PNG)</span>
               <p className="text-[11px] text-[#6E6478]">Formato cuadrado de alta fidelidad para el feed o carruseles promocionales.</p>
-              <div className="mt-3 p-3 bg-stone-100 rounded-xl flex items-center justify-center overflow-hidden max-h-[300px]">
+              <div className="mt-3 p-3 bg-[#F4F2F7] rounded-xl flex items-center justify-center overflow-hidden max-h-[300px]">
                 <canvas ref={postCanvasRef} className="w-auto h-[260px] rounded-lg shadow-sm" />
               </div>
             </div>
@@ -422,7 +422,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
               type="button"
               onClick={descargarPost}
               disabled={downloadingPost}
-              className="w-full mt-2 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-2 py-2.5 rounded-xl bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{downloadingPost ? 'Generando PNG...' : 'Descargar Post PNG (1080 × 1080)'}</span>

@@ -122,12 +122,12 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
   return (
     <div className="space-y-6">
       {/* Guía corta de sección */}
-      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#24152B]/10 flex items-start gap-3.5">
-        <div className="p-2 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] shrink-0 mt-0.5">
+      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start gap-3.5">
+        <div className="p-2 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] shrink-0 mt-0.5">
           <HelpCircle className="w-4 h-4" />
         </div>
         <div className="text-xs text-[#6E6478] leading-relaxed">
-          <p className="font-bold text-[#24152B] text-sm mb-0.5">Tarjetas Regalo Prepagadas</p>
+          <p className="font-bold text-[#1A1020] text-sm mb-0.5">Tarjetas Regalo Prepagadas</p>
           <p>
             Emite tarjetas de consumo con saldo prepagado tras recibir el cobro de la clienta en recepción o por transferencia.
             La clienta puede canjear el código en su reserva web y el saldo se descontará de forma transparente.
@@ -160,14 +160,14 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
 
       {/* Cabecera y botón emitir */}
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-          <Gift className="w-4 h-4 text-[#5B2A6E]" />
+        <h4 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+          <Gift className="w-4 h-4 text-[#4A1F5C]" />
           <span>Tarjetas Emitidas ({tarjetas.length})</span>
         </h4>
         <button
           type="button"
           onClick={() => setShowEmitirModal(true)}
-          className="px-4 py-2 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          className="px-4 py-2 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Emitir Tarjeta Regalo</span>
@@ -176,7 +176,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
 
       {/* Modal / Alerta: CÓDIGO REVELADO UNA SOLA VEZ */}
       {tarjetaCreada && (
-        <div className="p-6 rounded-2xl bg-[#24152B] text-white space-y-4 shadow-xl border-2 border-[#C5A059]">
+        <div className="p-6 rounded-2xl bg-[#1A1020] text-white space-y-4 shadow-xl border-2 border-[#C5A059]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#C5A059] uppercase tracking-widest flex items-center gap-1.5">
               <Gift className="w-4 h-4" />
@@ -188,7 +188,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs text-stone-300">
+            <p className="text-xs text-[#6E6478]">
               {tarjetaCreada.beneficiaria ? `Para: ${tarjetaCreada.beneficiaria}` : 'Código de canje al portador:'}
             </p>
             <div className="flex items-center gap-3 p-3.5 bg-black/40 rounded-xl border border-white/10 font-mono text-xl sm:text-2xl font-bold tracking-widest text-[#F6ECEC]">
@@ -229,16 +229,16 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
       {/* Modal para emitir nueva tarjeta */}
       {showEmitirModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-[#24152B]/10">
-            <div className="flex items-center justify-between pb-2 border-b border-[#24152B]/10">
-              <h5 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-                <Gift className="w-4 h-4 text-[#5B2A6E]" />
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-[#1A1020]/10">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1A1020]/10">
+              <h5 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+                <Gift className="w-4 h-4 text-[#4A1F5C]" />
                 <span>Emitir Nueva Tarjeta Regalo</span>
               </h5>
               <button
                 type="button"
                 onClick={() => setShowEmitirModal(false)}
-                className="text-stone-400 hover:text-stone-700 text-sm font-bold"
+                className="text-[#6E6478] hover:text-[#1A1020] text-sm font-bold"
               >
                 ✕
               </button>
@@ -246,7 +246,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
 
             <form onSubmit={handleEmitir} className="space-y-4">
               <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#24152B]">
+                <label className="block text-xs font-bold text-[#1A1020]">
                   Saldo Inicial ($ USD) * (1 a 10.000 $)
                 </label>
                 <input
@@ -258,39 +258,39 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                   value={saldoUSD}
                   onChange={(e) => setSaldoUSD(e.target.value)}
                   placeholder="Ej: 50"
-                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#24152B]">Beneficiaria / Destinataria (Opcional)</label>
+                <label className="block text-xs font-bold text-[#1A1020]">Beneficiaria / Destinataria (Opcional)</label>
                 <input
                   type="text"
                   value={beneficiaria}
                   onChange={(e) => setBeneficiaria(e.target.value)}
                   placeholder="Ej: Laura Méndez"
-                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#24152B]">Nota o Motivo (Opcional)</label>
+                <label className="block text-xs font-bold text-[#1A1020]">Nota o Motivo (Opcional)</label>
                 <input
                   type="text"
                   value={nota}
                   onChange={(e) => setNota(e.target.value)}
                   placeholder="Ej: Regalo de Cumpleaños / Aniversario"
-                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-bold text-[#24152B]">Fecha de Caducidad (Opcional)</label>
+                <label className="block text-xs font-bold text-[#1A1020]">Fecha de Caducidad (Opcional)</label>
                 <input
                   type="date"
                   value={caduca}
                   onChange={(e) => setCaduca(e.target.value)}
-                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                  className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
                 />
               </div>
 
@@ -302,14 +302,14 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                 <button
                   type="button"
                   onClick={() => setShowEmitirModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-[#6E6478] hover:text-[#24152B] cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {saving ? 'Emitiendo...' : 'Generar Tarjeta'}
                 </button>
@@ -323,9 +323,9 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
       {loading ? (
         <div className="py-10 text-center text-xs text-[#6E6478]">Cargando tarjetas regalo del salón...</div>
       ) : tarjetas.length === 0 ? (
-        <div className="p-8 rounded-2xl bg-white border border-[#24152B]/10 text-center space-y-2">
+        <div className="p-8 rounded-2xl bg-white border border-[#1A1020]/10 text-center space-y-2">
           <Gift className="w-8 h-8 text-[#6E6478]/40 mx-auto" />
-          <p className="text-xs font-bold text-[#24152B]">No hay tarjetas regalo emitidas</p>
+          <p className="text-xs font-bold text-[#1A1020]">No hay tarjetas regalo emitidas</p>
           <p className="text-[11px] text-[#6E6478]">
             Pulsa en "Emitir Tarjeta Regalo" cuando una clienta adquiera una tarjeta de consumo.
           </p>
@@ -337,11 +337,11 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
             return (
               <div
                 key={t.id}
-                className="p-4 sm:p-5 rounded-2xl bg-white border border-[#24152B]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="p-4 sm:p-5 rounded-2xl bg-white border border-[#1A1020]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono font-bold text-xs text-[#24152B] bg-[#24152B]/5 px-2.5 py-0.5 rounded-lg">
+                    <span className="font-mono font-bold text-xs text-[#1A1020] bg-[#1A1020]/5 px-2.5 py-0.5 rounded-lg">
                       •••• {t.codigoFinal}
                     </span>
                     {t.activa && !agotada ? (
@@ -349,7 +349,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                         Activa
                       </span>
                     ) : agotada ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F4F2F7] text-[#4A4150]">
                         Saldo agotado
                       </span>
                     ) : (
@@ -358,7 +358,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                       </span>
                     )}
                     {t.beneficiaria && (
-                      <span className="text-xs font-bold text-[#24152B]">
+                      <span className="text-xs font-bold text-[#1A1020]">
                         Para: {t.beneficiaria}
                       </span>
                     )}
@@ -375,7 +375,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                     </span>
                     {t.caduca && (
                       <span className="flex items-center gap-1 text-[11px]">
-                        <Calendar className="w-3 h-3 text-[#5B2A6E]" />
+                        <Calendar className="w-3 h-3 text-[#4A1F5C]" />
                         <span>Caduca: {t.caduca}</span>
                       </span>
                     )}

@@ -875,7 +875,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <td style="padding: 8px 6px;">${i + 1}</td>
         <td style="padding: 8px 6px; font-weight: bold;">${b.date}</td>
         <td style="padding: 8px 6px;">${b.timeSlot}</td>
-        <td style="padding: 8px 6px; font-weight: 600;">${b.clientName}<br/><span style="color: #6b7280; font-size: 10px;">${b.clientPhone}</span></td>
+        <td style="padding: 8px 6px; font-weight: 600;">${b.clientName}<br/><span style="color: #6E6478; font-size: 10px;">${b.clientPhone}</span></td>
         <td style="padding: 8px 6px;">${b.serviceName}</td>
         <td style="padding: 8px 6px; text-transform: capitalize;">${b.paymentMethod.replace('_', ' ')}</td>
         <td style="padding: 8px 6px; font-weight: bold; text-align: right; color: #166534;">$${b.totalPriceUSD.toFixed(2)}</td>
@@ -908,7 +908,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           .meta { text-align: right; font-size: 11px; color: #4b5563; }
           .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
           .kpi-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: #fafafa; }
-          .kpi-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6b7280; }
+          .kpi-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6E6478; }
           .kpi-val { font-size: 18px; font-weight: 800; color: #111827; margin-top: 4px; }
           .kpi-sub { font-size: 10px; color: #059669; font-weight: 600; }
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -948,12 +948,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div class="kpi-card">
             <div class="kpi-title">No Asistieron (No-Show)</div>
             <div class="kpi-val" style="color: #b45309;">${analyticsNoShow.length}</div>
-            <div style="font-size: 10px; color: #6b7280;">Cupos no aprovechados</div>
+            <div style="font-size: 10px; color: #6E6478;">Cupos no aprovechados</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-title">Canceladas con Motivo</div>
             <div class="kpi-val" style="color: #be123c;">${analyticsCancelled.length}</div>
-            <div style="font-size: 10px; color: #6b7280;">Con registro de causa</div>
+            <div style="font-size: 10px; color: #6E6478;">Con registro de causa</div>
           </div>
         </div>
 
@@ -972,7 +972,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No se registraron movimientos en este período.</td></tr>'}
+            ${rowsHtml || '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6E6478;">No se registraron movimientos en este período.</td></tr>'}
           </tbody>
         </table>
 
@@ -1300,7 +1300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   // ─── SHARED UI STYLES ──────────────────────────────────────────────────────
-  const inputCls = 'w-full p-2.5 rounded-xl bg-[#FBF9F6] border border-warm-200 text-warm-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-warm-400 placeholder:text-warm-400';
+  const inputCls = 'w-full p-2.5 rounded-xl bg-[#FBFAFC] border border-warm-200 text-warm-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-warm-400 placeholder:text-warm-400';
   const tabBtnCls = (key: TabKey) =>
     `w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
       activeTab === key
@@ -1356,11 +1356,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #5B2A6E 0%, #4A2159 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #4A1F5C 0%, #2E1A38 100%)' }}
             >
               {tenantInitials}
             </div>
-            <span className="font-bold text-[#18181B] text-sm sm:text-base tracking-tight truncate">
+            <span className="font-bold text-[#1A1020] text-sm sm:text-base tracking-tight truncate">
               {salonTheme.salonName || tenantName}
             </span>
           </div>
@@ -1384,8 +1384,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   onClick={() => navigate(pill.key)}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     active
-                      ? 'bg-[#18181B] text-white shadow-2xs'
-                      : 'text-[#52525B] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                      ? 'bg-[#1A1020] text-white shadow-2xs'
+                      : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                   }`}
                 >
                   {pill.label}
@@ -1400,7 +1400,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => navigate('bookings')}
-                className="text-[#52525B] hover:text-[#18181B] transition-colors cursor-pointer"
+                className="text-[#6E6478] hover:text-[#1A1020] transition-colors cursor-pointer"
                 title="Buscar citas y reservas"
               >
                 <Search className="w-3.5 h-3.5" />
@@ -1408,7 +1408,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={onRefreshData}
-                className="text-[#52525B] hover:text-[#18181B] transition-colors cursor-pointer"
+                className="text-[#6E6478] hover:text-[#1A1020] transition-colors cursor-pointer"
                 title={`Sincronizar datos · BCV Bs. ${exchangeRate.toFixed(2)}`}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -1416,7 +1416,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={onExitToCatalog}
-                className="text-[#5B2A6E] hover:text-[#4A2159] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                className="text-[#4A1F5C] hover:text-[#2E1A38] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                 title="Ver Carta Pública del Salón"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1432,10 +1432,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {tenantInitials}
               </div>
               <div className="hidden sm:block text-left leading-tight">
-                <p className="text-[11px] font-bold text-[#18181B] truncate max-w-[115px]">
+                <p className="text-[11px] font-bold text-[#1A1020] truncate max-w-[115px]">
                   {salonTheme.salonName || tenantName}
                 </p>
-                <p className="text-[9px] text-[#71717A] tabular-nums">
+                <p className="text-[9px] text-[#6E6478] tabular-nums">
                   BCV Bs. {exchangeRate.toFixed(2)}
                 </p>
               </div>
@@ -1443,7 +1443,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="ml-0.5 p-1 rounded-full text-[#71717A] hover:text-rose-600 transition-colors cursor-pointer"
+                  className="ml-0.5 p-1 rounded-full text-[#6E6478] hover:text-rose-600 transition-colors cursor-pointer"
                   title="Cerrar Sesión"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -1464,8 +1464,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 onClick={() => navigate(item.key)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   active
-                    ? 'bg-[#18181B] text-white shadow-2xs'
-                    : 'text-[#52525B] hover:text-[#18181B]'
+                    ? 'bg-[#1A1020] text-white shadow-2xs'
+                    : 'text-[#6E6478] hover:text-[#1A1020]'
                 }`}
               >
                 {item.shortLabel}
@@ -1486,8 +1486,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 onClick={() => navigate('theme')}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === 'theme'
-                    ? 'bg-[#18181B] text-white shadow-2xs'
-                    : 'text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                    ? 'bg-[#1A1020] text-white shadow-2xs'
+                    : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                 }`}
                 title="Diseño & Paleta de Carta"
               >
@@ -1498,8 +1498,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 onClick={() => navigate('qr')}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === 'qr'
-                    ? 'bg-[#18181B] text-white shadow-2xs'
-                    : 'text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                    ? 'bg-[#1A1020] text-white shadow-2xs'
+                    : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                 }`}
                 title="Código QR de Recepción"
               >
@@ -1526,14 +1526,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onClick={() => navigate(key)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
                       active
-                        ? 'bg-[#18181B] text-white shadow-xs'
-                        : 'text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                        ? 'bg-[#1A1020] text-white shadow-xs'
+                        : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                     }`}
                     title={title}
                   >
                     <Icon className="w-4 h-4" />
                     {key === 'bookings' && enWhatsAppCount > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-[#5B2A6E] absolute top-0.5 right-0.5" />
+                      <span className="w-2 h-2 rounded-full bg-[#1F1226] absolute top-0.5 right-0.5" />
                     )}
                   </button>
                 );
@@ -1545,7 +1545,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={onExitToCatalog}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7] transition-all cursor-pointer"
                 title="Abrir Carta Pública del Salón"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -1554,7 +1554,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#71717A] hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#6E6478] hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                   title="Cerrar Sesión"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1568,10 +1568,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* Dynamic Vertix Section Heading + 1-Line Subtitle */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5">
               <div>
-                <h1 className="text-2xl sm:text-[28px] font-bold text-[#18181B] tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-[28px] font-bold text-[#1A1020] tracking-tight leading-tight">
                   {currentNavInfo.label}
                 </h1>
-                <p className="text-xs sm:text-sm text-[#71717A] mt-0.5">
+                <p className="text-xs sm:text-sm text-[#6E6478] mt-0.5">
                   {currentNavInfo.subtitle}
                 </p>
               </div>
@@ -1590,8 +1590,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onClick={() => navigate(sub.key)}
                     className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer border ${
                       activeTab === sub.key
-                        ? 'bg-[#18181B] text-white border-[#18181B]'
-                        : 'bg-white text-[#52525B] border-black/5 hover:text-[#18181B]'
+                        ? 'bg-[#1A1020] text-white border-[#1A1020]'
+                        : 'bg-white text-[#6E6478] border-black/5 hover:text-[#1A1020]'
                     }`}
                   >
                     {sub.label}
@@ -1610,7 +1610,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   whileHover={{ y: -2 }}
                   className="lg:col-span-7 rounded-[24px] p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between min-h-[240px] relative overflow-hidden"
                   style={{
-                    background: 'linear-gradient(135deg, #F27449 0%, #E35633 55%, #C94122 100%)',
+                    background: 'linear-gradient(135deg, #F27449 0%, #4A1F5C 55%, #C94122 100%)',
                   }}
                 >
                   {/* Top Pill & Date */}
@@ -1664,9 +1664,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         navigate('bookings');
                         handleOpenManualBooking();
                       }}
-                      className="px-4 py-2 rounded-full bg-white text-[#18181B] text-xs font-bold shadow-xs hover:scale-[1.02] transition-transform flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 rounded-full bg-white text-[#1A1020] text-xs font-bold shadow-xs hover:scale-[1.02] transition-transform flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#E35633]" />
+                      <Plus className="w-3.5 h-3.5 text-[#4A1F5C]" />
                       <span>Agendar Cita</span>
                     </button>
                     <button
@@ -1686,10 +1686,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* BENTO 2 (TOP-RIGHT, 5 COLS): WHITE TIER BENEFITS / ESTADO OPERATIVO CARD */}
                 <div className="lg:col-span-5 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03] flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-[#18181B]">Beneficios &amp; Estado del Salón</h3>
+                    <h3 className="text-sm font-bold text-[#1A1020]">Beneficios &amp; Estado del Salón</h3>
 
                     {/* Segmented Gray Pill Switcher (Silver / Gold / Platinum style) */}
-                    <div className="mt-3 bg-[#F4F4F6] rounded-full p-1 inline-flex items-center gap-1">
+                    <div className="mt-3 bg-[#F4F2F7] rounded-full p-1 inline-flex items-center gap-1">
                       {[
                         { id: 'silver' as const, label: 'Carta QR' },
                         { id: 'gold' as const, label: 'Pasaporte VIP' },
@@ -1701,8 +1701,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onClick={() => setOverviewTier(tab.id)}
                           className={`px-3.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                             overviewTier === tab.id
-                              ? 'bg-white text-[#18181B] shadow-2xs'
-                              : 'text-[#71717A] hover:text-[#18181B]'
+                              ? 'bg-white text-[#1A1020] shadow-2xs'
+                              : 'text-[#6E6478] hover:text-[#1A1020]'
                           }`}
                         >
                           {tab.label}
@@ -1734,7 +1734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           ]
                       ).map((benefit, idx) => (
                         <div key={idx} className="flex items-center gap-2.5 text-xs text-[#27272A]">
-                          <span className="w-4 h-4 rounded-full bg-[#FFF0EC] text-[#E35633] flex items-center justify-center shrink-0">
+                          <span className="w-4 h-4 rounded-full bg-[#FFF0EC] text-[#4A1F5C] flex items-center justify-center shrink-0">
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </span>
                           <span>{benefit}</span>
@@ -1743,7 +1743,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-[#A1A1AA] mt-4 pt-3 border-t border-zinc-100">
+                  <p className="text-[11px] text-[#9A92A3] mt-4 pt-3 border-t border-[#E4E2EA]">
                     Sede sincronizada en tiempo real con Neon Cloud
                   </p>
                 </div>
@@ -1752,12 +1752,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="lg:col-span-7 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03]">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-bold text-[#18181B]">Módulos &amp; Acciones Rápidas</h3>
-                      <p className="text-xs text-[#71717A] mt-0.5">
+                      <h3 className="text-sm font-bold text-[#1A1020]">Módulos &amp; Acciones Rápidas</h3>
+                      <p className="text-xs text-[#6E6478] mt-0.5">
                         Configura la experiencia visual, descarga tu QR o actualiza precios al instante.
                       </p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0EC] text-[#E35633] text-[10px] font-bold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0EC] text-[#4A1F5C] text-[10px] font-bold">
                       3 activos
                     </span>
                   </div>
@@ -1766,20 +1766,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {/* Sub-Card 1 (Highlighted Coral Border like Vertix Screenshot 1) */}
                     <div className="rounded-[18px] p-4 bg-[#FFF8F6] border border-[#F5CFC4] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#E35633] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#4A1F5C] mb-3">
                           <Palette className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Diseño de Carta</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Diseño de Carta</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           Paleta {salonPalette.name} y tipografía editorial activa.
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-3 mt-2">
-                        <span className="text-[10px] text-[#A1A1AA] font-medium">En vivo</span>
+                        <span className="text-[10px] text-[#9A92A3] font-medium">En vivo</span>
                         <button
                           type="button"
                           onClick={() => navigate('theme')}
-                          className="px-3 py-1 rounded-full bg-[#5B2A6E] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                          className="px-3 py-1 rounded-full bg-[#1F1226] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                           <span>Editar</span>
@@ -1790,20 +1790,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {/* Sub-Card 2 */}
                     <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#1A1020] mb-3">
                           <QrCode className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Kit QR Recepción</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Kit QR Recepción</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           Código QR listo para tocador, recepción y bio de Instagram.
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-3 mt-2">
-                        <span className="text-[10px] text-[#A1A1AA] font-medium">Permanente</span>
+                        <span className="text-[10px] text-[#9A92A3] font-medium">Permanente</span>
                         <button
                           type="button"
                           onClick={() => navigate('qr')}
-                          className="px-3 py-1 rounded-full bg-[#18181B] text-white text-[10px] font-bold cursor-pointer"
+                          className="px-3 py-1 rounded-full bg-[#1A1020] text-white text-[10px] font-bold cursor-pointer"
                         >
                           Abrir QR
                         </button>
@@ -1813,20 +1813,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {/* Sub-Card 3 */}
                     <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#1A1020] mb-3">
                           <Scissors className="w-4 h-4" strokeWidth={1.5} />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Precios &amp; Servicios</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Precios &amp; Servicios</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           {services.length} servicios activos con cálculo automático BCV.
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-3 mt-2">
-                        <span className="text-[10px] text-[#A1A1AA] font-medium">Catálogo</span>
+                        <span className="text-[10px] text-[#9A92A3] font-medium">Catálogo</span>
                         <button
                           type="button"
                           onClick={() => navigate('services')}
-                          className="px-3 py-1 rounded-full bg-[#18181B] text-white text-[10px] font-bold cursor-pointer"
+                          className="px-3 py-1 rounded-full bg-[#1A1020] text-white text-[10px] font-bold cursor-pointer"
                         >
                           Gestionar
                         </button>
@@ -1839,11 +1839,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="lg:col-span-5 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-[#18181B]">Actividad &amp; Servicios en Carta</h3>
+                      <h3 className="text-sm font-bold text-[#1A1020]">Actividad &amp; Servicios en Carta</h3>
                       <button
                         type="button"
                         onClick={() => navigate('bookings')}
-                        className="text-[11px] font-semibold text-[#E35633] hover:underline cursor-pointer"
+                        className="text-[11px] font-semibold text-[#4A1F5C] hover:underline cursor-pointer"
                       >
                         Ver agenda &rarr;
                       </button>
@@ -1868,17 +1868,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       ).map((row) => (
                         <div key={row.id} className="py-2.5 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-[#FFF3EF] text-[#E35633] flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-[#FFF3EF] text-[#4A1F5C] flex items-center justify-center shrink-0">
                               <Scissors className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-[#18181B] truncate">{row.title}</p>
-                              <p className="text-[10px] text-[#A1A1AA] truncate">{row.sub}</p>
+                              <p className="text-xs font-bold text-[#1A1020] truncate">{row.title}</p>
+                              <p className="text-[10px] text-[#9A92A3] truncate">{row.sub}</p>
                             </div>
                           </div>
                           <span
                             className={`text-xs font-bold tabular-nums shrink-0 ${
-                              row.positive ? 'text-[#10B981]' : 'text-[#E35633]'
+                              row.positive ? 'text-[#10B981]' : 'text-[#4A1F5C]'
                             }`}
                           >
                             {row.amount}
@@ -1916,7 +1916,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <select
                       value={bookingFilterStatus}
                       onChange={e => setBookingFilterStatus(e.target.value)}
-                      className="px-3 py-2 rounded-xl bg-[#FBF9F6] border border-sage-200 text-xs text-warm-900 focus:outline-none focus:ring-2 focus:ring-sage-400 font-bold"
+                      className="px-3 py-2 rounded-xl bg-[#FBFAFC] border border-sage-200 text-xs text-warm-900 focus:outline-none focus:ring-2 focus:ring-sage-400 font-bold"
                     >
                       <option value="all">Todas ({bookings.length})</option>
                       <option value="en_whatsapp">🟡 En WhatsApp ({enWhatsAppCount})</option>
@@ -1937,7 +1937,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 ) : (
                   <div className="space-y-3">
                     {filteredBookings.map(b => (
-                      <div key={b.id} className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-3 hover:border-sage-300 transition-colors">
+                      <div key={b.id} className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-3 hover:border-sage-300 transition-colors">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 pb-3 border-b border-sage-100">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
@@ -2102,7 +2102,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )}
 
                 {/* Filtros de período */}
-                <div className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-warm-800">
                     <Filter className="w-4 h-4 text-warm-500" />
                     <span>Seleccionar Período Contable:</span>
@@ -2158,7 +2158,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 {/* Tarjetas de Métricas Ejecutivas (KPIs) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-1">
+                  <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-warm-400 block">Facturación Total</span>
                     <span className="font-serif text-2xl font-black text-emerald-700 block">
                       ${analyticsTotalRevenueUSD.toFixed(2)} <span className="text-xs font-sans text-warm-500">USD</span>
@@ -2168,7 +2168,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-1">
+                  <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-warm-400 block">Citas Culminadas</span>
                     <div className="flex items-baseline gap-2">
                       <span className="font-serif text-2xl font-black text-warm-900">{analyticsCompleted.length}</span>
@@ -2179,7 +2179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <span className="text-[11px] text-warm-500 block">De {analyticsTotalProcessed} citas procesadas</span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-1">
+                  <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-warm-400 block">Inasistencias (No-Show)</span>
                     <span className="font-serif text-2xl font-black text-amber-700 block">{analyticsNoShow.length}</span>
                     <span className="text-[11px] text-amber-800 block">
@@ -2187,7 +2187,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-1">
+                  <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-warm-400 block">Cancelaciones &amp; Ticket</span>
                     <span className="font-serif text-2xl font-black text-rose-700 block">{analyticsCancelled.length} <span className="text-xs font-sans text-warm-500">canceladas</span></span>
                     <span className="text-[11px] text-warm-600 block font-semibold">
@@ -2208,7 +2208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
 
                   {analyticsBookings.length === 0 ? (
-                    <div className="p-8 text-center rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-2">
+                    <div className="p-8 text-center rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-2">
                       <BarChart3 className="w-8 h-8 text-warm-400 mx-auto" />
                       <p className="text-xs font-bold text-warm-700">Sin movimientos en el período seleccionado.</p>
                       <p className="text-[11px] text-warm-400">Prueba cambiando el filtro de período más arriba.</p>
@@ -2229,7 +2229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </thead>
                         <tbody className="divide-y divide-sage-100 text-warm-800">
                           {analyticsBookings.map(b => (
-                            <tr key={b.id} className="hover:bg-[#FBF9F6] transition-colors">
+                            <tr key={b.id} className="hover:bg-[#FBFAFC] transition-colors">
                               <td className="p-3 whitespace-nowrap font-bold">
                                 {b.date}<br/>
                                 <span className="text-[11px] font-normal text-warm-500">{b.timeSlot}</span>
@@ -2299,7 +2299,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )}
 
                 {/* 1. Selector de Día y Bloqueo de Día Completo */}
-                <div className="p-5 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#FBFAFC] border border-sage-200 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <label className="text-xs font-bold text-warm-800">Fecha a gestionar:</label>
@@ -2418,7 +2418,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       placeholder="Ej: 10:30 AM, 01:00 PM, 05:30 PM..."
                       value={newCustomSlot}
                       onChange={e => setNewCustomSlot(e.target.value)}
-                      className="p-2.5 bg-[#FBF9F6] border border-sage-300 rounded-xl text-xs font-semibold text-warm-900 focus:ring-2 focus:ring-sage-400 focus:outline-none w-56"
+                      className="p-2.5 bg-[#FBFAFC] border border-sage-300 rounded-xl text-xs font-semibold text-warm-900 focus:ring-2 focus:ring-sage-400 focus:outline-none w-56"
                     />
                     <button
                       type="submit"
@@ -2639,7 +2639,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* Services List Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {services.map(s => (
-                    <div key={s.id} className="rounded-3xl bg-[#FBF9F6] border border-sage-200 overflow-hidden hover:border-sage-300 transition-all flex flex-col justify-between shadow-xs">
+                    <div key={s.id} className="rounded-3xl bg-[#FBFAFC] border border-sage-200 overflow-hidden hover:border-sage-300 transition-all flex flex-col justify-between shadow-xs">
                       {s.imageUrl && (
                         <div className="h-32 overflow-hidden bg-sage-100 relative">
                           <img src={s.imageUrl} alt={s.name} className="w-full h-full object-cover" />
@@ -2714,7 +2714,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       placeholder="Buscar por nombre o teléfono..."
                       value={crmSearch}
                       onChange={e => setCrmSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-[#FBF9F6] border border-sage-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage-400"
+                      className="w-full pl-9 pr-3 py-2 bg-[#FBFAFC] border border-sage-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage-400"
                     />
                   </div>
 
@@ -2738,7 +2738,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 ) : (
                   <div className="space-y-3">
                     {clientsList.map(client => (
-                      <div key={client.phone} className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-sage-300 transition-all">
+                      <div key={client.phone} className="p-4 rounded-2xl bg-[#FBFAFC] border border-sage-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-sage-300 transition-all">
                         
                         {/* Client details */}
                         <div className="space-y-1">
@@ -2894,7 +2894,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                       <div className="pt-2 border-t border-sage-100">
                         <span className="font-bold text-warm-500 block text-[10px] uppercase mb-1">Cuerpo del Mensaje:</span>
-                        <pre className="whitespace-pre-wrap font-sans text-xs text-warm-800 leading-relaxed bg-[#FBF9F6] p-3 rounded-xl border border-sage-100">
+                        <pre className="whitespace-pre-wrap font-sans text-xs text-warm-800 leading-relaxed bg-[#FBFAFC] p-3 rounded-xl border border-sage-100">
                           {getEmailContent().body}
                         </pre>
                       </div>
@@ -3152,7 +3152,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )}
 
                 {/* ZONAS / ESTACIONES DEL LOCAL (studio_zones en Neon DB) */}
-                <div className="p-5 rounded-3xl bg-[#FBF9F6] border border-sage-200 space-y-4">
+                <div className="p-5 rounded-3xl bg-[#FBFAFC] border border-sage-200 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sage-200 pb-3">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
@@ -3283,7 +3283,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </button>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#FBF9F6] p-2.5 rounded-xl border border-sage-100">
+                          <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#FBFAFC] p-2.5 rounded-xl border border-sage-100">
                             <div>
                               <span className="text-warm-400 font-bold uppercase text-[9px] block">Especialidades</span>
                               <span className="text-warm-800 font-medium">{specs}</span>
@@ -3424,8 +3424,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full inline-block">
                         Fase de Puesta a Punto Activa
                       </span>
-                      <h4 className="font-bold text-sm text-[#18181B] mt-1">¿Lista para activar tu cuenta definitiva?</h4>
-                      <p className="text-xs text-zinc-600 max-w-xl leading-relaxed">
+                      <h4 className="font-bold text-sm text-[#1A1020] mt-1">¿Lista para activar tu cuenta definitiva?</h4>
+                      <p className="text-xs text-[#4A4150] max-w-xl leading-relaxed">
                         Al activar tu cuenta sustituirás el acceso temporal por tu correo personal y contraseña definitiva. <strong>No se borra nada</strong>: tu catálogo, equipo, zonas, citas, fichas de clientas y solicitudes se conservan intactos.
                       </p>
                     </div>
@@ -3446,10 +3446,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )}
 
                 {/* Formulario de puesta a punto (Orden B1-c §3.1) */}
-                <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-4">
+                <div className="p-6 rounded-2xl bg-[#F4F2F7] border border-[#E4E2EA] space-y-4">
                   <div>
-                    <h4 className="font-bold text-sm text-[#18181B]">Formulario de Puesta a Punto</h4>
-                    <p className="text-xs text-zinc-500 mt-0.5">
+                    <h4 className="font-bold text-sm text-[#1A1020]">Formulario de Puesta a Punto</h4>
+                    <p className="text-xs text-[#6E6478] mt-0.5">
                       Describe los cambios o ajustes que necesitas en tu salón (mínimo 10 caracteres, máximo 3.000). Máximo 10 solicitudes al día.
                     </p>
                   </div>
@@ -3478,9 +3478,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         value={solicitudTexto}
                         onChange={(e) => setSolicitudTexto(e.target.value)}
                         placeholder="Ej: Quisiera añadir 3 nuevos servicios de spa capilar, cambiar el horario de los sábados de 10:00 a 19:00, y ajustar la paleta de colores a tonos oro..."
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 text-xs focus:outline-none focus:border-amber-600 bg-white leading-relaxed resize-y"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-amber-600 bg-white leading-relaxed resize-y"
                       />
-                      <div className="flex justify-between items-center text-[10px] text-zinc-400 mt-1">
+                      <div className="flex justify-between items-center text-[10px] text-[#6E6478] mt-1">
                         <span>Mínimo 10 caracteres</span>
                         <span>{solicitudTexto.length} / 3.000 caracteres</span>
                       </div>
@@ -3492,9 +3492,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         id="quiereLlamada"
                         checked={solicitudQuiereLlamada}
                         onChange={(e) => setSolicitudQuiereLlamada(e.target.checked)}
-                        className="rounded border-zinc-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                        className="rounded border-[#E4E2EA] text-amber-600 focus:ring-amber-500 cursor-pointer"
                       />
-                      <label htmlFor="quiereLlamada" className="text-xs text-zinc-700 cursor-pointer select-none font-medium">
+                      <label htmlFor="quiereLlamada" className="text-xs text-[#1A1020] cursor-pointer select-none font-medium">
                         Quiero una llamada para coordinar estos cambios
                       </label>
                     </div>
@@ -3503,7 +3503,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <button
                         type="submit"
                         disabled={enviandoSolicitud || solicitudTexto.trim().length < 10}
-                        className="px-5 py-2.5 rounded-xl bg-[#18181B] hover:bg-black text-white font-bold text-xs shadow-sm disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-colors"
+                        className="px-5 py-2.5 rounded-xl bg-[#1A1020] hover:bg-black text-white font-bold text-xs shadow-sm disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-colors"
                       >
                         {enviandoSolicitud ? (
                           <>
@@ -3522,19 +3522,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {/* Historial de solicitudes (nunca se borra) */}
-                <div className="p-6 rounded-2xl bg-white border border-zinc-200 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-100">
+                <div className="p-6 rounded-2xl bg-white border border-[#E4E2EA] space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E4E2EA]">
                     <div>
-                      <h4 className="font-bold text-sm text-[#18181B]">Historial de Solicitudes de Puesta a Punto</h4>
-                      <p className="text-xs text-zinc-500 mt-0.5">Registro permanente de todas las peticiones enviadas por este salón (se conserva siempre).</p>
+                      <h4 className="font-bold text-sm text-[#1A1020]">Historial de Solicitudes de Puesta a Punto</h4>
+                      <p className="text-xs text-[#6E6478] mt-0.5">Registro permanente de todas las peticiones enviadas por este salón (se conserva siempre).</p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-100 text-zinc-700">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#F4F2F7] text-[#1A1020]">
                       {peticiones.length} Solicitudes
                     </span>
                   </div>
 
                   {peticiones.length === 0 ? (
-                    <p className="text-xs text-zinc-400 py-6 text-center">Aún no has enviado ninguna solicitud de puesta a punto.</p>
+                    <p className="text-xs text-[#6E6478] py-6 text-center">Aún no has enviado ninguna solicitud de puesta a punto.</p>
                   ) : (
                     <div className="divide-y divide-zinc-100">
                       {peticiones.map((p: any) => (
@@ -3554,11 +3554,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </span>
                               )}
                             </div>
-                            <span className="text-[11px] text-zinc-400">
+                            <span className="text-[11px] text-[#6E6478]">
                               {p.createdAt ? new Date(p.createdAt).toLocaleString('es-ES') : ''}
                             </span>
                           </div>
-                          <p className="text-xs text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                          <p className="text-xs text-[#1A1020] whitespace-pre-wrap leading-relaxed bg-[#F4F2F7] p-3 rounded-xl border border-[#E4E2EA]">
                             {p.body}
                           </p>
                         </div>
@@ -3584,8 +3584,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <KeyRound className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#18181B]">Activar mi cuenta de VANESEV</h3>
-                  <span className="text-[10px] text-zinc-500 font-medium">Paso {activarPaso} de 2 &bull; Acceso definitivo</span>
+                  <h3 className="font-bold text-base text-[#1A1020]">Activar mi cuenta de VANESEV</h3>
+                  <span className="text-[10px] text-[#6E6478] font-medium">Paso {activarPaso} de 2 &bull; Acceso definitivo</span>
                 </div>
               </div>
               <button
@@ -3595,7 +3595,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   setActivarError(null);
                   setActivarSuccess(null);
                 }}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-full text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -3628,7 +3628,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {activarPaso === 1 ? (
               <form onSubmit={handleEnviarCodigoActivacion} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Tu Correo Electrónico Personal *
                   </label>
                   <input
@@ -3637,9 +3637,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     value={activarCorreo}
                     onChange={(e) => setActivarCorreo(e.target.value)}
                     placeholder="ej: duena@misalon.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-amber-600"
                   />
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[10px] text-[#6E6478] mt-1 block">
                     Te enviaremos un código de verificación de 6 dígitos (válido durante 10 minutos).
                   </span>
                 </div>
@@ -3648,7 +3648,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowActivarModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#4A4150] hover:bg-[#F4F2F7] cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -3674,10 +3674,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             ) : (
               <form onSubmit={handleActivarCuenta} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Correo Verificado
                   </label>
-                  <div className="flex items-center justify-between text-xs font-mono bg-zinc-100 px-3 py-2 rounded-xl text-zinc-700">
+                  <div className="flex items-center justify-between text-xs font-mono bg-[#F4F2F7] px-3 py-2 rounded-xl text-[#1A1020]">
                     <span>{activarCorreo}</span>
                     <button
                       type="button"
@@ -3693,7 +3693,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Código de 6 Dígitos *
                   </label>
                   <input
@@ -3703,16 +3703,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     value={activarCodigo}
                     onChange={(e) => setActivarCodigo(e.target.value.replace(/\D/g, ''))}
                     placeholder="123456"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-mono tracking-widest text-center font-bold focus:outline-none focus:border-amber-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-base font-mono tracking-widest text-center font-bold focus:outline-none focus:border-amber-600"
                   />
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[10px] text-[#6E6478] mt-1 block">
                     Revisa tu bandeja de entrada o spam.
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                       Nueva Contraseña *
                     </label>
                     <input
@@ -3722,12 +3722,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       value={activarContrasena}
                       onChange={(e) => setActivarContrasena(e.target.value)}
                       placeholder="Mínimo 12 caracteres"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-amber-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                       Confirmar Contraseña *
                     </label>
                     <input
@@ -3737,11 +3737,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       value={activarConfirmContrasena}
                       onChange={(e) => setActivarConfirmContrasena(e.target.value)}
                       placeholder="Repite la contraseña"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-amber-600"
                     />
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500 block">
+                <span className="text-[10px] text-[#6E6478] block">
                   La contraseña debe tener un mínimo de 12 caracteres para máxima seguridad.
                 </span>
 
@@ -3749,7 +3749,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setActivarPaso(1)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#4A4150] hover:bg-[#F4F2F7] cursor-pointer"
                   >
                     Atrás
                   </button>
@@ -3823,7 +3823,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   required
                   value={rescheduleNewDate}
                   onChange={(e) => setRescheduleNewDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FBF9F6] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
+                  className="w-full px-3 py-2 rounded-xl bg-[#FBFAFC] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
                 />
               </div>
 
@@ -3835,7 +3835,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   required
                   value={rescheduleNewTime}
                   onChange={(e) => setRescheduleNewTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FBF9F6] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
+                  className="w-full px-3 py-2 rounded-xl bg-[#FBFAFC] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
                 >
                   <option value="">Selecciona un horario</option>
                   {allTimeSlots.map((slot) => (
@@ -4045,7 +4045,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <select
                   value={cancellationReasonType}
                   onChange={e => setCancellationReasonType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FBF9F6] border border-sage-200 text-warm-900 text-xs font-semibold focus:ring-2 focus:ring-sage-400"
+                  className="w-full px-3 py-2 rounded-xl bg-[#FBFAFC] border border-sage-200 text-warm-900 text-xs font-semibold focus:ring-2 focus:ring-sage-400"
                 >
                   <option value="aviso_previo">Aviso previo de la clienta (reprogramación voluntaria)</option>
                   <option value="emergencia">Emergencia personal / salud de la clienta</option>
@@ -4066,7 +4066,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     value={cancellationCustomNote}
                     onChange={e => setCancellationCustomNote(e.target.value)}
                     placeholder="Ej. Se le presentó un viaje imprevisto..."
-                    className="w-full px-3 py-2 rounded-xl bg-[#FBF9F6] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
+                    className="w-full px-3 py-2 rounded-xl bg-[#FBFAFC] border border-sage-200 text-warm-900 text-xs focus:ring-2 focus:ring-sage-400"
                   />
                 </div>
               )}
