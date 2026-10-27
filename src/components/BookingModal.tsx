@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { INITIAL_ADDONS, AVAILABLE_TIME_SLOTS } from '../data/initialData';
 import { AppStore } from '../services/store';
+import { SalonApi, Presupuesto } from '../services/salonApi';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -100,6 +101,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   // Confirmation state
   const [isSuccess, setIsSuccess] = useState(false);
+  // D3 §4: Cupones y Tarjetas regalo con presupuesto del servidor
+  const [showCuponAccordion, setShowCuponAccordion] = useState(false);
+  const [cuponInput, setCuponInput] = useState('');
+  const [cuponError, setCuponError] = useState<string | null>(null);
+  const [showTarjetaAccordion, setShowTarjetaAccordion] = useState(false);
+  const [tarjetaInput, setTarjetaInput] = useState('');
+  const [tarjetaError, setTarjetaError] = useState<string | null>(null);
+  const [servidorPresupuesto, setServidorPresupuesto] = useState<Presupuesto | null>(null);
+  const [presupuestoLoading, setPresupuestoLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastCreatedBooking, setLastCreatedBooking] = useState<AppointmentBooking | null>(null);
 
@@ -173,6 +183,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
   }, [isOpen, preSelectedService, preSelectedPromo, services, availableDates, tenantSlug]);
 
+  
+
   // Intelligent real-time recognition by phone or email
   useEffect(() => {
     const cleanPhone = clientPhone.replace(/\D/g, '');
@@ -219,6 +231,41 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   // Calculate pricing: sum of all selected services + addons
   const basePriceUSD = currentServices.reduce((acc, curr) => acc + curr.priceUSD, 0);
+
+  // D3 §4: Presupuesto oficial del servidor
+  useEffect(() => {
+    if (step !== 3 || !currentService?.id || !selectedDate || !selectedTimeSlot) return;
+    let active = true;
+    setPresupuestoLoading(true);
+    setCuponError(null);
+    setTarjetaError(null);
+
+    SalonApi.presupuesto(tenantSlug, {
+      servicioId: currentService.id,
+      fecha: selectedDate,
+      turno: selectedTimeSlot,
+      telefono: clientPhone.trim() || undefined,
+      primeraVisita: !isExistingClient && isFirstVisit,
+      cupon: cuponInput.trim() ? cuponInput.trim().toUpperCase() : undefined,
+      tarjetaRegalo: tarjetaInput.trim() || undefined,
+    }).then((res) => {
+      if (!active) return;
+      setPresupuestoLoading(false);
+      if (res.ok) {
+        setServidorPresupuesto(res.data);
+      } else {
+        if (cuponInput.trim() && res.error.toLowerCase().includes('cupón')) {
+          setCuponError(res.error);
+        } else if (tarjetaInput.trim() && (res.error.toLowerCase().includes('tarjeta') || res.error.toLowerCase().includes('saldo'))) {
+          setTarjetaError(res.error);
+        } else {
+          setCuponError(res.error);
+        }
+      }
+    });
+
+    return () => { active = false; };
+  }, [step, tenantSlug, currentService?.id, selectedDate, selectedTimeSlot, clientPhone, isFirstVisit, isExistingClient, cuponInput, tarjetaInput]);
   const addonsTotalUSD = selectedAddons.reduce((acc, curr) => acc + curr.priceUSD, 0);
   const discountUSD = (!isExistingClient && isFirstVisit) ? 2.00 : 0.00;
   const totalPriceUSD = Math.max(0, basePriceUSD + addonsTotalUSD - discountUSD);
@@ -286,7 +333,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       serviceName: combinedServiceNames,
       servicePriceUSD: basePriceUSD,
       selectedAddons,
-      totalPriceUSD,
+      totalPriceUSD: servidorPresupuesto ? servidorPresupuesto.total : totalPriceUSD,
       staffId: chosenStaffObj?.id,
       staffName: chosenStaffObj?.name || chosenStaffObj?.full_name,
       zoneId: chosenZoneObj?.id,
@@ -296,6 +343,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       paymentMethod,
       notes: enrichedNotes || undefined,
       status: 'en_whatsapp',
+      cupon: cuponInput.trim() ? cuponInput.trim().toUpperCase() : undefined,
+      tarjetaRegalo: tarjetaInput.trim() || undefined,
+      desglose: servidorPresupuesto || undefined,
       isFirstVisit: (!isExistingClient && isFirstVisit),
       discountUSD,
       createdAt: new Date().toISOString()
@@ -1180,6 +1230,93 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       </div>
                     </div>
                   )}
+
+                  {/* D3 §4: Acordeones opcionales y plegados de Cupón y Tarjeta Regalo */}
+                  <div className="space-y-3 pt-1">
+                    {/* Acordeón: ¿Tienes un cupón? */}
+                    <div className="rounded-2xl border border-warm-200 bg-warm-50/80 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setShowCuponAccordion(!showCuponAccordion)}
+                        className="w-full p-3.5 flex items-center justify-between text-left text-xs font-bold text-warm-900 cursor-pointer hover:bg-warm-100/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-[#5B2A6E]" />
+                          <span>¿Tienes un cupón de descuento?</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#5B2A6E]">
+                          {showCuponAccordion ? 'Cerrar' : '+ Añadir código'}
+                        </span>
+                      </button>
+
+                      {showCuponAccordion && (
+                        <div className="p-3.5 pt-0 border-t border-warm-200/60 space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={cuponInput}
+                              onChange={(e) => {
+                                setCuponInput(e.target.value.toUpperCase());
+                                setCuponError(null);
+                              }}
+                              placeholder="Ej: BIENVENIDA2026"
+                              className="w-full p-2.5 bg-white border border-warm-200 rounded-xl text-xs font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                            />
+                          </div>
+                          {cuponError && (
+                            <p className="text-[11px] text-rose-600 font-semibold">{cuponError}</p>
+                          )}
+                          {servidorPresupuesto?.cupon && !cuponError && (
+                            <p className="text-[11px] text-emerald-700 font-bold">
+                              ✓ Cupón {servidorPresupuesto.cupon.codigo} aplicado: -${servidorPresupuesto.cupon.descuento.toFixed(2)} USD
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Acordeón: Tarjeta Regalo */}
+                    <div className="rounded-2xl border border-warm-200 bg-warm-50/80 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setShowTarjetaAccordion(!showTarjetaAccordion)}
+                        className="w-full p-3.5 flex items-center justify-between text-left text-xs font-bold text-warm-900 cursor-pointer hover:bg-warm-100/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-4 h-4 text-[#8A6A2E]" />
+                          <span>¿Tienes una Tarjeta Regalo?</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-[#8A6A2E]">
+                          {showTarjetaAccordion ? 'Cerrar' : '+ Canjear tarjeta'}
+                        </span>
+                      </button>
+
+                      {showTarjetaAccordion && (
+                        <div className="p-3.5 pt-0 border-t border-warm-200/60 space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={tarjetaInput}
+                              onChange={(e) => {
+                                setTarjetaInput(e.target.value);
+                                setTarjetaError(null);
+                              }}
+                              placeholder="Introduce tu código completo de tarjeta..."
+                              className="w-full p-2.5 bg-white border border-warm-200 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#8A6A2E]"
+                            />
+                          </div>
+                          {tarjetaError && (
+                            <p className="text-[11px] text-rose-600 font-semibold">{tarjetaError}</p>
+                          )}
+                          {servidorPresupuesto?.tarjetaRegalo && !tarjetaError && (
+                            <p className="text-[11px] text-emerald-700 font-bold">
+                              ✓ Saldo aplicado: -${servidorPresupuesto.tarjetaRegalo.pago.toFixed(2)} USD (Restante: ${servidorPresupuesto.tarjetaRegalo.saldoRestante.toFixed(2)} USD)
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Resumen Final de Reserva */}
                   <div

@@ -1,5 +1,5 @@
 import { VanesevLogo } from './VanesevLogo';
-import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla } from './landing/EfectosPremium';
+import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla, Magnetico, TarjetaTilt, PanelDeDuena } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
 import {
 
@@ -349,7 +349,8 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
           {/* Right Actions: Commercial CTA + Mobile Menu Button (Zero Login/Admin leaks) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
+            <Magnetico>
+              <button
               type="button"
               onClick={() => openCheckoutWithPlan('Suite Couture Pro')}
               className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02] cursor-pointer"
@@ -358,6 +359,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Solicitar Propuesta</span>
             </button>
+              </Magnetico>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -483,6 +485,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <span>Ver un salón real</span>
               </button>
             </div>
+
+            <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7D6438]">
+              <span>Montado en 24 h</span><span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#B89B6A]" />
+              <span>0 % comisiones</span><span aria-hidden="true" className="h-1 w-1 rounded-full bg-[#B89B6A]" />
+              <span>Tus clientas, siempre tuyas</span>
+            </p>
 
             {/* Direct Sub-Links */}
             <p className="mt-6 text-xs sm:text-sm text-[#6E6478]">
@@ -804,6 +812,9 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       {/* Un día en tu salón: scroll 3D (G-036) */}
       <UnDiaEnTuSalon />
 
+      {/* Tu panel de dueña (G-036) */}
+      <PanelDeDuena />
+
       {/* ═══════════════════════════════════════════════════════════════════════════
           3. INFINITE EDITORIAL MARQUEE STRIP (MARQUESINA COMERCIAL)
       ═══════════════════════════════════════════════════════════════════════════ */}
@@ -1060,12 +1071,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               {
                 num: '06',
                 title: 'Puente directo a tu Pasaporte VIP',
-                desc: 'Desde la misma carta QR, tus clientas consultan sus sellos acumulados con su número de teléfono sin instalar nada.',
+                desc: 'Desde la misma carta QR, tus clientas consultan sus sellos acumulados entrando con su correo, sin instalar nada.',
               },
             ].map((sp) => (
+              <TarjetaTilt key={sp.num} className="rounded-[24px]">
               <div
-                key={sp.num}
-                className="rounded-[24px] bg-white border border-[#1A1020]/8 p-6 shadow-2xs flex flex-col justify-between"
+                className="h-full rounded-[24px] bg-white border border-[#1A1020]/8 p-6 shadow-2xs flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_24px_50px_-28px_rgba(20,11,25,0.45)]"
               >
                 <div>
                   <span className="font-cormorant italic text-2xl font-bold text-[#4A1F5C]">
@@ -1079,6 +1090,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                   </p>
                 </div>
               </div>
+              </TarjetaTilt>
             ))}
           </div>
         </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QREncoder } from '../utils/qrEncoder';
+import { SalonLaunchKit } from './SalonLaunchKit';
+import { SalonThemeConfig, getSalonThemeConfig } from '../utils/salonThemeEngine';
 import {
   QrCode,
   Download,
@@ -42,14 +44,17 @@ export interface ScanEvent {
 interface DynamicQrManagerProps {
   tenantSlug: 'capra-studio' | 'andrea-nails' | 'all';
   tenantName: string;
+  salonTheme?: SalonThemeConfig;
   onClose?: () => void;
 }
 
 export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
+  salonTheme,
   tenantSlug,
   tenantName,
   onClose,
 }) => {
+  const [seccionActual, setSeccionActual] = useState<'qr' | 'kit'>('qr');
   const [qrList, setQrList] = useState<DynamicQrItem[]>([]);
   const [recentScans, setRecentScans] = useState<ScanEvent[]>([]);
   const [totalScans, setTotalScans] = useState<number>(0);
@@ -273,7 +278,34 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
 
   return (
     <div className="bg-white text-[#0F172A] rounded-2xl border border-[#E2E8F0] shadow-xs p-6 lg:p-8 space-y-8">
-      {/* Header */}
+            {/* Switcher: QR Dinamicos vs Kit de Lanzamiento */}
+      <div className="flex items-center gap-2 border-b border-[#E2E8F0] pb-4">
+        <button
+          type="button"
+          onClick={() => setSeccionActual("qr")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${seccionActual === "qr" ? "bg-[#18181B] text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+        >
+          Códigos QR Dinámicos &amp; Analítica
+        </button>
+        <button
+          type="button"
+          onClick={() => setSeccionActual("kit")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${seccionActual === "kit" ? "bg-[#5B2A6E] text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Kit de Lanzamiento Imprimible &amp; Redes (5 Piezas)</span>
+        </button>
+      </div>
+
+      {seccionActual === "kit" ? (
+        <SalonLaunchKit
+          tenantSlug={tenantSlug}
+          salonTheme={salonTheme || getSalonThemeConfig(tenantSlug)}
+          activeQrCode={selectedQr?.code || qrList.find((q) => q.is_active)?.code}
+        />
+      ) : (
+        <>
+          {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
@@ -698,6 +730,9 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      </>
       )}
 
       {/* MODAL: Create New Dynamic QR */}
