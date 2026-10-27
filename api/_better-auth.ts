@@ -23,6 +23,24 @@ function resolveBaseUrl(): string {
   return "https://vanesev.com";
 }
 
+/**
+ * Cuenta de trabajo = superadmin, miembro de un salón o cuenta con contraseña. El acceso por código
+ * de correo (emailOTP) es SOLO para clientas: better-auth no aplica el 2FA en /sign-in/email-otp,
+ * así que permitirlo a estas cuentas saltaría la contraseña y Google Authenticator.
+ */
+async function esCuentaDeTrabajo(email: string): Promise<boolean> {
+  const r = await pool.query(
+    `SELECT 1 FROM "user" u
+     WHERE LOWER(u.email) = $1
+       AND (u.platform_role IS NOT NULL
+            OR EXISTS (SELECT 1 FROM "member" m WHERE m."userId" = u.id)
+            OR EXISTS (SELECT 1 FROM "account" a WHERE a."userId" = u.id AND a."providerId" = 'credential'))
+     LIMIT 1`,
+    [String(email || "").trim().toLowerCase()]
+  );
+  return r.rows.length > 0;
+}
+
 // Referencia a la propia instancia para usarla dentro de los hooks (se asigna al final del archivo).
 let instancia: any = null;
 
@@ -254,6 +272,30 @@ export const auth = betterAuth({
         }
       }
 
+      // Hook 4 bis-0: el código por correo es solo para clientas y solo para iniciar sesión.
+      // Sin recuperación de contraseña ni cambio de correo por código (no se ofrecen).
+      if (
+        ctx.path.startsWith("/forget-password/email-otp") ||
+        ctx.path.startsWith("/email-otp/reset-password") ||
+        ctx.path.startsWith("/email-otp/request-email-change") ||
+        ctx.path.startsWith("/email-otp/change-email")
+      ) {
+        throw new APIError("FORBIDDEN", { message: "Operación no disponible." });
+      }
+      if (ctx.path.startsWith("/email-otp/send-verification-otp")) {
+        const tipo = (ctx.body as Record<string, any> | undefined)?.type;
+        if (tipo !== "sign-in") {
+          throw new APIError("BAD_REQUEST", { message: "Tipo de código no disponible." });
+        }
+      }
+      if (ctx.path.startsWith("/sign-in/email-otp")) {
+        const email = (ctx.body as Record<string, any> | undefined)?.email;
+        if (email && (await esCuentaDeTrabajo(String(email)))) {
+          // Mismo mensaje que un código erróneo: no revela que el correo es de una cuenta de trabajo.
+          throw new APIError("UNAUTHORIZED", { message: "Código inválido o caducado." });
+        }
+      }
+
       // Hook 4 bis: Tope adicional de send-otp por correo electrónico (máximo 3 envíos / hora en base de datos)
       if (ctx.path.startsWith("/email-otp/send-verification-otp")) {
         const body = ctx.body as Record<string, any> | undefined;
@@ -451,6 +493,8 @@ export const auth = betterAuth({
       allowedAttempts: 3,
       disableSignUp: false,
       sendVerificationOTP: async ({ email, otp, type }) => {
+        // A una cuenta de trabajo no se le envía nada (y la respuesta es la misma: no se revela si existe).
+        if (type !== "sign-in" || (await esCuentaDeTrabajo(email))) return;
         await enviarCorreo({
           para: email,
           asunto: "Tu código de acceso a VANESEV",

@@ -35,6 +35,10 @@ export async function enviarCorreo({ para, asunto, texto, html }: EnviarCorreoPa
     port,
     secure: isPort465,
     requireTLS: isPort587,
+    // Tiempos límite: un SMTP colgado no puede dejar la función esperando hasta el máximo de Vercel.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
     auth: {
       user,
       pass,

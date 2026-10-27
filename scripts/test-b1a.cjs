@@ -131,7 +131,7 @@ const PASS = {
   superadmin: `Sa-${crypto.randomBytes(9).toString('base64url')}-1`,
   owner: `Ow-${crypto.randomBytes(9).toString('base64url')}-1`,
 };
-const creados = { bookings: [], services: [], qr: [], campanas: [] };
+const creados = { bookings: [], services: [], qr: [], campanas: [], equipo: [] };
 const inicio = new Date();
 
 async function crearUsuario(rol, { platformRole = null, org = null, memberRole = null } = {}) {
@@ -166,6 +166,9 @@ async function limpiar() {
   await sql`DELETE FROM public.limite_frecuencia WHERE actualizado_en >= ${inicio.toISOString()}
             AND (clave LIKE 'reserva-ip:%' OR clave LIKE 'reserva-tel:%' OR clave LIKE 'qr:%')`;
   await sql`DELETE FROM "rateLimit" WHERE key LIKE ${'phone_otp:58414' + RUN.replace(/\D/g, '').slice(-5) + '%'}`;
+  await sql`DELETE FROM "rateLimit" WHERE key LIKE ${'email_otp:ci-' + RUN + '-%'}`;
+  await sql`DELETE FROM "verification" WHERE identifier LIKE ${'%ci-' + RUN + '-%'}`;
+  if (creados.equipo.length) await sql`DELETE FROM public.staff_members WHERE id = ANY(${creados.equipo})`;
   await limpiarRateLimitRunner();
 }
 
@@ -206,6 +209,10 @@ async function main() {
     ['GET', '/api/qr?scope=campaigns'],
     ['GET', '/api/central'],
     ['POST', '/api/central', { action: 'create-staff' }],
+    ['GET', '/api/team?tenant=capra-studio'],
+    ['POST', '/api/team', { action: 'upsert_staff', tenantId: 'capra-studio', name: 'x' }],
+    ['DELETE', '/api/team?type=staff&id=no-existe'],
+    ['GET', '/api/bookings?mine=1'],
   ];
   const fallos = [];
   for (const [method, ruta, body] of anonimas) {
@@ -280,7 +287,7 @@ async function main() {
   const telBase = `58414${RUN.replace(/\D/g, '').slice(-5).padStart(5, '0')}`;
   const reserva = await api('/api/bookings', {
     method: 'POST',
-    body: { tenantId: 'capra-studio', clientName: `CI ${RUN} precio`, clientPhone: `${telBase}01`, date: fechaFutura(20), timeSlot: '09:00 AM',
+    body: { tenantId: 'capra-studio', clientName: `CI ${RUN} precio`, clientPhone: `${telBase}01`, clientEmail: email('clienta'), date: fechaFutura(20), timeSlot: '09:00 AM',
       serviceId: servicio.id, servicePriceUSD: 0.01, status: 'confirmada', id: 'ci-hack', isFirstVisit: false },
   });
   const idReserva = reserva.json?.booking?.id;
@@ -294,6 +301,12 @@ async function main() {
   comprobar('D3', 'Especialista de otro salón → 400', ajenaStaff.status === 400, `HTTP ${ajenaStaff.status}`);
   const ajenoServ = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} serv`, clientPhone: `${telBase}04`, date: fechaFutura(22), timeSlot: '09:00 AM', serviceId: servicioAjeno } });
   comprobar('D4', 'Servicio de otro salón → 400', ajenoServ.status === 400, `HTTP ${ajenoServ.status}`);
+  const reservaClienta = await api('/api/bookings', {
+    method: 'POST',
+    body: { tenantId: 'capra-studio', clientName: `CI ${RUN} clienta`, clientPhone: `${telBase}05`, clientEmail: email('clienta'), date: fechaFutura(40), timeSlot: '02:00 PM', serviceId: servicio.id },
+  });
+  const idReservaClienta = reservaClienta.json?.booking?.id;
+  if (idReservaClienta) creados.bookings.push(idReservaClienta);
   const estados = [];
   for (let i = 0; i < 4; i++) {
     const r = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} tel${i}`, clientPhone: `${telBase}09`, date: fechaFutura(30 + i), timeSlot: '11:30 AM', serviceId: servicio.id } });
@@ -348,6 +361,49 @@ async function main() {
   comprobar('F1', 'Campaña: dueño 403, destino //dominio 400, Central 200, /q/ → 302 con ?qr=',
     campOwner.status === 403 && campMala.status === 400 && campBuena.status === 200 && campSalto.status === 302 && campSalto.location === `/?utm_source=flyer&qr=${campana}`,
     `owner ${campOwner.status}, //dominio ${campMala.status}, Central ${campBuena.status}, /q/ ${campSalto.status} → ${campSalto.location}`);
+
+  // ── I. Equipo del salón (api/team.ts) ──
+  const equipoOwner = await api('/api/team?tenant=capra-studio', { token: owToken });
+  const equipoStaff = await api('/api/team?tenant=capra-studio', { token: stToken });
+  const staffVeSensibles = (equipoStaff.json?.staff || []).some((x) => 'phone' in x || 'commissionPercent' in x);
+  const equipoAjeno = await api('/api/team?tenant=andrea-nails', { token: owToken });
+  comprobar('I1', 'Equipo: dueño 200, staff 200 sin teléfono ni comisión, otro salón 403',
+    equipoOwner.status === 200 && equipoStaff.status === 200 && !staffVeSensibles && equipoAjeno.status === 403,
+    `dueño ${equipoOwner.status}, staff ${equipoStaff.status} (sensibles ${staffVeSensibles ? 'SÍ' : 'no'}), andrea ${equipoAjeno.status}`);
+  const staffEscribe = await api('/api/team', { method: 'POST', token: stToken, body: { action: 'upsert_staff', tenantId: 'capra-studio', name: 'CI' } });
+  const comisionMala = await api('/api/team', { method: 'POST', token: owToken, body: { action: 'upsert_staff', tenantId: 'capra-studio', name: 'CI', commissionPercent: 150 } });
+  const pisaAjena = await api('/api/team', { method: 'POST', token: owToken, body: { action: 'upsert_staff', tenantId: 'capra-studio', id: staffAjeno, name: 'CI' } });
+  const nuevo = await api('/api/team', { method: 'POST', token: owToken, body: { action: 'upsert_staff', tenantId: 'capra-studio', name: `CI ${RUN}`, commissionPercent: 30 } });
+  const idNuevo = nuevo.json?.id || nuevo.json?.staffId || nuevo.json?.staff?.id
+    || (await sql`SELECT id FROM public.staff_members WHERE tenant_id = 'capra-studio' AND name = ${'CI ' + RUN} LIMIT 1`)[0]?.id;
+  if (idNuevo) creados.equipo.push(idNuevo);
+  const borra = idNuevo ? await api(`/api/team?type=staff&id=${encodeURIComponent(idNuevo)}`, { method: 'DELETE', token: owToken }) : { status: 0 };
+  comprobar('I2', 'Equipo: staff no escribe 403, comisión 150 % 400, id de otro salón 403, alta y baja del dueño 200',
+    staffEscribe.status === 403 && comisionMala.status === 400 && pisaAjena.status === 403 && nuevo.status === 200 && borra.status === 200,
+    `staff ${staffEscribe.status}, comisión ${comisionMala.status}, ajeno ${pisaAjena.status}, alta ${nuevo.status}, baja ${borra.status}`);
+
+  // ── J. Código por correo: solo clientas, nunca cuentas de trabajo ──
+  const otpTrabajo = await api('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: email('owner'), type: 'sign-in' } });
+  const entraTrabajo = await api('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: email('superadmin'), otp: '123456' } });
+  const recupera = await api('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: email('owner'), type: 'forget-password' } });
+  const reset = await api('/api/auth/forget-password/email-otp', { method: 'POST', body: { email: email('owner') } });
+  comprobar('J1', 'Cuenta de trabajo: no se le envía código, no entra por código (sin saltar contraseña ni 2FA), sin recuperación por código',
+    entraTrabajo.status === 401 && recupera.status === 400 && reset.status === 403 && otpTrabajo.status === 200,
+    `envío ${otpTrabajo.status} (mudo), sign-in ${entraTrabajo.status}, forget-password ${recupera.status}, reset ${reset.status}`);
+
+  const correoClienta = email('clienta');
+  const envio = await api('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: correoClienta, type: 'sign-in' } });
+  // El código se lee de la base como sustituto del buzón (el paso probado es el inicio de sesión por la API).
+  const filaOtp = (await sql`SELECT value FROM "verification" WHERE identifier LIKE ${'%' + correoClienta + '%'} ORDER BY "createdAt" DESC LIMIT 1`)[0];
+  const codigoOtp = filaOtp ? String(filaOtp.value).split(":")[0] : null;
+  const clienta = codigoOtp ? await api("/api/auth/sign-in/email-otp", { method: "POST", body: { email: correoClienta, otp: codigoOtp } }) : { status: 0 };
+  comprobar('J2', 'Clienta: correo real enviado por SMTP (sin SMTP_PASS en Preview → FALLA) y acceso con el código', envio.status === 200 && clienta.status === 200 && !!clienta.token,
+    `envío ${envio.status}${envio.status === 500 ? ' (¿falta SMTP_PASS en Preview feat/b1-auth?)' : ''}, código ${codigoOtp ? "generado" : "NO"}, sign-in ${clienta.status}`);
+  const mias = clienta.token ? await api('/api/bookings?mine=1', { token: clienta.token }) : { status: 0, json: null };
+  const veLaSuya = (mias.json?.bookings || []).some((b) => b.id === idReservaClienta);
+  const ajenasVisibles = (mias.json?.bookings || []).some((b) => b.id !== idReservaClienta);
+  comprobar('J3', '«Mis citas»: la clienta ve su cita (ligada a su correo) y ninguna ajena', mias.status === 200 && veLaSuya && !ajenasVisibles,
+    `HTTP ${mias.status}, su cita ${veLaSuya ? 'sí' : 'NO'}, ajenas ${ajenasVisibles ? 'SÍ' : 'no'}`);
 
   // ── G. Cron ──
   const cronSin = await api('/api/cron-reminders');
