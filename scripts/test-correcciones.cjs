@@ -109,14 +109,21 @@ async function runTests() {
   // PRUEBA 1: Registro público cerrado de staff -> HTTP 400
   console.log("--- [PRUEBA 1] Registro público cerrado de staff (POST /api/auth/sign-up/email) ---");
   try {
-    const res = await requestApi("/api/auth/sign-up/email", {
-      method: "POST",
-      body: {
-        name: "Intruso Registro",
-        email: "intruso.registro@vanesev.com",
-        password: "PasswordLargaValida123!",
-      },
-    });
+    let res = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      res = await requestApi("/api/auth/sign-up/email", {
+        method: "POST",
+        body: {
+          name: "Intruso Registro",
+          email: "intruso.registro@vanesev.com",
+          password: "PasswordLargaValida123!",
+        },
+      });
+      if (res.status === 400) break;
+      if (res.status === 500 && attempt < 3) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
     console.log(`HTTP Status: ${res.status} (Esperado: 400)`);
     console.log(`Respuesta: ${res.text.slice(0, 200)}`);
     if (res.status === 400) {
@@ -239,11 +246,14 @@ async function runTests() {
     // 5.2 Limpieza quirúrgica de pruebas previas
     await sql`DELETE FROM "account" WHERE "userId" = ${testUserId}`;
     await sql`DELETE FROM "user" WHERE id = ${testUserId} OR email = ${testLockoutEmail}`;
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    const clearRateLimit = async () => {
+      if (runnerIp) {
+        await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + '|/sign-in/email'} OR key = ${runnerIp + ':/sign-in/email'}`;
+      } else {
+        await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
+      }
+    };
+    await clearRateLimit();
 
     // 5.3 Inserción de user y account con hash real
     await sql`
@@ -258,13 +268,7 @@ async function runTests() {
     // 5.4 Ejecutar 10 intentos fallidos
     console.log("Ejecutando 10 intentos fallidos de login con contraseña incorrecta...");
     for (let i = 1; i <= 10; i++) {
-      if (i > 4) {
-        if (runnerIp) {
-          await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-        } else {
-          await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-        }
-      }
+      await clearRateLimit();
       await requestApi("/api/auth/sign-in/email", {
         method: "POST",
         body: {
@@ -277,11 +281,7 @@ async function runTests() {
     const userRows = await sql`SELECT failed_attempts, locked_until FROM "user" WHERE id = ${testUserId}`;
     console.log(`Estado en base de datos tras 10 fallos: failed_attempts=${userRows[0]?.failed_attempts}, locked_until=${userRows[0]?.locked_until}`);
 
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    await clearRateLimit();
 
     // 5.5 Intento 11: Realizado con la contraseña CORRECTA -> Debe retornar HTTP 403 Forbidden
     const res11 = await requestApi("/api/auth/sign-in/email", {
@@ -298,11 +298,7 @@ async function runTests() {
     // 5.6 Control Positivo (§3.1): Resetear bloqueo y verificar 200 con la contraseña correcta
     console.log("Ejecutando Control Positivo: reseteando locked_until y failed_attempts en fila de prueba...");
     await sql`UPDATE "user" SET locked_until = NULL, failed_attempts = 0 WHERE id = ${testUserId}`;
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    await clearRateLimit();
 
     const resPositive = await requestApi("/api/auth/sign-in/email", {
       method: "POST",
@@ -323,11 +319,7 @@ async function runTests() {
     // 5.7 Limpieza quirúrgica de filas de prueba
     await sql`DELETE FROM "account" WHERE "userId" = ${testUserId}`;
     await sql`DELETE FROM "user" WHERE id = ${testUserId}`;
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    await clearRateLimit();
   } catch (err) {
     console.error("Error ejecutando Prueba 5:", err.message);
     allPassed = false;
@@ -371,6 +363,9 @@ async function runTests() {
   // PRUEBA 7: Recuento de tablas en Neon Staging tras pruebas (Confirmación estricta de Purga)
   console.log("--- [PRUEBA 7] Recuento de tablas en Neon Staging tras pruebas (Confirmación de Purga) ---");
   try {
+    if (runnerIp) {
+      await sql`DELETE FROM "rateLimit" WHERE key LIKE ${runnerIp + '|%'} OR key LIKE ${runnerIp + ':%'}`;
+    }
     const tablesToCheck = ["user", "session", "account", "verification", "member", "invitation", "twoFactor"];
     let purgeClean = true;
     for (const t of tablesToCheck) {

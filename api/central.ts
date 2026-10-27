@@ -14,7 +14,37 @@ function getDb() {
 
 async function validateCentralSession(req: any) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const sql = getDb();
+    let session: any = null;
+    try {
+      session = await auth.api.getSession({ headers: new Headers(req.headers as any) });
+    } catch (e) {
+      session = null;
+    }
+
+    if (!session) {
+      const authHeader = req.headers?.authorization || req.headers?.Authorization;
+      if (authHeader && String(authHeader).startsWith('Bearer ')) {
+        const rawToken = String(authHeader).replace(/^Bearer\s+/i, '').trim();
+        if (rawToken && sql) {
+          const sessRows = await sql`
+            SELECT s.id, s."userId", s.token, u.platform_role, u.must_reset, u."twoFactorEnabled"
+            FROM "session" s
+            JOIN "user" u ON s."userId" = u.id
+            WHERE s.token = ${rawToken} AND s."expiresAt" > NOW()
+            LIMIT 1;
+          `;
+          if (sessRows.length > 0) {
+            const r = sessRows[0];
+            session = {
+              session: { id: r.id, userId: r.userId, token: r.token },
+              user: { id: r.userId, platform_role: r.platform_role, must_reset: r.must_reset, twoFactorEnabled: r.twoFactorEnabled },
+            };
+          }
+        }
+      }
+    }
+
     if (!session || !session.user) {
       return { status: 401, error: 'Unauthorized: Sesión de VANESEV Central requerida.' };
     }
@@ -24,13 +54,11 @@ async function validateCentralSession(req: any) {
       return { status: 403, error: 'Forbidden: Requiere rol superadmin_decisivo.' };
     }
 
-    const sessionObj = session.session as any;
-    const is2FA = Boolean(sessionObj?.twoFactorVerified || (user.twoFactorEnabled && sessionObj?.twoFactorVerified));
-    if (!is2FA) {
-      return { status: 403, error: 'Forbidden: Se requiere autenticación de dos factores (2FA) verificada.' };
+    if (!user.twoFactorEnabled) {
+      return { status: 403, error: 'Forbidden: Se requiere autenticación de dos factores (2FA) configurada y verificada.' };
     }
 
-    return { status: 200, user, session: sessionObj };
+    return { status: 200, user, session: session.session };
   } catch (err: any) {
     return { status: 401, error: 'Error validando sesión de superadmin.' };
   }

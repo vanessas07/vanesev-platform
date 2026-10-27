@@ -572,23 +572,23 @@ async function runTestSuite() {
 
     // 10 intentos fallidos
     console.log('Simulando 10 intentos fallidos de login...');
-    for (let i = 1; i <= 10; i++) {
-      if (i > 4 && runnerIp) {
-        await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ':/sign-in/email'}`;
-      } else if (i > 4) {
+    const clearRateLimit = async () => {
+      if (runnerIp) {
+        await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + '|/sign-in/email'} OR key = ${runnerIp + ':/sign-in/email'}`;
+      } else {
         await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
       }
+    };
+
+    for (let i = 1; i <= 10; i++) {
+      await clearRateLimit();
       await requestApi('/api/auth/sign-in/email', {
         method: 'POST',
         body: { email: lockoutEmail, password: `WrongPassword${i}!` },
       });
     }
 
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ':/sign-in/email'}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    await clearRateLimit();
 
     // Intento 11 con contraseña correcta -> 403 Forbidden
     const res11 = await requestApi('/api/auth/sign-in/email', {
@@ -599,11 +599,7 @@ async function runTestSuite() {
 
     // Control Positivo (§3.1): Resetear bloqueo y verificar login exitoso -> 200
     await sql`UPDATE "user" SET locked_until = NULL, failed_attempts = 0 WHERE id = ${lockoutUserId}`;
-    if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ':/sign-in/email'}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
-    }
+    await clearRateLimit();
 
     const resPositive = await requestApi('/api/auth/sign-in/email', {
       method: 'POST',
@@ -621,6 +617,7 @@ async function runTestSuite() {
     // Limpieza
     await sql`DELETE FROM "account" WHERE "userId" = ${lockoutUserId}`;
     await sql`DELETE FROM "user" WHERE id = ${lockoutUserId}`;
+    await clearRateLimit();
   } catch (err) {
     console.error('Error en Prueba 9:', err.message);
     allPassed = false;
@@ -661,14 +658,17 @@ async function runTestSuite() {
   try {
     // Limpieza de filas de prueba por IDs específicos
     await sql`DELETE FROM "twoFactor" WHERE "userId" IN (${sa2faId}, ${saNo2faId}, ${staffUserId})`;
-    await sql`DELETE FROM "session" WHERE "userId" IN (${sa2faId}, ${saNo2faId}, ${staffUserId})`;
-    await sql`DELETE FROM "member" WHERE "userId" IN (${staffUserId})`;
+    await sql`DELETE FROM "session" WHERE "userId" IN (${sa2faId}, ${saNo2faId}, ${staffUserId}) OR "userId" IN (SELECT id FROM "user" WHERE email = ${nuevoStaffEmail})`;
+    await sql`DELETE FROM "member" WHERE "userId" IN (${staffUserId}) OR "userId" IN (SELECT id FROM "user" WHERE email = ${nuevoStaffEmail})`;
+    await sql`DELETE FROM "account" WHERE "userId" IN (${sa2faId}, ${saNo2faId}, ${staffUserId}) OR "userId" IN (SELECT id FROM "user" WHERE email = ${nuevoStaffEmail})`;
+    await sql`DELETE FROM "verification" WHERE identifier LIKE '%58424%' OR identifier LIKE '%vanesev%' OR identifier LIKE '%test%'`;
     await sql`DELETE FROM "user" WHERE id IN (${sa2faId}, ${saNo2faId}, ${staffUserId}) OR email IN (${staffEmail}, ${saNo2faEmail}, ${sa2faEmail}, ${nuevoStaffEmail})`;
 
     // Limpieza de rateLimit por IP del runner (§3.2)
     if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ':/sign-in/email'}`;
+      await sql`DELETE FROM "rateLimit" WHERE key LIKE ${runnerIp + '|%'} OR key LIKE ${runnerIp + ':%'}`;
     }
+    await sql`DELETE FROM "rateLimit" WHERE key LIKE '%phone_otp%' OR key LIKE '%lockout%'`;
 
     const tablesToCheck = ['user', 'session', 'account', 'verification', 'member', 'invitation', 'twoFactor'];
     let tablesClean = true;

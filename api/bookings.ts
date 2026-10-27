@@ -211,12 +211,45 @@ export default async function handler(req: any, res: any) {
       }
 
       // 1. Verificación de sesión con Better Auth (Orden B1-a §4.8)
-      const session = await auth.api.getSession({ headers: req.headers });
+      let session: any = null;
+      try {
+        session = await auth.api.getSession({ headers: new Headers(req.headers as any) });
+      } catch (e) {
+        session = null;
+      }
+
+      if (!session) {
+        const authHeader = req.headers?.authorization || req.headers?.Authorization;
+        if (authHeader && String(authHeader).startsWith('Bearer ')) {
+          const rawToken = String(authHeader).replace(/^Bearer\s+/i, '').trim();
+          if (rawToken && sql) {
+            const sessRows = await sql`
+              SELECT s.id, s."userId", s.token, u.platform_role, u.must_reset
+              FROM "session" s
+              JOIN "user" u ON s."userId" = u.id
+              WHERE s.token = ${rawToken} AND s."expiresAt" > NOW()
+              LIMIT 1;
+            `;
+            if (sessRows.length > 0) {
+              const r = sessRows[0];
+              session = {
+                session: { id: r.id, userId: r.userId, token: r.token },
+                user: { id: r.userId, platform_role: r.platform_role, must_reset: r.must_reset },
+              };
+            }
+          }
+        }
+      }
+
       if (!session || !session.user) {
         return res.status(401).json({ error: 'Unauthorized: Sesión requerida para consultar citas.' });
       }
 
       const user = session.user as any;
+      if (user.must_reset) {
+        return res.status(403).json({ error: 'Forbidden: Debe restablecer su contraseña antes de continuar (MUST_RESET).' });
+      }
+
       let isAllowed = false;
       if (user.platform_role === 'superadmin_decisivo') {
         isAllowed = true;

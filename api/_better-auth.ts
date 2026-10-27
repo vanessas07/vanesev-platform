@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { organization, twoFactor, phoneNumber } from "better-auth/plugins";
+import { organization, twoFactor, phoneNumber, bearer } from "better-auth/plugins";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import pg from "pg";
 
@@ -364,5 +364,6 @@ export const auth = betterAuth({
         getTempEmail: (phone) => `${phone.replace(/[^0-9]/g, '')}@client.vanesev.internal`,
       },
     }),
+    bearer(),
   ],
 });
