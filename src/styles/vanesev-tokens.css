@@ -134,3 +134,46 @@
 /* Bodoni Moda (G-039): peso medio y tracking fino en titulares; la seminegrita de Bodoni pesa demasiado. */
 .font-lujo { font-optical-sizing: auto; letter-spacing: -0.012em; }
 .font-lujo.font-semibold, .font-lujo.font-bold { font-weight: 500; }
+
+/* ─── Paneles de lujo (Central y admin del salón, G-039) ─── */
+.v-panel {
+  background:
+    radial-gradient(60% 40% at 100% 0%, rgba(201, 164, 92, 0.10) 0%, rgba(201, 164, 92, 0) 70%),
+    radial-gradient(50% 40% at 0% 100%, rgba(74, 31, 92, 0.06) 0%, rgba(74, 31, 92, 0) 70%),
+    #FBFAFC;
+}
+.v-panel h1, .v-panel h2, .v-panel h3 {
+  font-family: 'Bodoni Moda', Didot, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+/* Tarjetas blancas del panel: borde de oro y elevación al pasar. */
+.v-panel .bg-white[class*='rounded'] {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.v-panel .bg-white[class*='rounded']:hover {
+  border-color: rgba(201, 164, 92, 0.55);
+  box-shadow: 0 18px 40px -28px rgba(20, 11, 25, 0.35);
+}
+/* Cifras: números tabulares en la tipografía de lujo. */
+.v-panel .tabular-nums {
+  font-family: 'Bodoni Moda', Didot, Georgia, serif;
+  font-weight: 500;
+}
+/* Filete de oro bajo la cabecera. */
+.v-panel header {
+  position: relative;
+  padding-bottom: 14px;
+}
+.v-panel header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201, 164, 92, 0), rgba(201, 164, 92, 0.7) 30%, rgba(201, 164, 92, 0.7) 70%, rgba(201, 164, 92, 0));
+}
+@media (prefers-reduced-motion: reduce) {
+  .v-panel .bg-white[class*='rounded'] { transition: none; }
+}
