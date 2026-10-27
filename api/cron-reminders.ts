@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { getDb } from './_db.js';
 import { applyCors } from './_cors.js';
 
@@ -17,9 +18,13 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // 1. Verificación obligatoria de autorización por CRON_SECRET (Orden B1-a §4.8)
-  const authHeader = req.headers?.authorization;
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || !authHeader || authHeader !== `Bearer ${cronSecret}`) {
+  const cronSecret = String(process.env.CRON_SECRET ?? '').trim(); // vacía → 401 (abajo)
+  const recibido = String(req.headers?.authorization || '').trim();
+  const esperado = `Bearer ${cronSecret}`;
+  const a = Buffer.from(recibido);
+  const b = Buffer.from(esperado);
+  // Comparación en tiempo constante: no revela cuántos caracteres de la clave coinciden.
+  if (!cronSecret || a.length !== b.length || !timingSafeEqual(a, b)) {
     return res.status(401).json({ error: 'Unauthorized: Token de autorización cron ausente o inválido.' });
   }
 

@@ -75,24 +75,22 @@ export async function requireSession(req: any): Promise<AuthResult> {
 export async function requireTenantRole(
   req: any,
   tenantId: string,
-  allowedRoles: string[]
+  allowedRoles: string[],
+  pre?: AuthSuccess
 ): Promise<AuthResult> {
-  const sessionResult = await requireSession(req);
+  // `pre`: sesión ya validada en este handler (se pide la sesión antes de buscar el registro,
+  // para que un anónimo reciba 401 y no pueda averiguar qué ids existen).
+  const sessionResult = pre ?? (await requireSession(req));
   if (sessionResult.status !== 200) {
     return sessionResult;
   }
 
   const { user, session } = sessionResult;
 
-  // Superadmin de plataforma tiene acceso irrestricto
+  // Superadmin de plataforma: entra en cualquier salón, pero con el mismo filtro que Central
+  // (2FA activo y sesión iniciada después de activarlo).
   if (user.platform_role === 'superadmin_decisivo') {
-    return {
-      status: 200,
-      user,
-      session,
-      role: 'superadmin_decisivo',
-      error: null,
-    };
+    return verificarSegundoFactor(user, session);
   }
 
   const cleanTenant = String(tenantId || '').trim().toLowerCase();
@@ -183,6 +181,14 @@ export async function requireCentral(req: any): Promise<AuthResult> {
     };
   }
 
+  return verificarSegundoFactor(user, session);
+}
+
+/**
+ * 2FA del superadmin: TOTP activo y verificado, y sesión creada después de activarlo
+ * (las sesiones previas no pasaron por el segundo factor).
+ */
+async function verificarSegundoFactor(user: any, session: any): Promise<AuthResult> {
   const sql = getDb();
   if (!sql) {
     return {
@@ -197,7 +203,7 @@ export async function requireCentral(req: any): Promise<AuthResult> {
     const tfRows = await sql`
       SELECT "updatedAt", verified 
       FROM "twoFactor" 
-      WHERE "userId" = ${user.id} AND (verified = true OR verified IS NULL)
+      WHERE "userId" = ${user.id} AND verified = true
       LIMIT 1;
     `;
 
@@ -211,11 +217,11 @@ export async function requireCentral(req: any): Promise<AuthResult> {
     }
 
     const tf = tfRows[0];
-    const sessCreated = new Date(session.createdAt || session.created_at || Date.now()).getTime();
-    const tfTimestamp = tf.updatedAt ? new Date(tf.updatedAt).getTime() : 0;
+    const sessCreated = session?.createdAt ? new Date(session.createdAt).getTime() : NaN;
+    const tfTimestamp = tf.updatedAt ? new Date(tf.updatedAt).getTime() : NaN;
 
-    // Si la sesión fue creada antes de activar o actualizar el 2FA, se rechaza
-    if (tfTimestamp > 0 && sessCreated < tfTimestamp - 5000) {
+    // Si no se puede fechar la sesión o el 2FA, o la sesión es anterior al 2FA, se rechaza
+    if (Number.isNaN(sessCreated) || Number.isNaN(tfTimestamp) || sessCreated < tfTimestamp) {
       return {
         status: 403,
         error: 'Forbidden: Sesión creada antes de activar 2FA. Inicie sesión nuevamente con su segundo factor.',

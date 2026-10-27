@@ -1,8 +1,16 @@
 // Vercel Serverless Function: /api/gallery
 // Manages carousel gallery images in Neon Serverless Postgres with strict tenant isolation
 import { getDb } from './_db.js';
-import { requireTenantRole } from './_session.js';
+import { randomUUID } from 'node:crypto';
+import { requireSession, requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
+
+// Imágenes: ruta propia (/capra/…, /vanesev/…), https, o la foto subida desde el panel como
+// data:image png/jpeg/webp en base64 (máx. ~1,5 MB; el paso a Vercel Blob por salón va en B2).
+// Nunca javascript:, http: ni SVG (un SVG puede llevar scripts).
+const IMAGEN_VALIDA = /^(\/[A-Za-z0-9/_.-]{1,200}|https:\/\/[^\s"'<>]{1,500}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/;
+const IMAGEN_MAX_CARACTERES = 2_000_000;
+const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -84,6 +92,18 @@ export default async function handler(req: any, res: any) {
       if (!finalTitle || !finalImage) {
         return res.status(400).json({ error: 'Nombre/título e imagen son obligatorios.' });
       }
+      if (finalImage.length > IMAGEN_MAX_CARACTERES || !IMAGEN_VALIDA.test(finalImage)) {
+        return res.status(400).json({ error: 'Imagen inválida: usa una ruta propia o una URL https.' });
+      }
+      if (id !== undefined && !ID_VALIDO.test(String(id))) {
+        return res.status(400).json({ error: 'Id de imagen inválido.' });
+      }
+      if (id) {
+        const owner = await sql`SELECT tenant_id FROM public.gallery_slides WHERE id = ${String(id)} LIMIT 1;`;
+        if (owner.length > 0 && String(owner[0].tenant_id).toLowerCase() !== tenantSlug) {
+          return res.status(403).json({ error: 'Forbidden: la imagen pertenece a otro salón.' });
+        }
+      }
 
       const countRes = await sql`
         SELECT COUNT(*) as count FROM public.gallery_slides WHERE tenant_id = ${tenantSlug};
@@ -93,7 +113,7 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'Límite de 40 imágenes alcanzado. Elimina alguna para subir una nueva.' });
       }
 
-      const slideId = id || `slide_${Date.now()}`;
+      const slideId = id ? String(id) : `slide_${randomUUID()}`;
       const finalSubtitle = String(subtitle || technique || '').trim().slice(0, 120);
       const finalCategory = String(category || tag || 'Diseño Real').trim().slice(0, 100);
 
@@ -137,6 +157,12 @@ export default async function handler(req: any, res: any) {
 
       const cleanId = String(id).trim();
 
+      // Sesión antes de buscar: 401 para anónimos, sin revelar qué imágenes existen.
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
       // C10 (§4.2): Carga la imagen de la BD para tomar su tenant_id
       const targetSlide = await sql`
         SELECT id, tenant_id 
@@ -152,7 +178,7 @@ export default async function handler(req: any, res: any) {
       const slideTenant = String(targetSlide[0].tenant_id).toLowerCase();
 
       // Validación estricta de sesión y rol owner/admin
-      const authCheck = await requireTenantRole(req, slideTenant, ['owner', 'admin']);
+      const authCheck = await requireTenantRole(req, slideTenant, ['owner', 'admin'], sesion);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }

@@ -10,6 +10,14 @@ jobs:
   generar-evidencias:
     name: Generar Artefactos de Evidencia CI
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: read
+    # shell: bash explícito = «bash --noprofile --norc -eo pipefail». Sin él, Actions usa «bash -e»
+    # y un «node prueba | tee archivo» sale en verde aunque la prueba falle (corregido el 27/10).
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,6 +52,19 @@ jobs:
           node scripts/wcag-contrast.cjs > evidencias_out/wcag-contrast.txt 2>&1 || true
           cat evidencias_out/wcag-contrast.txt
 
+      - name: Esperar al despliegue de Vercel de este mismo commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 48); do
+            estado=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" --jq '[.statuses[] | select(.context == "Vercel")][0].state // "pendiente"')
+            echo "Intento $i: Vercel = $estado"
+            if [ "$estado" = "success" ]; then exit 0; fi
+            if [ "$estado" = "failure" ] || [ "$estado" = "error" ]; then echo "El despliegue de Vercel ha fallado"; exit 1; fi
+            sleep 15
+          done
+          echo "Vercel no terminó en 12 minutos"; exit 1
+
       - name: Ejecutar Pruebas Automatizadas de Correcciones de Autenticación (Sección 3)
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
@@ -53,6 +74,8 @@ jobs:
           node scripts/test-correcciones.cjs 2>&1 | tee evidencias_out/correcciones-auth.txt
 
       - name: Ejecutar Suite Automatizada B1-a (Backend de Autenticación)
+        # Se ejecuta aunque falle la suite anterior, para ver el cuadro completo; el job sigue en rojo.
+        if: ${{ !cancelled() }}
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}

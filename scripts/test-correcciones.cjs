@@ -19,6 +19,10 @@ const { neon } = require("@neondatabase/serverless");
 let connectionString = process.env.DATABASE_URL_STAGING;
 let bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const runnerIp = process.env.RUNNER_IP || "";
+if (process.env.CI && !runnerIp) {
+  console.error("[FATAL] Falta RUNNER_IP en CI: sin ella no se puede borrar el rate limit solo del runner.");
+  process.exit(1);
+}
 
 // En CI está terminantemente prohibido leer .env.local
 if (!process.env.CI) {
@@ -236,7 +240,7 @@ async function runTests() {
           p: 1,
           maxmem: 128 * 16384 * 16 * 2,
         }).toString("hex");
-        return `${key}:${salt}`;
+        return `${salt}:${key}`; // formato oficial de @better-auth/utils/password
       };
     }
 
@@ -249,8 +253,6 @@ async function runTests() {
     const clearRateLimit = async () => {
       if (runnerIp) {
         await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + '|/sign-in/email'} OR key = ${runnerIp + ':/sign-in/email'}`;
-      } else {
-        await sql`DELETE FROM "rateLimit" WHERE key LIKE '%/sign-in/email%'`;
       }
     };
     await clearRateLimit();
@@ -350,9 +352,7 @@ async function runTests() {
     }
 
     if (runnerIp) {
-      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + ":/sign-in/email"}`;
-    } else {
-      await sql`DELETE FROM "rateLimit" WHERE key LIKE '%rate.limit.test%' OR key LIKE '%/sign-in/email%'`;
+      await sql`DELETE FROM "rateLimit" WHERE key = ${runnerIp + "|/sign-in/email"}`;
     }
   } catch (err) {
     console.error("Error ejecutando Prueba 6:", err.message);
@@ -366,12 +366,23 @@ async function runTests() {
     if (runnerIp) {
       await sql`DELETE FROM "rateLimit" WHERE key LIKE ${runnerIp + '|%'} OR key LIKE ${runnerIp + ':%'}`;
     }
-    await sql`DELETE FROM "verification" WHERE identifier LIKE '%58424%' OR identifier LIKE '%vanesev%' OR identifier LIKE '%test%'`;
+    await sql`DELETE FROM "verification" WHERE identifier LIKE '%584241234567%'`;
     const tablesToCheck = ["user", "session", "account", "verification", "member", "invitation", "twoFactor"];
     let purgeClean = true;
+    const usuariosDePrueba = `SELECT id FROM "user" WHERE id = 'test_lockout_user_sec3' OR email = 'test.lockout.sec3@vanesev.com'
+      OR email = 'intruso.registro@vanesev.com' OR email LIKE 'rate.limit.test%@vanesev.com' OR "phoneNumber" = '+584241234567'`;
+    const consultas = {
+      user: `SELECT count(*)::int AS total FROM (${usuariosDePrueba}) u`,
+      session: `SELECT count(*)::int AS total FROM "session" WHERE "userId" IN (${usuariosDePrueba})`,
+      account: `SELECT count(*)::int AS total FROM "account" WHERE "userId" IN (${usuariosDePrueba})`,
+      verification: `SELECT count(*)::int AS total FROM "verification" WHERE identifier LIKE '%584241234567%'`,
+      member: `SELECT count(*)::int AS total FROM "member" WHERE "userId" IN (${usuariosDePrueba})`,
+      invitation: `SELECT count(*)::int AS total FROM "invitation" WHERE email = 'intruso.registro@vanesev.com'`,
+      twoFactor: `SELECT count(*)::int AS total FROM "twoFactor" WHERE "userId" IN (${usuariosDePrueba})`,
+    };
     for (const t of tablesToCheck) {
       try {
-        const rows = await sql(`SELECT count(*)::int as total FROM "${t}"`);
+        const rows = await sql(consultas[t]);
         const count = rows[0].total;
         console.log(`Tabla "${t}": ${count} registros`);
         if (count !== 0) {
@@ -393,10 +404,10 @@ async function runTests() {
 
     // Consulta y explicación de filas en rateLimit (§3.2)
     try {
-      const rlRows = await sql`SELECT key, count, "lastRequest" FROM "rateLimit"`;
+      const rlRows = await sql`SELECT key, count, "lastRequest" FROM "rateLimit" WHERE key LIKE ${runnerIp + '|%'}`;
       console.log(`Tabla "rateLimit": ${rlRows.length} registros restantes.`);
       rlRows.forEach(r => {
-        console.log(`  - Clave: "${r.key}" | Intentos: ${r.count} | Explicación: Registro de rate limit legítimo generado durante la ejecución`);
+        console.log(`  - Clave: "${r.key}" | Intentos: ${r.count} | Explicación: fila del runner que la purga no ha borrado`);
       });
     } catch (err) {
       console.log(`Tabla "rateLimit": error (${err.message})`);

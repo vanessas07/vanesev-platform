@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { organization, twoFactor, phoneNumber, bearer } from "better-auth/plugins";
-import { createAuthMiddleware, APIError, getSessionFromCtx } from "better-auth/api";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import pg from "pg";
 
 const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
@@ -21,6 +21,9 @@ function resolveBaseUrl(): string {
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "https://vanesev.com";
 }
+
+// Referencia a la propia instancia para usarla dentro de los hooks (se asigna al final del archivo).
+let instancia: any = null;
 
 export const auth = betterAuth({
   database: pool,
@@ -245,9 +248,14 @@ export const auth = betterAuth({
         ctx.path.startsWith("/get-session") ||
         ctx.path.startsWith("/two-factor");
 
-      if (!isExemptResetPath) {
+      // Sin cookie ni Bearer no hay sesión que comprobar (inicios de sesión, OTP…): no se consulta nada.
+      const traeSesion = /^Bearer\s+\S+/i.test(ctx.headers?.get("authorization") || "") || /session_token=/.test(ctx.headers?.get("cookie") || "");
+      if (!isExemptResetPath && traeSesion && ctx.headers) {
         try {
-          const session = await getSessionFromCtx(ctx);
+          // auth.api.getSession pasa por el plugin bearer (este hook corre ANTES que los de los plugins,
+          // así que getSessionFromCtx no vería una sesión enviada como «Authorization: Bearer»).
+          // /get-session está exento arriba: no hay recursión.
+          const session = await instancia?.api.getSession({ headers: ctx.headers });
           if (session?.user && (session.user as any).must_reset) {
             throw new APIError("FORBIDDEN", {
               message: "Debe restablecer su contraseña antes de continuar (MUST_RESET).",
@@ -335,22 +343,21 @@ export const auth = betterAuth({
         }
       }
 
-      // Al activar/verificar 2FA, revocar las demás sesiones del usuario (Orden B1-a v2 §4.5)
+      // Al ACTIVAR el 2FA, revocar las demás sesiones del usuario (decisión de karc0, 27/10: solo al activarlo).
+      // Activación = verify-totp llamado con una sesión abierta (cookie o Bearer). En un inicio de sesión
+      // con 2FA la petición no trae sesión (trae la cookie two_factor) y no se revoca nada.
+      // En ambos casos better-auth crea una sesión nueva en esta llamada (ctx.context.newSession): esa se conserva.
       if (ctx.path.startsWith("/two-factor/verify-totp")) {
-        const ret = ctx.context?.returned as any;
-        const status = ctx.context?.response?.status;
-        const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 400 && ret?.status !== 401 && ret?.status !== 403) || status === 200;
-        if (isSuccess) {
-          try {
-            const session = await getSessionFromCtx(ctx);
-            const userId = session?.user?.id || ret?.user?.id;
-            const currentToken = session?.session?.token || ret?.session?.token;
-            if (userId && currentToken) {
-              await pool.query(`DELETE FROM "session" WHERE "userId" = $1 AND token != $2`, [userId, currentToken]);
-            }
-          } catch (e: any) {
-            console.error("[AUTH] Error al revocar sesiones previas tras activar 2FA:", e?.message || "Error desconocido");
-          }
+        const auth = ctx.headers?.get("authorization") || "";
+        const cookie = ctx.headers?.get("cookie") || "";
+        const traiaSesion = /^Bearer\s+\S+/i.test(auth) || /session_token=/.test(cookie);
+        const nueva = ctx.context?.newSession as any;
+        if (traiaSesion && nueva?.session?.token && nueva?.user?.id) {
+          await pool
+            .query(`DELETE FROM "session" WHERE "userId" = $1 AND token <> $2`, [nueva.user.id, nueva.session.token])
+            .catch((e: any) => {
+              console.error("[AUTH] Error al revocar sesiones previas tras activar 2FA:", e?.message || "Error desconocido");
+            });
         }
       }
     }),
@@ -382,3 +389,5 @@ export const auth = betterAuth({
     bearer(),
   ],
 });
+
+instancia = auth;

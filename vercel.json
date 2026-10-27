@@ -34,6 +34,10 @@
       "destination": "/api/qr?mode=redirect&code=:code"
     },
     {
+      "source": "/q/:code",
+      "destination": "/api/qr?mode=campaign&code=:code"
+    },
+    {
       "source": "/:tenant/r/:code",
       "destination": "/api/qr?mode=redirect&code=:code"
     },

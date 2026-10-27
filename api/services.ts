@@ -2,8 +2,16 @@
 // Manages catalog services in Neon Serverless Postgres with PostgreSQL 18 RLS enforcement
 // Strict multi-tenant isolation: tenant parameter is required; zero cross-tenant default fallback.
 import { getDb, executeWithTenantRls } from './_db.js';
-import { requireTenantRole } from './_session.js';
+import { randomUUID } from 'node:crypto';
+import { requireSession, requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
+
+// Imágenes: ruta propia (/capra/…, /vanesev/…), https, o la foto subida desde el panel como
+// data:image png/jpeg/webp en base64 (máx. ~1,5 MB; el paso a Vercel Blob por salón va en B2).
+// Nunca javascript:, http: ni SVG (un SVG puede llevar scripts).
+const IMAGEN_VALIDA = /^(\/[A-Za-z0-9/_.-]{1,200}|https:\/\/[^\s"'<>]{1,500}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/;
+const IMAGEN_MAX_CARACTERES = 2_000_000;
+const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -130,11 +138,40 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, categoría, precio).' });
       }
 
-      const serviceId = id || ('srv_' + Date.now());
-      const cleanPrice = Number(priceUSD) || 10;
-      const cleanDuration = Number(durationMinutes) || 60;
-      const cleanTags = Array.isArray(tags) ? tags : ['Servicio VIP'];
-      const available = isAvailable ?? true;
+      // Validación del catálogo: precios y duraciones posibles, textos acotados, imágenes seguras.
+      const cleanName = String(name).trim();
+      const cleanCategory = String(category).trim();
+      const cleanPrice = Number(priceUSD);
+      const cleanDuration = durationMinutes === undefined ? 60 : Number(durationMinutes);
+      const cleanImage = imageUrl ? String(imageUrl).trim() : '';
+      const cleanTags = Array.isArray(tags)
+        ? tags.map((t: any) => String(t).trim().slice(0, 30)).filter(Boolean).slice(0, 10)
+        : ['Servicio VIP'];
+      const available = isAvailable === undefined ? true : Boolean(isAvailable);
+      if (cleanName.length < 1 || cleanName.length > 80 || cleanCategory.length < 1 || cleanCategory.length > 40) {
+        return res.status(400).json({ error: 'Nombre (1-80) o categoría (1-40) con longitud inválida.' });
+      }
+      if (!Number.isFinite(cleanPrice) || cleanPrice <= 0 || cleanPrice > 10000) {
+        return res.status(400).json({ error: 'Precio inválido: debe ser mayor que 0 y como mucho 10.000 USD.' });
+      }
+      if (!Number.isInteger(cleanDuration) || cleanDuration < 5 || cleanDuration > 600) {
+        return res.status(400).json({ error: 'Duración inválida: entre 5 y 600 minutos.' });
+      }
+      if (cleanImage && (cleanImage.length > IMAGEN_MAX_CARACTERES || !IMAGEN_VALIDA.test(cleanImage))) {
+        return res.status(400).json({ error: 'Imagen inválida: usa una ruta propia o una URL https.' });
+      }
+      if (id !== undefined && !ID_VALIDO.test(String(id))) {
+        return res.status(400).json({ error: 'Id de servicio inválido.' });
+      }
+
+      // Un id que ya pertenece a otro salón no se toca: 403 (antes respondía «guardado» sin guardar).
+      const serviceId = id ? String(id) : `srv_${randomUUID()}`;
+      if (id) {
+        const owner = await sql`SELECT tenant_id FROM public.services WHERE id = ${serviceId} LIMIT 1;`;
+        if (owner.length > 0 && String(owner[0].tenant_id).toLowerCase() !== cleanTenant) {
+          return res.status(403).json({ error: 'Forbidden: el servicio pertenece a otro salón.' });
+        }
+      }
 
       await sql`
         INSERT INTO public.services (
@@ -142,9 +179,9 @@ export default async function handler(req: any, res: any) {
           short_description, full_description, ideal_for,
           image_url, badge_text, badge_color, zone_id, default_staff_id, is_available, tags, updated_at
         ) VALUES (
-          ${serviceId}, ${cleanTenant}, ${name}, ${category}, ${cleanPrice}, ${cleanDuration},
-          ${shortDescription || ''}, ${fullDescription || ''}, ${idealFor || ''},
-          ${imageUrl || ''}, ${badgeText || null}, ${badgeColor || 'bg-sage-800'},
+          ${serviceId}, ${cleanTenant}, ${cleanName}, ${cleanCategory}, ${cleanPrice}, ${cleanDuration},
+          ${String(shortDescription || '').slice(0, 300)}, ${String(fullDescription || '').slice(0, 2000)}, ${String(idealFor || '').slice(0, 300)},
+          ${cleanImage}, ${badgeText ? String(badgeText).slice(0, 40) : null}, ${/^[a-z0-9 -]{1,40}$/.test(String(badgeColor || '')) ? badgeColor : 'bg-sage-800'},
           ${zoneId || null}, ${defaultStaffId || null}, ${available}, ${cleanTags}, NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
@@ -187,6 +224,12 @@ export default async function handler(req: any, res: any) {
 
       const cleanId = String(id).trim();
 
+      // Sesión antes de buscar: 401 para anónimos, sin revelar qué servicios existen.
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
       // C10 (§4.2): Carga el servicio de la BD para tomar su tenant_id
       const targetService = await sql`
         SELECT id, tenant_id 
@@ -202,7 +245,7 @@ export default async function handler(req: any, res: any) {
       const serviceTenant = String(targetService[0].tenant_id).toLowerCase();
 
       // Validación estricta de sesión y rol owner/admin
-      const authCheck = await requireTenantRole(req, serviceTenant, ['owner', 'admin']);
+      const authCheck = await requireTenantRole(req, serviceTenant, ['owner', 'admin'], sesion);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }

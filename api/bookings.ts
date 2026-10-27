@@ -1,8 +1,33 @@
 // Vercel Serverless Function: /api/bookings
 // High-performance Neon Serverless Postgres integration with Anti-Tampering & Anti-Hacking Security
+import { randomUUID } from 'node:crypto';
 import { getDb } from './_db.js';
-import { requireTenantRole } from './_session.js';
+import { requireSession, requireTenantRole } from './_session.js';
+import { claveDeLimite, ipDeLaPeticion, limiteSuperado } from './_limite.js';
 import { applyCors } from './_cors.js';
+
+// Reserva pública: límites contados en la base (migración 0006).
+const RESERVAS_POR_IP_HORA = 5;
+const RESERVAS_POR_TELEFONO_HORA = 3;
+const DIAS_MAXIMOS_DE_ANTELACION = 90;
+const TURNO_VALIDO = /^((0?[1-9]|1[0-2]):[0-5]\d (AM|PM)|([01]\d|2[0-3]):[0-5]\d)$/;
+
+/** Fecha de hoy (YYYY-MM-DD) en Venezuela, donde operan los salones. */
+function hoyEnCaracas(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas' }).format(new Date());
+}
+
+function sumarDias(fecha: string, dias: number): string {
+  const d = new Date(`${fecha}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+function fechaReal(fecha: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+  const d = new Date(`${fecha}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === fecha;
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -34,13 +59,10 @@ export default async function handler(req: any, res: any) {
         clientName,
         clientPhone,
         clientEmail,
-        clientPin,
         clientInstagram,
         serviceId,
         staffId,
-        staffName,
         zoneId,
-        zoneName,
         date,
         timeSlot,
         paymentMethod,
@@ -63,10 +85,9 @@ export default async function handler(req: any, res: any) {
       const cleanPhone = String(clientPhone).replace(/\D/g, '');
       const cleanName = String(clientName).trim().slice(0, 80);
       const cleanEmail = clientEmail ? String(clientEmail).trim().toLowerCase().slice(0, 80) : '';
-      const cleanPin = clientPin ? String(clientPin).trim().slice(0, 10) : '';
       const cleanInstagram = clientInstagram ? String(clientInstagram).replace('@', '').trim().slice(0, 40) : '';
-      const cleanDate = String(date).trim().slice(0, 10);
-      const cleanTime = String(timeSlot).trim().slice(0, 10);
+      const cleanDate = String(date).trim();
+      const cleanTime = String(timeSlot).trim().toUpperCase();
       const rawNotes = notes ? String(notes).trim().slice(0, 300) : '';
       const cleanNotes = [rawNotes, cleanEmail ? `Email: ${cleanEmail}` : ''].filter(Boolean).join(' | ');
       const validPayment = ['pago_movil', 'efectivo', 'binance'].includes(paymentMethod)
@@ -76,6 +97,26 @@ export default async function handler(req: any, res: any) {
 
       if (cleanPhone.length < 7 || cleanPhone.length > 15) {
         return res.status(400).json({ error: 'Número de teléfono inválido (debe contener entre 7 y 15 dígitos).' });
+      }
+
+      // Fecha real, no pasada y como mucho a 90 días; turno con formato de agenda.
+      const hoy = hoyEnCaracas();
+      if (!fechaReal(cleanDate) || cleanDate < hoy || cleanDate > sumarDias(hoy, DIAS_MAXIMOS_DE_ANTELACION)) {
+        return res.status(400).json({ error: `Fecha inválida: debe estar entre hoy y los próximos ${DIAS_MAXIMOS_DE_ANTELACION} días.` });
+      }
+      if (!TURNO_VALIDO.test(cleanTime)) {
+        return res.status(400).json({ error: 'Turno (timeSlot) con formato inválido.' });
+      }
+
+      // Freno anti-bots: por IP y por teléfono en el salón (HMAC, nunca en claro).
+      const ip = ipDeLaPeticion(req);
+      const [porIp, porTelefono] = await Promise.all([
+        limiteSuperado(claveDeLimite('reserva-ip', ip), RESERVAS_POR_IP_HORA, 3600),
+        limiteSuperado(claveDeLimite('reserva-tel', `${cleanTenant}|${cleanPhone}`), RESERVAS_POR_TELEFONO_HORA, 3600),
+      ]);
+      if (porIp || porTelefono) {
+        res.setHeader('Retry-After', '3600');
+        return res.status(429).json({ error: 'Demasiadas reservas seguidas. Inténtalo de nuevo más tarde.' });
       }
 
       // Orden B1-a v2 §4.2: El precio sale exclusivamente de services en la BD, servicePriceUSD del body se ignora.
@@ -88,6 +129,36 @@ export default async function handler(req: any, res: any) {
 
       if (serviceRows.length === 0) {
         return res.status(400).json({ error: 'Servicio no encontrado o no disponible para este salón.' });
+      }
+
+      // Especialista y zona: solo del mismo salón, y con el nombre que figura en la base.
+      let cleanStaffId: string | null = null;
+      let cleanStaffName: string | null = null;
+      if (staffId) {
+        const staffRows = await sql`
+          SELECT id, name FROM public.staff_members
+          WHERE id = ${String(staffId)} AND tenant_id = ${cleanTenant} AND is_active = true
+          LIMIT 1;
+        `;
+        if (staffRows.length === 0) {
+          return res.status(400).json({ error: 'Especialista no encontrado en este salón.' });
+        }
+        cleanStaffId = staffRows[0].id;
+        cleanStaffName = staffRows[0].name;
+      }
+      let cleanZoneId: string | null = null;
+      let cleanZoneName: string | null = null;
+      if (zoneId) {
+        const zoneRows = await sql`
+          SELECT id, name FROM public.studio_zones
+          WHERE id = ${String(zoneId)} AND tenant_id = ${cleanTenant} AND is_active = true
+          LIMIT 1;
+        `;
+        if (zoneRows.length === 0) {
+          return res.status(400).json({ error: 'Zona no encontrada en este salón.' });
+        }
+        cleanZoneId = zoneRows[0].id;
+        cleanZoneName = zoneRows[0].name;
       }
 
       const officialService = serviceRows[0];
@@ -116,9 +187,9 @@ export default async function handler(req: any, res: any) {
       const eligibleFirstVisit = (prevCount === 0) && claimedFirst;
       const discountUSD = eligibleFirstVisit ? 2.00 : 0.00;
       const finalPriceUSD = Math.max(0, officialPrice - discountUSD);
-      const allowedStatus = ['en_whatsapp', 'pendiente', 'confirmada'];
-      const bookingStatus = allowedStatus.includes(req.body?.status) ? req.body.status : 'en_whatsapp';
-      const bookingId = req.body?.id || `booking_${Date.now()}_${cleanPhone.slice(-4)}`;
+      // Id y estado los decide el servidor: la clienta no puede elegir el id ni dejar la cita «confirmada».
+      const bookingStatus = 'en_whatsapp';
+      const bookingId = `bk_${randomUUID()}`;
 
       // 3. Registrar Cita con precio oficial verificado en base de datos
       await sql`
@@ -137,10 +208,10 @@ export default async function handler(req: any, res: any) {
           ${cleanServiceName},
           ${officialPrice},
           ${finalPriceUSD},
-          ${staffId || null},
-          ${staffName ? String(staffName).trim() : null},
-          ${zoneId || null},
-          ${zoneName ? String(zoneName).trim() : null},
+          ${cleanStaffId},
+          ${cleanStaffName},
+          ${cleanZoneId},
+          ${cleanZoneName},
           ${cleanDate}::date,
           ${cleanTime},
           ${validPayment},
@@ -243,6 +314,12 @@ export default async function handler(req: any, res: any) {
 
       const cleanId = String(id).trim();
 
+      // Sesión antes de buscar: un anónimo recibe 401 y no puede averiguar qué citas existen.
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
       // C10 (§4.2): Carga la cita de la base de datos y toma SU tenant_id
       const targetBooking = await sql`
         SELECT id, tenant_id, client_phone, client_name 
@@ -258,15 +335,18 @@ export default async function handler(req: any, res: any) {
       const bookingTenant = String(targetBooking[0].tenant_id).toLowerCase();
 
       // Validación estricta de sesión y rol del salón
-      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin', 'staff']);
+      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin', 'staff'], sesion);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       // Reprogramación de Cita (cambio de fecha y turno aislado por salón)
       if (action === 'reschedule' && date && timeSlot) {
-        const cleanDate = String(date).trim().slice(0, 10);
-        const cleanTime = String(timeSlot).trim().slice(0, 10);
+        const cleanDate = String(date).trim();
+        const cleanTime = String(timeSlot).trim().toUpperCase();
+        if (!fechaReal(cleanDate) || !TURNO_VALIDO.test(cleanTime)) {
+          return res.status(400).json({ error: 'Fecha o turno con formato inválido.' });
+        }
 
         // Validar que el nuevo turno no esté ocupado ni bloqueado en ESE MISMO SALÓN
         const occupied = await sql`
@@ -395,6 +475,12 @@ export default async function handler(req: any, res: any) {
 
       const cleanId = String(id).trim();
 
+      // Sesión antes de buscar (401 para anónimos, sin revelar si la cita existe).
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
       // C10 (§4.2): Carga la cita de la BD para tomar SU tenant_id
       const targetBooking = await sql`
         SELECT id, tenant_id 
@@ -409,8 +495,8 @@ export default async function handler(req: any, res: any) {
 
       const bookingTenant = String(targetBooking[0].tenant_id).toLowerCase();
 
-      // Exige sesión y rol en ese salón (owner, admin, staff)
-      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin', 'staff']);
+      // Borrar solo dueño o admin (decisión de karc0, 27/10): el staff cambia estados, no borra.
+      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin'], sesion);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }
