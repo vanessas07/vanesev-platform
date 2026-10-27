@@ -36,7 +36,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
           return;
         }
 
-        if (res.data?.twoFactorRedirect) {
+        if ((res.data as any)?.twoFactorRedirect) {
           setRequire2fa(true);
         } else {
           // Central exige 2FA activo obligatoriamente. Si no lo tiene, se rechaza tajantemente.

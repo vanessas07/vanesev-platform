@@ -57,7 +57,7 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({ onAuthenticated, o
         return;
       }
 
-      if (res.data?.twoFactorRedirect) {
+      if ((res.data as any)?.twoFactorRedirect) {
         setView('totp');
         setSuccessMsg('Introduce el código de verificación en dos pasos (TOTP).');
         return;

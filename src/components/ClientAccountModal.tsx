@@ -111,7 +111,7 @@ export const ClientAccountModal: React.FC<ClientAccountModalProps> = ({
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const res = await authClient.emailOTP.sendVerificationOtp({
+      const res = await authClient.emailOtp.sendVerificationOtp({
         email: cleanEmail,
         type: 'sign-in',
       });

@@ -650,7 +650,7 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
                   className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#0F172A] font-mono placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Destinos permitidos exclusivamente dentro del salón: <code className="text-slate-800 font-bold">/{slug}...</code> o <code className="text-slate-800 font-bold">/m/{slug}...</code>.
+                  Destinos permitidos exclusivamente dentro del salón: <code className="text-slate-800 font-bold">/{tenantSlug === 'all' ? 'salón' : tenantSlug}...</code> o <code className="text-slate-800 font-bold">/m/{tenantSlug === 'all' ? 'salón' : tenantSlug}...</code>.
                 </p>
               </div>
 
