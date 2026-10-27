@@ -137,6 +137,15 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
   const [showVipModal, setShowVipModal] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [publicData, setPublicData] = useState<SalonPublico | null>(null);
+
+  useEffect(() => {
+    SalonApi.publico(tenantSlug || 'capra-studio').then((res) => {
+      if (res.ok) {
+        setPublicData(res.data);
+      }
+    });
+  }, [tenantSlug]);
 
   // VIP Loyalty Passport interactive state
   const [vipPhoneInput, setVipPhoneInput] = useState('');

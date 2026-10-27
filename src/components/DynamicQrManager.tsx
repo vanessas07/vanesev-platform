@@ -49,10 +49,12 @@ interface DynamicQrManagerProps {
 }
 
 export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
+  salonTheme,
   tenantSlug,
   tenantName,
   onClose,
 }) => {
+  const [seccionActual, setSeccionActual] = useState<'qr' | 'kit'>('qr');
   const [qrList, setQrList] = useState<DynamicQrItem[]>([]);
   const [recentScans, setRecentScans] = useState<ScanEvent[]>([]);
   const [totalScans, setTotalScans] = useState<number>(0);

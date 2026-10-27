@@ -34,10 +34,10 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
 
   // SVG QR data string
   const qrSvg = React.useMemo(() => {
-    return QREncoder.generateSvgString(targetUrl, {
+    const matrix = QREncoder.generateMatrix(targetUrl);
+    return QREncoder.toSVG(matrix, {
       fgColor: palette.primary || '#7A3E4A',
       bgColor: '#FFFFFF',
-      margin: 1,
       centerText: tenantSlug === 'capra-studio' ? 'CS' : 'V',
     });
   }, [targetUrl, palette.primary, tenantSlug]);
@@ -101,7 +101,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
     ctx.fill();
 
     // Dibujar QR dentro de la tarjeta
-    const qrMatrix = QREncoder.encode(targetUrl, 'M');
+    const qrMatrix = { size: QREncoder.generateMatrix(targetUrl).length, data: QREncoder.generateMatrix(targetUrl) };
     const qrPixelSize = 14;
     const qrTotalPx = qrMatrix.size * qrPixelSize;
     const qrX = cardX + (cardW - qrTotalPx) / 2;
@@ -192,7 +192,7 @@ export const SalonLaunchKit: React.FC<SalonLaunchKitProps> = ({
     ctx.stroke();
 
     // Dibujar QR
-    const qrMatrix = QREncoder.encode(targetUrl, 'M');
+    const qrMatrix = { size: QREncoder.generateMatrix(targetUrl).length, data: QREncoder.generateMatrix(targetUrl) };
     const qrPixelSize = 10;
     const qrTotalPx = qrMatrix.size * qrPixelSize;
     const qrX = cardX + (cardSize - qrTotalPx) / 2;

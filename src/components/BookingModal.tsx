@@ -183,40 +183,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
   }, [isOpen, preSelectedService, preSelectedPromo, services, availableDates, tenantSlug]);
 
-  // D3 §4: Presupuesto oficial del servidor
-  useEffect(() => {
-    if (step !== 3 || !currentService?.id || !selectedDate || !selectedTimeSlot) return;
-    let active = true;
-    setPresupuestoLoading(true);
-    setCuponError(null);
-    setTarjetaError(null);
-
-    SalonApi.presupuesto(tenantSlug, {
-      servicioId: currentService.id,
-      fecha: selectedDate,
-      turno: selectedTimeSlot,
-      telefono: clientPhone.trim() || undefined,
-      primeraVisita: !isExistingClient && isFirstVisit,
-      cupon: cuponInput.trim() ? cuponInput.trim().toUpperCase() : undefined,
-      tarjetaRegalo: tarjetaInput.trim() || undefined,
-    }).then((res) => {
-      if (!active) return;
-      setPresupuestoLoading(false);
-      if (res.ok) {
-        setServidorPresupuesto(res.data);
-      } else {
-        if (cuponInput.trim() && res.error.toLowerCase().includes('cupón')) {
-          setCuponError(res.error);
-        } else if (tarjetaInput.trim() && (res.error.toLowerCase().includes('tarjeta') || res.error.toLowerCase().includes('saldo'))) {
-          setTarjetaError(res.error);
-        } else {
-          setCuponError(res.error);
-        }
-      }
-    });
-
-    return () => { active = false; };
-  }, [step, tenantSlug, currentService?.id, selectedDate, selectedTimeSlot, clientPhone, isFirstVisit, isExistingClient, cuponInput, tarjetaInput]);
+  
 
   // Intelligent real-time recognition by phone or email
   useEffect(() => {
@@ -264,6 +231,41 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   // Calculate pricing: sum of all selected services + addons
   const basePriceUSD = currentServices.reduce((acc, curr) => acc + curr.priceUSD, 0);
+
+  // D3 §4: Presupuesto oficial del servidor
+  useEffect(() => {
+    if (step !== 3 || !currentService?.id || !selectedDate || !selectedTimeSlot) return;
+    let active = true;
+    setPresupuestoLoading(true);
+    setCuponError(null);
+    setTarjetaError(null);
+
+    SalonApi.presupuesto(tenantSlug, {
+      servicioId: currentService.id,
+      fecha: selectedDate,
+      turno: selectedTimeSlot,
+      telefono: clientPhone.trim() || undefined,
+      primeraVisita: !isExistingClient && isFirstVisit,
+      cupon: cuponInput.trim() ? cuponInput.trim().toUpperCase() : undefined,
+      tarjetaRegalo: tarjetaInput.trim() || undefined,
+    }).then((res) => {
+      if (!active) return;
+      setPresupuestoLoading(false);
+      if (res.ok) {
+        setServidorPresupuesto(res.data);
+      } else {
+        if (cuponInput.trim() && res.error.toLowerCase().includes('cupón')) {
+          setCuponError(res.error);
+        } else if (tarjetaInput.trim() && (res.error.toLowerCase().includes('tarjeta') || res.error.toLowerCase().includes('saldo'))) {
+          setTarjetaError(res.error);
+        } else {
+          setCuponError(res.error);
+        }
+      }
+    });
+
+    return () => { active = false; };
+  }, [step, tenantSlug, currentService?.id, selectedDate, selectedTimeSlot, clientPhone, isFirstVisit, isExistingClient, cuponInput, tarjetaInput]);
   const addonsTotalUSD = selectedAddons.reduce((acc, curr) => acc + curr.priceUSD, 0);
   const discountUSD = (!isExistingClient && isFirstVisit) ? 2.00 : 0.00;
   const totalPriceUSD = Math.max(0, basePriceUSD + addonsTotalUSD - discountUSD);

@@ -1,3 +1,4 @@
+import { InstagramIcon } from './Icons';
 import React, { useState, useEffect } from 'react';
 import { SalonApi, PerfilSalon } from '../services/salonApi';
 import { 
@@ -13,8 +14,7 @@ import {
   Image as ImageIcon,
   Save,
   HelpCircle,
-  CreditCard,
-  Instagram
+  CreditCard
 } from 'lucide-react';
 
 interface SalonPerfilTabProps {
@@ -245,7 +245,7 @@ export const SalonPerfilTab: React.FC<SalonPerfilTabProps> = ({ tenantSlug, onPe
 
             <div className="space-y-1">
               <label className="block text-xs font-bold text-[#24152B] flex items-center gap-1.5">
-                <Instagram className="w-3.5 h-3.5 text-[#5B2A6E]" />
+                <InstagramIcon className="w-3.5 h-3.5 text-[#5B2A6E]" />
                 <span>Cuenta de Instagram</span>
               </label>
               <input

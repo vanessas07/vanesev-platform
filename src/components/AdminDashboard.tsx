@@ -83,21 +83,60 @@ interface AdminDashboardProps {
   onLogout?: () => void;
 }
 
-type TabKey = 'overview' | 'bookings' | 'theme' | 'services' | 'team' | 'qr' | 'crm' | 'analytics' | 'calendar' | 'gallery' | 'settings' | 'puesta_a_punto';
+type TabKey =
+  | 'overview'
+  | 'perfil'
+  | 'services'
+  | 'team'
+  | 'theme'
+  | 'landing'
+  | 'qr'
+  | 'promos'
+  | 'cupones'
+  | 'tarjetas'
+  | 'bookings'
+  | 'calendar'
+  | 'crm'
+  | 'analytics'
+  | 'gallery'
+  | 'settings'
+  | 'puesta_a_punto';
+
+type SpaceKey = 'inicio' | 'estudio' | 'ventas' | 'agenda' | 'clientas' | 'negocio';
+
+interface SpaceDef {
+  key: SpaceKey;
+  label: string;
+  tabs: TabKey[];
+}
+
+const SPACES: SpaceDef[] = [
+  { key: 'inicio', label: 'Inicio', tabs: ['overview'] },
+  { key: 'estudio', label: 'Estudio', tabs: ['perfil', 'services', 'team', 'theme', 'landing', 'qr', 'gallery'] },
+  { key: 'ventas', label: 'Ventas', tabs: ['promos', 'cupones', 'tarjetas'] },
+  { key: 'agenda', label: 'Agenda', tabs: ['bookings', 'calendar'] },
+  { key: 'clientas', label: 'Clientas', tabs: ['crm'] },
+  { key: 'negocio', label: 'Negocio', tabs: ['analytics', 'puesta_a_punto', 'settings'] },
+];
 
 const NAV_ITEMS: { key: TabKey; label: string; shortLabel: string; subtitle: string; Icon: React.FC<{ className?: string }> }[] = [
-  { key: 'overview',  label: 'Panel & Programa VIP',     shortLabel: 'Overview',  subtitle: 'Supervisa facturación, metas operativas, módulos activos y reservas en tiempo real.', Icon: LayoutDashboard },
-  { key: 'bookings',  label: 'Agenda & Reservas',        shortLabel: 'Agenda',    subtitle: 'Gestiona turnos confirmados, solicitudes en WhatsApp y citas presenciales.',          Icon: Calendar },
-  { key: 'services',  label: 'Catálogo de Servicios',    shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Scissors },
-  { key: 'theme',     label: 'Diseño & Identidad',       shortLabel: 'Diseño',    subtitle: 'Personaliza en vivo la paleta de colores, tipografía y tarjetas de tu carta QR.',   Icon: Palette },
-  { key: 'crm',       label: 'Programa de Fidelidad',    shortLabel: 'Programa',  subtitle: 'Controla sellos acumulados en el Pasaporte VIP y recompensas de clientas.',         Icon: Award },
-  { key: 'team',      label: 'Equipo & Cabinas',         shortLabel: 'Equipo',    subtitle: 'Configura especialistas, comisiones pactadas y capacidad por área o cabina.',       Icon: ShieldCheck },
-  { key: 'qr',        label: 'Motor QR de Recepción',    shortLabel: 'QR Studio', subtitle: 'Descarga tu código QR oficial para tocadores, espejos, recepción e Instagram.',     Icon: QrCode },
-  { key: 'analytics', label: 'Reportes & Finanzas',      shortLabel: 'Reportes',  subtitle: 'Analítica de ingresos, balance de comisiones y exportación contable.',              Icon: BarChart3 },
-  { key: 'calendar',  label: 'Horarios & Bloqueos',      shortLabel: 'Horarios',  subtitle: 'Bloquea días festivos, horas de almuerzo o cabinas en mantenimiento.',              Icon: Clock },
-  { key: 'gallery',   label: 'Galería Editorial',        shortLabel: 'Galería',   subtitle: 'Actualiza el portafolio visual de trabajos reales de tu estudio.',                  Icon: ImageIcon },
-  { key: 'settings',  label: 'Tasa BCV & Ajustes',       shortLabel: 'Ajustes',   subtitle: 'Sincroniza la tasa oficial BCV del día y descarga respaldos de seguridad.',         Icon: Settings },
-  { key: 'puesta_a_punto', label: 'Puesta a punto', shortLabel: 'Puesta a punto', subtitle: 'Envía solicitudes de cambio y consulta el historial permanente de tu salón.', Icon: Wrench },
+  { key: 'overview',  label: 'Panel & Resumen Operativo', shortLabel: 'Resumen',   subtitle: 'Supervisa facturación, metas operativas, módulos activos y reservas en tiempo real.', Icon: LayoutDashboard },
+  { key: 'perfil',    label: 'Identidad & Negocio',       shortLabel: 'Identidad', subtitle: 'Configura la marca comercial, canales de atención directa, ubicación y reglas de cobro.', Icon: Briefcase },
+  { key: 'services',  label: 'Catálogo de Servicios',     shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Scissors },
+  { key: 'team',      label: 'Equipo & Zonas',            shortLabel: 'Equipo',    subtitle: 'Configura especialistas, comisiones pactadas y capacidad por área o cabina.',       Icon: ShieldCheck },
+  { key: 'theme',     label: 'Diseño & Estilo de Carta',  shortLabel: 'Estilo',    subtitle: 'Personaliza en vivo la paleta de colores, tipografía y tarjetas de tu carta QR.',   Icon: Palette },
+  { key: 'landing',   label: 'Landing & Presencia Web',   shortLabel: 'Landing',   subtitle: 'Gestiona la historia, galería, preguntas frecuentes y orden de bloques de tu web.', Icon: Globe },
+  { key: 'qr',        label: 'QR Oficial & Kit de Lanzamiento', shortLabel: 'QR y kit', subtitle: 'Descarga tu QR oficial y piezas impresas para recepción, tarjetas y redes.',   Icon: QrCode },
+  { key: 'promos',    label: 'Ofertas & Precios Especiales', shortLabel: 'Ofertas', subtitle: 'Lanza precios especiales por fecha y horario con descuento real en reservas.',  Icon: Tag },
+  { key: 'cupones',   label: 'Cupones de Descuento',      shortLabel: 'Cupones',   subtitle: 'Crea códigos promocionales por porcentaje o importe con límite de usos.',           Icon: Percent },
+  { key: 'tarjetas',  label: 'Tarjetas Regalo',           shortLabel: 'Tarjetas',  subtitle: 'Emite tarjetas regalo con saldo prepagado y control de consumo en reservas.',       Icon: Gift },
+  { key: 'bookings',  label: 'Agenda & Citas',            shortLabel: 'Citas',     subtitle: 'Gestiona turnos confirmados, solicitudes en WhatsApp y citas presenciales.',          Icon: Calendar },
+  { key: 'calendar',  label: 'Calendario & Bloqueos',     shortLabel: 'Calendario',subtitle: 'Bloquea días festivos, horas de almuerzo o cabinas en mantenimiento.',              Icon: Clock },
+  { key: 'crm',       label: 'CRM & Fidelidad VIP',       shortLabel: 'CRM VIP',   subtitle: 'Controla sellos acumulados en el Pasaporte VIP y recompensas de clientas.',         Icon: Award },
+  { key: 'analytics', label: 'Analítica & Caja (PDF)',    shortLabel: 'Analítica', subtitle: 'Analítica de ingresos, balance de comisiones y exportación contable en PDF.',       Icon: BarChart3 },
+  { key: 'gallery',   label: 'Galería Editorial',         shortLabel: 'Galería',   subtitle: 'Actualiza el portafolio visual de trabajos reales de tu estudio.',                  Icon: ImageIcon },
+  { key: 'settings',  label: 'Tasa BCV & Ajustes',        shortLabel: 'Ajustes',   subtitle: 'Sincroniza la tasa oficial BCV del día y descarga respaldos de seguridad.',         Icon: Settings },
+  { key: 'puesta_a_punto', label: 'Puesta a punto',       shortLabel: 'Puesta a punto', subtitle: 'Envía solicitudes de cambio y consulta el historial permanente de tu salón.', Icon: Wrench },
 ];
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
