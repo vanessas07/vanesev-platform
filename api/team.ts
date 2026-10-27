@@ -48,7 +48,7 @@ export default async function handler(req: any, res: any) {
 
       const isStaffOnly = authCheck.role === 'staff';
 
-      const [staffRows, zoneRows] = await Promise.all([
+      const [staffRows, zoneRows, peticionesRows, tenantRows] = await Promise.all([
         isStaffOnly
           ? sql`
               SELECT 

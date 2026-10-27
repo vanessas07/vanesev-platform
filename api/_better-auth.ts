@@ -380,7 +380,7 @@ export const auth = betterAuth({
         const identifier = body?.email || body?.phoneNumber;
         if (identifier) {
           const ret = ctx.context?.returned as any;
-          const status = ctx.context?.response?.status;
+          const status = (ctx.context as any)?.response?.status;
 
           const isError =
             ret instanceof Error ||
@@ -418,7 +418,7 @@ export const auth = betterAuth({
       // Al verificar OTP (desbloqueo), limpiar contador de fallos
       if (ctx.path.startsWith("/phone-number/verify")) {
         const ret = ctx.context?.returned as any;
-        const status = ctx.context?.response?.status;
+        const status = (ctx.context as any)?.response?.status;
         const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 401) || status === 200;
         if (isSuccess) {
           const body = ctx.body as Record<string, any> | undefined;
@@ -436,7 +436,7 @@ export const auth = betterAuth({
       // Al cambiar la contraseña exitosamente, retirar la bandera must_reset
       if (ctx.path.startsWith("/change-password")) {
         const ret = ctx.context?.returned as any;
-        const status = ctx.context?.response?.status;
+        const status = (ctx.context as any)?.response?.status;
         const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 400 && ret?.status !== 401 && ret?.status !== 403) || status === 200;
         if (isSuccess) {
           try {
