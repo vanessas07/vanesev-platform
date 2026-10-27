@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { VanesevLogo } from './VanesevLogo';
 import { authClient } from '../lib/authClient';
 import { 
   ShieldCheck, 
@@ -158,14 +159,14 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({ onAuthenticated, o
         
         {/* Cabecera */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-v-brand-soft text-v-brand border border-v-brand/20 shadow-xs mx-auto mb-1">
-            <ShieldCheck className="w-8 h-8" />
+          <div className="flex justify-center mb-2">
+            <VanesevLogo tono="claro" tamano={40} dedicatoria={false} />
           </div>
-          <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-v-brand block">
-            Acceso del Estudio &bull; Panel de Gestión
+          <span className="text-[10px] uppercase font-semibold tracking-[0.25em] text-v-champagne-ink block">
+            Acceso del estudio &bull; Panel de gestión
           </span>
           <h2 className="font-cormorant text-2xl sm:text-3xl font-semibold text-v-ink tracking-tight">
-            VANESEV Panel
+            Tu panel de dueña
           </h2>
           <p className="text-xs text-v-muted">
             Portal administrativo del salón

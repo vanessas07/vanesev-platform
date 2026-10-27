@@ -167,12 +167,12 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
   return (
     <div className="space-y-6">
       {/* Guía corta de sección */}
-      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#24152B]/10 flex items-start gap-3.5">
-        <div className="p-2 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] shrink-0 mt-0.5">
+      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start gap-3.5">
+        <div className="p-2 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] shrink-0 mt-0.5">
           <HelpCircle className="w-4 h-4" />
         </div>
         <div className="text-xs text-[#6E6478] leading-relaxed">
-          <p className="font-bold text-[#24152B] text-sm mb-0.5">Ofertas & Precios Especiales</p>
+          <p className="font-bold text-[#1A1020] text-sm mb-0.5">Ofertas & Precios Especiales</p>
           <p>
             Publica promociones temporales para tus servicios. El precio especial se vincula a tu catálogo y el servidor
             lo aplica automáticamente durante la reserva cuando la clienta elige un turno dentro de la vigencia configurada.
@@ -204,14 +204,14 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
 
       {/* Cabecera y botón de nueva oferta */}
       <div className="flex items-center justify-between gap-3">
-        <h4 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-          <Tag className="w-4 h-4 text-[#5B2A6E]" />
+        <h4 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+          <Tag className="w-4 h-4 text-[#4A1F5C]" />
           <span>Ofertas Activas ({ofertas.length})</span>
         </h4>
         <button
           type="button"
           onClick={() => { setShowForm(!showForm); resetForm(); }}
-          className="px-4 py-2 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+          className="px-4 py-2 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>{showForm ? 'Cancelar' : 'Nueva Oferta'}</span>
@@ -220,12 +220,12 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
 
       {/* Formulario de creación */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/15 space-y-4 shadow-sm">
-          <h5 className="text-xs font-bold text-[#24152B] uppercase tracking-wider">Crear Nueva Oferta Comercial</h5>
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/15 space-y-4 shadow-sm">
+          <h5 className="text-xs font-bold text-[#1A1020] uppercase tracking-wider">Crear Nueva Oferta Comercial</h5>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Título de la Oferta * (≤ 60 caracteres)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Título de la Oferta * (≤ 60 caracteres)</label>
               <input
                 type="text"
                 required
@@ -233,17 +233,17 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Ej: Happy Hour Manicura Semipermanente"
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Servicio en Promoción *</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Servicio en Promoción *</label>
               <select
                 required
                 value={servicioId}
                 onChange={(e) => setServicioId(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               >
                 <option value="">-- Selecciona un servicio --</option>
                 {services.map((s) => (
@@ -255,19 +255,19 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <label className="block text-xs font-bold text-[#24152B]">Texto o Beneficio (≤ 160 caracteres)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Texto o Beneficio (≤ 160 caracteres)</label>
               <input
                 type="text"
                 maxLength={160}
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
                 placeholder="Ej: Disfruta de un 25% de descuento directo en turnos de mañana los días laborables."
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Precio Especial ($ USD) *</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Precio Especial ($ USD) *</label>
               <input
                 type="number"
                 step="0.5"
@@ -276,7 +276,7 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
                 value={precioEspecialUSD}
                 onChange={(e) => setPrecioEspecialUSD(e.target.value)}
                 placeholder="Ej: 15.00"
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
               {servicioSeleccionado && (
                 <p className="text-[11px] text-[#6E6478]">
@@ -287,11 +287,11 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Tipo de Botón & Acción</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Tipo de Botón & Acción</label>
               <select
                 value={boton}
                 onChange={(e) => setBoton(e.target.value as any)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               >
                 <option value="reservar">Botón Reservar</option>
                 <option value="catalogo">Ver en Catálogo</option>
@@ -300,92 +300,92 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <label className="block text-xs font-bold text-[#24152B]">Texto del Botón (≤ 30 caracteres)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Texto del Botón (≤ 30 caracteres)</label>
               <input
                 type="text"
                 maxLength={30}
                 value={botonTexto}
                 onChange={(e) => setBotonTexto(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             {/* Fechas de vigencia */}
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Fecha Inicio (Opcional)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Fecha Inicio (Opcional)</label>
               <input
                 type="date"
                 value={inicio}
                 onChange={(e) => setInicio(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Fecha Fin (Opcional)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Fecha Fin (Opcional)</label>
               <input
                 type="date"
                 value={fin}
                 onChange={(e) => setFin(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             {/* Franja horaria */}
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Hora Desde (Opcional, 24 h)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Hora Desde (Opcional, 24 h)</label>
               <input
                 type="time"
                 value={horaInicio}
                 onChange={(e) => setHoraInicio(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#24152B]">Hora Hasta (Opcional, 24 h)</label>
+              <label className="block text-xs font-bold text-[#1A1020]">Hora Hasta (Opcional, 24 h)</label>
               <input
                 type="time"
                 value={horaFin}
                 onChange={(e) => setHoraFin(e.target.value)}
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             <div className="flex items-center gap-4 sm:col-span-2 pt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#24152B]">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#1A1020]">
                 <input
                   type="checkbox"
                   checked={activa}
                   onChange={(e) => setActiva(e.target.checked)}
-                  className="rounded text-[#5B2A6E] focus:ring-[#5B2A6E]"
+                  className="rounded text-[#4A1F5C] focus:ring-[#4A1F5C]"
                 />
                 <span>Oferta activa y visible</span>
               </label>
 
-              <div className="flex items-center gap-2 text-xs text-[#24152B]">
+              <div className="flex items-center gap-2 text-xs text-[#1A1020]">
                 <span className="font-bold">Prioridad / Orden:</span>
                 <input
                   type="number"
                   min={1}
                   value={orden}
                   onChange={(e) => setOrden(parseInt(e.target.value, 10) || 1)}
-                  className="w-16 p-1 bg-[#FBFAFC] border border-[#24152B]/15 rounded-lg text-xs text-center"
+                  className="w-16 p-1 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-lg text-xs text-center"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-[#24152B]/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-[#1A1020]/10">
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-xs font-semibold text-[#6E6478] hover:text-[#24152B] cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              className="px-6 py-2 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
               {saving ? 'Guardando...' : 'Guardar Oferta'}
             </button>
@@ -397,9 +397,9 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
       {loading ? (
         <div className="py-10 text-center text-xs text-[#6E6478]">Cargando ofertas del salón...</div>
       ) : ofertas.length === 0 ? (
-        <div className="p-8 rounded-2xl bg-white border border-[#24152B]/10 text-center space-y-2">
+        <div className="p-8 rounded-2xl bg-white border border-[#1A1020]/10 text-center space-y-2">
           <Tag className="w-8 h-8 text-[#6E6478]/40 mx-auto" />
-          <p className="text-xs font-bold text-[#24152B]">No hay ofertas configuradas</p>
+          <p className="text-xs font-bold text-[#1A1020]">No hay ofertas configuradas</p>
           <p className="text-[11px] text-[#6E6478]">
             Pulsa en "Nueva Oferta" para publicar precios especiales o paquetes de temporada.
           </p>
@@ -409,22 +409,22 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
           {ofertas.map((of) => (
             <div
               key={of.id || of.titulo}
-              className="p-4 sm:p-5 rounded-2xl bg-white border border-[#24152B]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-4 sm:p-5 rounded-2xl bg-white border border-[#1A1020]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-xs text-[#24152B]">{of.titulo}</span>
+                  <span className="font-bold text-xs text-[#1A1020]">{of.titulo}</span>
                   {of.activa ? (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                       Activa
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F4F2F7] text-[#4A4150]">
                       Inactiva
                     </span>
                   )}
                   {of.servicioNombre && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#5B2A6E]/10 text-[#5B2A6E]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1F1226]/10 text-[#4A1F5C]">
                       {of.servicioNombre}
                     </span>
                   )}
@@ -445,13 +445,13 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
                   )}
                   {(of.inicio || of.fin) && (
                     <span className="flex items-center gap-1 text-[11px]">
-                      <Calendar className="w-3 h-3 text-[#5B2A6E]" />
+                      <Calendar className="w-3 h-3 text-[#4A1F5C]" />
                       <span>{of.inicio || 'Siempre'} hasta {of.fin || 'Indefinido'}</span>
                     </span>
                   )}
                   {(of.horaInicio && of.horaFin) && (
                     <span className="flex items-center gap-1 text-[11px]">
-                      <Clock className="w-3 h-3 text-[#5B2A6E]" />
+                      <Clock className="w-3 h-3 text-[#4A1F5C]" />
                       <span>{of.horaInicio} – {of.horaFin}</span>
                     </span>
                   )}
@@ -462,7 +462,7 @@ export const SalonOfertasTab: React.FC<SalonOfertasTabProps> = ({ tenantSlug, se
                 <button
                   type="button"
                   onClick={() => handleBorrar(of.id)}
-                  className="p-2 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer rounded-lg hover:bg-rose-50"
+                  className="p-2 text-[#6E6478] hover:text-rose-600 transition-colors cursor-pointer rounded-lg hover:bg-rose-50"
                   title="Eliminar oferta"
                 >
                   <Trash2 className="w-4 h-4" />
