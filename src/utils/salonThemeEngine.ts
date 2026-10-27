@@ -405,17 +405,44 @@ function normalizeThemeConfig(raw: Partial<SalonThemeConfig>, slug: string): Sal
   };
 }
 
-export function getSalonThemeConfig(tenantSlug: string): SalonThemeConfig {
-  const cleanSlug = (tenantSlug || 'capra-studio').toLowerCase().trim();
-  const storageKey = `vanesev_salon_theme_${cleanSlug}`;
+// Tema del salón guardado en Neon (tenants.tema, G-031): se carga una vez por salón y se guarda en
+// memoria; las pantallas siguen leyendo en síncrono y se repintan con el evento «vanesev-theme-updated».
+const temasEnMemoria = new Map<string, Partial<SalonThemeConfig>>();
+const temasPedidos = new Set<string>();
+
+function avisarCambioDeTema(config: SalonThemeConfig) {
   try {
-    const raw = localStorage.getItem(storageKey);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return normalizeThemeConfig(parsed, cleanSlug);
+    window.dispatchEvent(new CustomEvent('vanesev-theme-updated', { detail: config }));
+  } catch {
+    // fuera del navegador no hay a quién avisar
+  }
+}
+
+/** Trae el tema del salón desde /api/salon (vista pública) y avisa a las pantallas. */
+export async function cargarTemaRemoto(tenantSlug: string): Promise<SalonThemeConfig> {
+  const cleanSlug = (tenantSlug || 'capra-studio').toLowerCase().trim();
+  temasPedidos.add(cleanSlug);
+  try {
+    const res = await fetch(`/api/salon?tenant=${encodeURIComponent(cleanSlug)}&vista=publica`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.tema && typeof json.tema === 'object') temasEnMemoria.set(cleanSlug, json.tema);
     }
   } catch {
-    // ignore storage errors
+    // sin conexión: se queda el tema por defecto
+  }
+  const config = getSalonThemeConfig(cleanSlug);
+  avisarCambioDeTema(config);
+  return config;
+}
+
+export function getSalonThemeConfig(tenantSlug: string): SalonThemeConfig {
+  const cleanSlug = (tenantSlug || 'capra-studio').toLowerCase().trim();
+  if (!temasPedidos.has(cleanSlug) && typeof window !== 'undefined') void cargarTemaRemoto(cleanSlug);
+  const guardado = temasEnMemoria.get(cleanSlug);
+  if (guardado && Object.keys(guardado).length) {
+    const base = cleanSlug === 'capra-studio' ? DEFAULT_CAPRA_THEME : {};
+    return normalizeThemeConfig({ ...base, ...guardado }, cleanSlug);
   }
 
   if (cleanSlug === 'capra-studio') {
@@ -442,6 +469,10 @@ export function getSalonThemeConfig(tenantSlug: string): SalonThemeConfig {
   );
 }
 
+/**
+ * Guarda el tema en Neon (owner/admin del salón o superadmin). Devuelve el tema al momento para
+ * que la pantalla no espere; si el servidor lo rechaza, se vuelve a cargar el guardado y se avisa.
+ */
 export function saveSalonThemeConfig(
   slugOrConfig: string | Partial<SalonThemeConfig>,
   maybeConfig?: Partial<SalonThemeConfig>
@@ -453,13 +484,19 @@ export function saveSalonThemeConfig(
   const cleanSlug = (rawConfig.tenantSlug || 'capra-studio').toLowerCase().trim();
   const existing = getSalonThemeConfig(cleanSlug);
   const merged = normalizeThemeConfig({ ...existing, ...rawConfig }, cleanSlug);
-  const storageKey = `vanesev_salon_theme_${cleanSlug}`;
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(merged));
-    window.dispatchEvent(new CustomEvent('vanesev-theme-updated', { detail: merged }));
-  } catch {
-    // ignore
-  }
+  temasEnMemoria.set(cleanSlug, merged);
+  avisarCambioDeTema(merged);
+  const { tenantSlug: _slug, ...tema } = merged;
+  fetch('/api/salon', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'tema_guardar', tenantId: cleanSlug, tema }),
+  })
+    .then((res) => {
+      if (!res.ok) void cargarTemaRemoto(cleanSlug);
+    })
+    .catch(() => void cargarTemaRemoto(cleanSlug));
   return merged;
 }
 

@@ -189,6 +189,36 @@ export class AppStore {
     }));
   }
 
+  /**
+   * Ofertas del salón desde Neon (G-033), en el formato que pintan las pantallas actuales.
+   * Andrea Nails conserva sus ofertas de siempre mientras no tenga ninguna en la base (G-032).
+   */
+  static async fetchRemotePromos(): Promise<PromoOffer[]> {
+    if (!this.activeTenantId) return [];
+    try {
+      const res = await fetch(`/api/salon?tenant=${encodeURIComponent(this.activeTenantId)}&vista=publica`);
+      if (!res.ok) return this.getPromos();
+      const json = await res.json();
+      const ofertas: any[] = Array.isArray(json?.ofertas) ? json.ofertas : [];
+      if (!ofertas.length) return this.getPromos();
+      return ofertas.map((o) => ({
+        id: o.id,
+        title: o.titulo,
+        subtitle: o.texto || '',
+        servicesIncluded: o.servicioNombre ? [o.servicioNombre] : [],
+        regularPriceUSD: Number(o.precioNormalUSD) || 0,
+        promoPriceUSD: o.precioEspecialUSD === null || o.precioEspecialUSD === undefined ? Number(o.precioNormalUSD) || 0 : Number(o.precioEspecialUSD),
+        badge: o.botonTexto || 'Oferta',
+        validUntil: o.fin || '',
+        isActive: o.activa !== false,
+        imageUrl: '',
+        serviceId: o.servicioId || undefined,
+      }));
+    } catch {
+      return this.getPromos();
+    }
+  }
+
   static savePromos(promos: PromoOffer[]): void {
     this.setStored(STORAGE_KEYS.PROMOS, promos);
   }
@@ -348,6 +378,9 @@ export class AppStore {
           totalPriceUSD: booking.totalPriceUSD,
           date: booking.date,
           timeSlot: booking.timeSlot,
+          // G-033: el servidor valida el cupón y la tarjeta regalo y decide el precio final.
+          cupon: (booking as any).cupon || undefined,
+          tarjetaRegalo: (booking as any).tarjetaRegalo || undefined,
           paymentMethod: booking.paymentMethod,
           isFirstVisit: booking.isFirstVisit,
           notes: booking.notes,
