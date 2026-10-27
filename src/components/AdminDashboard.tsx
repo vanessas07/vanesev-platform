@@ -7,7 +7,10 @@ import {
   GallerySlide
 } from '../types';
 import { AppStore, StudioEmailSettings } from '../services/store';
+import { authClient } from '../lib/authClient';
 import { 
+  Wrench,
+  KeyRound,
   LayoutDashboard, 
   Calendar, 
   Sparkles, 
@@ -74,7 +77,7 @@ interface AdminDashboardProps {
   onLogout?: () => void;
 }
 
-type TabKey = 'overview' | 'bookings' | 'theme' | 'services' | 'team' | 'qr' | 'crm' | 'analytics' | 'calendar' | 'gallery' | 'settings';
+type TabKey = 'overview' | 'bookings' | 'theme' | 'services' | 'team' | 'qr' | 'crm' | 'analytics' | 'calendar' | 'gallery' | 'settings' | 'puesta_a_punto';
 
 const NAV_ITEMS: { key: TabKey; label: string; shortLabel: string; subtitle: string; Icon: React.FC<{ className?: string }> }[] = [
   { key: 'overview',  label: 'Panel & Programa VIP',     shortLabel: 'Overview',  subtitle: 'Supervisa facturación, metas operativas, módulos activos y reservas en tiempo real.', Icon: LayoutDashboard },
@@ -88,6 +91,7 @@ const NAV_ITEMS: { key: TabKey; label: string; shortLabel: string; subtitle: str
   { key: 'calendar',  label: 'Horarios & Bloqueos',      shortLabel: 'Horarios',  subtitle: 'Bloquea días festivos, horas de almuerzo o cabinas en mantenimiento.',              Icon: Clock },
   { key: 'gallery',   label: 'Galería Editorial',        shortLabel: 'Galería',   subtitle: 'Actualiza el portafolio visual de trabajos reales de tu estudio.',                  Icon: ImageIcon },
   { key: 'settings',  label: 'Tasa BCV & Ajustes',       shortLabel: 'Ajustes',   subtitle: 'Sincroniza la tasa oficial BCV del día y descarga respaldos de seguridad.',         Icon: Settings },
+  { key: 'puesta_a_punto', label: 'Puesta a punto', shortLabel: 'Puesta a punto', subtitle: 'Envía solicitudes de cambio y consulta el historial permanente de tu salón.', Icon: Wrench },
 ];
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -111,6 +115,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [dbStaff, setDbStaff] = useState<any[]>([]);
   const [dbZones, setDbZones] = useState<any[]>([]);
   const [isLoadingTeamDb, setIsLoadingTeamDb] = useState(false);
+  const [enPrueba, setEnPrueba] = useState(false);
+  const [peticiones, setPeticiones] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const [solicitudTexto, setSolicitudTexto] = useState('');
+  const [solicitudQuiereLlamada, setSolicitudQuiereLlamada] = useState(false);
+  const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
+  const [solicitudError, setSolicitudError] = useState<string | null>(null);
+  const [solicitudSuccess, setSolicitudSuccess] = useState<string | null>(null);
+
+  const [showActivarModal, setShowActivarModal] = useState(false);
+  const [activarPaso, setActivarPaso] = useState<1 | 2>(1);
+  const [activarCorreo, setActivarCorreo] = useState('');
+  const [activarCodigo, setActivarCodigo] = useState('');
+  const [activarContrasena, setActivarContrasena] = useState('');
+  const [activarConfirmContrasena, setActivarConfirmContrasena] = useState('');
+  const [activarLoading, setActivarLoading] = useState(false);
+  const [activarError, setActivarError] = useState<string | null>(null);
+  const [activarSuccess, setActivarSuccess] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    authClient.getSession().then((res: any) => {
+      if (res?.data?.user) {
+        setCurrentUser(res.data.user);
+      }
+    }).catch(() => {});
+  }, []);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneCapacity, setNewZoneCapacity] = useState('1');
   const [newZoneColor, setNewZoneColor] = useState('#C5A059');
@@ -123,6 +154,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const json = await res.json();
         if (Array.isArray(json.staff)) setDbStaff(json.staff);
         if (Array.isArray(json.zones)) setDbZones(json.zones);
+        if (Array.isArray(json.peticiones)) setPeticiones(json.peticiones);
+        if (typeof json.enPrueba === 'boolean') setEnPrueba(json.enPrueba);
       }
     } catch {
       // Fallback silencioso
@@ -212,6 +245,132 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       await fetchTenantTeamAndZones();
     } finally {
       setIsLoadingTeamDb(false);
+    }
+  };
+
+  const handleEnviarSolicitud = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSolicitudError(null);
+    setSolicitudSuccess(null);
+    if (solicitudTexto.trim().length < 10) {
+      setSolicitudError('El texto debe tener al menos 10 caracteres.');
+      return;
+    }
+    if (solicitudTexto.trim().length > 3000) {
+      setSolicitudError('El texto no puede superar los 3.000 caracteres.');
+      return;
+    }
+    setEnviandoSolicitud(true);
+    try {
+      const res = await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'solicitud_cambios',
+          tenantId: tenantSlug,
+          texto: solicitudTexto.trim(),
+          quiereLlamada: solicitudQuiereLlamada,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSolicitudError(data.error || 'Error al enviar la solicitud.');
+        return;
+      }
+      setSolicitudSuccess('Solicitud enviada correctamente. El equipo técnico la revisará y actualizará su estado.');
+      setSolicitudTexto('');
+      setSolicitudQuiereLlamada(false);
+      await fetchTenantTeamAndZones();
+    } catch (err: any) {
+      setSolicitudError(err?.message || 'Error de conexión.');
+    } finally {
+      setEnviandoSolicitud(false);
+    }
+  };
+
+  const handleEnviarCodigoActivacion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActivarError(null);
+    setActivarSuccess(null);
+    if (!activarCorreo.trim() || !/^[^s@]+@[^s@]+.[^s@]+$/.test(activarCorreo.trim())) {
+      setActivarError('Introduce un correo electrónico válido.');
+      return;
+    }
+    setActivarLoading(true);
+    try {
+      const res = await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'activar_cuenta_codigo',
+          tenantId: tenantSlug,
+          correo: activarCorreo.trim().toLowerCase(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActivarError(data.error || 'Error al solicitar el código.');
+        return;
+      }
+      setActivarSuccess('Código de 6 dígitos enviado por correo. Revisa tu bandeja de entrada.');
+      setActivarPaso(2);
+    } catch (err: any) {
+      setActivarError(err?.message || 'Error de conexión.');
+    } finally {
+      setActivarLoading(false);
+    }
+  };
+
+  const handleActivarCuenta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActivarError(null);
+    setActivarSuccess(null);
+    if (activarCodigo.trim().length !== 6) {
+      setActivarError('El código debe tener 6 dígitos.');
+      return;
+    }
+    if (activarContrasena.length < 12) {
+      setActivarError('La nueva contraseña debe tener al menos 12 caracteres.');
+      return;
+    }
+    if (activarContrasena !== activarConfirmContrasena) {
+      setActivarError('Las contraseñas no coinciden.');
+      return;
+    }
+    setActivarLoading(true);
+    try {
+      const res = await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'activar_cuenta',
+          tenantId: tenantSlug,
+          correo: activarCorreo.trim().toLowerCase(),
+          codigo: activarCodigo.trim(),
+          nuevaContrasena: activarContrasena,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActivarError(data.error || 'Error al activar la cuenta.');
+        return;
+      }
+      setActivarSuccess('¡Cuenta activada con éxito! Cerrando sesión para que inicies con tus nuevas credenciales...');
+      setTimeout(async () => {
+        try {
+          await authClient.signOut();
+        } finally {
+          if (onLogout) {
+            onLogout();
+          } else {
+            window.location.reload();
+          }
+        }
+      }, 2000);
+    } catch (err: any) {
+      setActivarError(err?.message || 'Error de conexión.');
+    } finally {
+      setActivarLoading(false);
     }
   };
 
@@ -1121,6 +1280,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-[#F5F5F8] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
 
+        {/* Franja discreta: Periodo de puesta a punto (Orden B1-c §5) */}
+        {enPrueba && (
+          <div className="mb-4 px-4 py-2.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-950 text-xs font-medium flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span><strong>Periodo de puesta a punto</strong> &bull; Tu salón está en fase de prueba y configuración.</span>
+            </div>
+            {currentUser?.cuenta_prueba && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActivarError(null);
+                  setActivarSuccess(null);
+                  setActivarPaso(1);
+                  setShowActivarModal(true);
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Activar mi cuenta</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* ── VERTIX TOP HEADER BAR (1 SINGLE CLEAN ROW) ── */}
         <header className="flex items-center justify-between gap-3">
           {/* Left: Circular Coral Brand Mark + Compact Salon Name */}
@@ -1145,6 +1329,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               { key: 'theme' as TabKey, label: 'Diseño' },
               { key: 'crm' as TabKey, label: 'Programa' },
               { key: 'analytics' as TabKey, label: 'Reportes' },
+              ...(enPrueba ? [{ key: 'puesta_a_punto' as TabKey, label: 'Puesta a punto' }] : []),
             ].map((pill) => {
               const active = activeTab === pill.key;
               return (
@@ -3154,10 +3339,373 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               />
             )}
 
+            {/* ── PUESTA A PUNTO Y ACTIVACIÓN DE CUENTA (Orden B1-c §3 y §4) ── */}
+            {activeTab === 'puesta_a_punto' && (
+              <div className="space-y-6">
+                {sectionHead(
+                  'Periodo de Puesta a Punto',
+                  'Envía tus solicitudes de cambio o personalización. Todo lo que pidas y configures se conserva siempre.'
+                )}
+
+                {/* Banner Activar mi cuenta (solo visible para cuentas de puesta a punto) */}
+                {currentUser?.cuenta_prueba && (
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full inline-block">
+                        Fase de Puesta a Punto Activa
+                      </span>
+                      <h4 className="font-bold text-sm text-[#18181B] mt-1">¿Lista para activar tu cuenta definitiva?</h4>
+                      <p className="text-xs text-zinc-600 max-w-xl leading-relaxed">
+                        Al activar tu cuenta sustituirás el acceso temporal por tu correo personal y contraseña definitiva. <strong>No se borra nada</strong>: tu catálogo, equipo, zonas, citas, fichas de clientas y solicitudes se conservan intactos.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActivarError(null);
+                        setActivarSuccess(null);
+                        setActivarPaso(1);
+                        setShowActivarModal(true);
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition-colors cursor-pointer flex items-center gap-2 shrink-0"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                      <span>Activar mi cuenta</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Formulario de puesta a punto (Orden B1-c §3.1) */}
+                <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-4">
+                  <div>
+                    <h4 className="font-bold text-sm text-[#18181B]">Formulario de Puesta a Punto</h4>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Describe los cambios o ajustes que necesitas en tu salón (mínimo 10 caracteres, máximo 3.000). Máximo 10 solicitudes al día.
+                    </p>
+                  </div>
+
+                  {solicitudError && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>{solicitudError}</span>
+                    </div>
+                  )}
+
+                  {solicitudSuccess && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{solicitudSuccess}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleEnviarSolicitud} className="space-y-4">
+                    <div>
+                      <textarea
+                        required
+                        rows={4}
+                        minLength={10}
+                        maxLength={3000}
+                        value={solicitudTexto}
+                        onChange={(e) => setSolicitudTexto(e.target.value)}
+                        placeholder="Ej: Quisiera añadir 3 nuevos servicios de spa capilar, cambiar el horario de los sábados de 10:00 a 19:00, y ajustar la paleta de colores a tonos oro..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 text-xs focus:outline-none focus:border-amber-600 bg-white leading-relaxed resize-y"
+                      />
+                      <div className="flex justify-between items-center text-[10px] text-zinc-400 mt-1">
+                        <span>Mínimo 10 caracteres</span>
+                        <span>{solicitudTexto.length} / 3.000 caracteres</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="quiereLlamada"
+                        checked={solicitudQuiereLlamada}
+                        onChange={(e) => setSolicitudQuiereLlamada(e.target.checked)}
+                        className="rounded border-zinc-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                      />
+                      <label htmlFor="quiereLlamada" className="text-xs text-zinc-700 cursor-pointer select-none font-medium">
+                        Quiero una llamada para coordinar estos cambios
+                      </label>
+                    </div>
+
+                    <div className="pt-1 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={enviandoSolicitud || solicitudTexto.trim().length < 10}
+                        className="px-5 py-2.5 rounded-xl bg-[#18181B] hover:bg-black text-white font-bold text-xs shadow-sm disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-colors"
+                      >
+                        {enviandoSolicitud ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Enviando solicitud...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Enviar solicitud</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Historial de solicitudes (nunca se borra) */}
+                <div className="p-6 rounded-2xl bg-white border border-zinc-200 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-100">
+                    <div>
+                      <h4 className="font-bold text-sm text-[#18181B]">Historial de Solicitudes de Puesta a Punto</h4>
+                      <p className="text-xs text-zinc-500 mt-0.5">Registro permanente de todas las peticiones enviadas por este salón (se conserva siempre).</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-100 text-zinc-700">
+                      {peticiones.length} Solicitudes
+                    </span>
+                  </div>
+
+                  {peticiones.length === 0 ? (
+                    <p className="text-xs text-zinc-400 py-6 text-center">Aún no has enviado ninguna solicitud de puesta a punto.</p>
+                  ) : (
+                    <div className="divide-y divide-zinc-100">
+                      {peticiones.map((p: any) => (
+                        <div key={p.id} className="py-4 space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                p.estado === 'hecha' ? 'bg-emerald-100 text-emerald-800' :
+                                p.estado === 'en_curso' ? 'bg-blue-100 text-blue-800' :
+                                'bg-amber-100 text-amber-800'
+                              }`}>
+                                {p.estado || 'recibida'}
+                              </span>
+                              {p.priority === 'high' && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+                                  Llamada solicitada
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-zinc-400">
+                              {p.createdAt ? new Date(p.createdAt).toLocaleString('es-ES') : ''}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                            {p.body}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             </div>
           </main>
         </div>
       </div>
+
+      {/* ── MODAL ACTIVAR MI CUENTA (Orden B1-c §4) ── */}
+      {showActivarModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-[#18181B]">Activar mi cuenta de VANESEV</h3>
+                  <span className="text-[10px] text-zinc-500 font-medium">Paso {activarPaso} de 2 &bull; Acceso definitivo</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowActivarModal(false);
+                  setActivarError(null);
+                  setActivarSuccess(null);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-amber-900">
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                Todo lo configurado se conserva
+              </p>
+              <p className="leading-relaxed">
+                A partir de este momento entrarás con tu correo personal y contraseña. El acceso temporal deja de funcionar. Tus servicios, citas, fichas, sellos, bloqueos y peticiones se mantienen intactos.
+              </p>
+            </div>
+
+            {activarError && (
+              <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{activarError}</span>
+              </div>
+            )}
+
+            {activarSuccess && (
+              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{activarSuccess}</span>
+              </div>
+            )}
+
+            {activarPaso === 1 ? (
+              <form onSubmit={handleEnviarCodigoActivacion} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Tu Correo Electrónico Personal *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={activarCorreo}
+                    onChange={(e) => setActivarCorreo(e.target.value)}
+                    placeholder="ej: duena@misalon.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Te enviaremos un código de verificación de 6 dígitos (válido durante 10 minutos).
+                  </span>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowActivarModal(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={activarLoading || !activarCorreo.trim()}
+                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {activarLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Enviando código...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Enviar código de activación</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleActivarCuenta} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Correo Verificado
+                  </label>
+                  <div className="flex items-center justify-between text-xs font-mono bg-zinc-100 px-3 py-2 rounded-xl text-zinc-700">
+                    <span>{activarCorreo}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActivarPaso(1);
+                        setActivarError(null);
+                      }}
+                      className="text-[11px] font-sans font-semibold text-amber-700 hover:underline cursor-pointer"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Código de 6 Dígitos *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={activarCodigo}
+                    onChange={(e) => setActivarCodigo(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-base font-mono tracking-widest text-center font-bold focus:outline-none focus:border-amber-600"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Revisa tu bandeja de entrada o spam.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Nueva Contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={12}
+                      value={activarContrasena}
+                      onChange={(e) => setActivarContrasena(e.target.value)}
+                      placeholder="Mínimo 12 caracteres"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Confirmar Contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={12}
+                      value={activarConfirmContrasena}
+                      onChange={(e) => setActivarConfirmContrasena(e.target.value)}
+                      placeholder="Repite la contraseña"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-amber-600"
+                    />
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-500 block">
+                  La contraseña debe tener un mínimo de 12 caracteres para máxima seguridad.
+                </span>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActivarPaso(1)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Atrás
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={activarLoading || activarCodigo.length !== 6 || activarContrasena.length < 12}
+                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {activarLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Activando cuenta...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Activar mi cuenta</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── MODAL PARA REPROGRAMAR FECHA Y HORA ACORDADA CON LA CLIENTA ── */}
       {rescheduleBookingTarget && (

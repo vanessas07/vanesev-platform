@@ -1,9 +1,12 @@
 // Vercel Serverless Function: /api/team
 // Manages salon staff members and studio zones in Neon Serverless Postgres
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash, randomInt } from 'node:crypto';
+import { hashPassword } from 'better-auth/crypto';
 import { getDb } from './_db.js';
 import { requireSession, requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
+import { limiteSuperado, claveDeLimite } from './_limite.js';
+import { enviarCorreo } from './_correo.js';
 
 const IMAGEN_VALIDA = /^(\/[A-Za-z0-9/_.-]{1,200}|https:\/\/[^\s"'<>]{1,500}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/;
 const IMAGEN_MAX_CARACTERES = 2_000_000;
@@ -106,6 +109,27 @@ export default async function handler(req: any, res: any) {
           WHERE tenant_id = ${cleanTenant}
           ORDER BY sort_order ASC, created_at ASC;
         `,
+        sql`
+          SELECT 
+            id,
+            sender,
+            recipient,
+            subject,
+            body,
+            category,
+            priority,
+            estado,
+            created_at as "createdAt"
+          FROM public.central_mailbox
+          WHERE sender = ${`salon:${cleanTenant}`} AND category = 'puesta_a_punto'
+          ORDER BY created_at DESC;
+        `,
+        sql`
+          SELECT id, en_prueba as "enPrueba"
+          FROM public.tenants
+          WHERE id = ${cleanTenant}
+          LIMIT 1;
+        `,
       ]);
 
       return res.status(200).json({
@@ -119,6 +143,18 @@ export default async function handler(req: any, res: any) {
           capacity: Number(z.capacity) || 1,
           sortOrder: Number(z.sortOrder) || 0,
         })),
+        peticiones: (peticionesRows || []).map((p: any) => ({
+          id: p.id,
+          sender: p.sender,
+          recipient: p.recipient,
+          subject: p.subject,
+          body: p.body,
+          category: p.category,
+          priority: p.priority,
+          estado: p.estado || 'recibida',
+          createdAt: p.createdAt,
+        })),
+        enPrueba: Boolean(tenantRows[0]?.enPrueba),
         databaseConnected: true,
       });
     } catch (err: any) {
@@ -127,12 +163,188 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Crear o actualizar especialista o zona (owner/admin) ─────────────
+  // ─── POST: Operaciones del equipo y puesta a punto ───────────────────────
   if (req.method === 'POST') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const { action, tenantId } = body;
 
+      // ─── Activar mi cuenta: Paso 1 (Enviar código al correo nuevo) ─────────
+      if (action === 'activar_cuenta_codigo') {
+        const authSession = await requireSession(req);
+        if (authSession.status !== 200) {
+          return res.status(authSession.status).json({ error: authSession.error });
+        }
+        const user = authSession.user;
+        if (!user.cuenta_prueba) {
+          return res.status(403).json({ error: 'Forbidden: Esta acción es solo para cuentas en periodo de puesta a punto (cuenta_prueba).' });
+        }
+
+        const cleanCorreo = String(body.correo || '').trim().toLowerCase();
+        if (!cleanCorreo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanCorreo)) {
+          return res.status(400).json({ error: 'Correo electrónico inválido.' });
+        }
+
+        // 409 si el correo ya es de otra cuenta
+        const existing = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanCorreo} LIMIT 1;
+        `;
+        if (existing.length > 0) {
+          return res.status(409).json({ error: 'El correo electrónico ya está registrado en otra cuenta.' });
+        }
+
+        // Freno de frecuencia: máximo 3 envíos por hora
+        const clave = claveDeLimite('activar_codigo', user.id);
+        const superado = await limiteSuperado(clave, 3, 3600);
+        if (superado) {
+          return res.status(429).json({ error: 'Has superado el límite de 3 envíos por hora. Inténtalo de nuevo más tarde.' });
+        }
+
+        // Código de 6 dígitos
+        const codigo = String(randomInt(100000, 1000000));
+        const hashedCodigo = createHash('sha256').update(codigo).digest('hex');
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+        const identifier = `activar:${user.id}:${cleanCorreo}`;
+
+        const verId = `ver_${randomUUID()}`;
+        await sql.transaction([
+          sql`DELETE FROM "verification" WHERE identifier = ${identifier};`,
+          sql`
+            INSERT INTO "verification" (id, identifier, value, "expiresAt", "createdAt", "updatedAt")
+            VALUES (${verId}, ${identifier}, ${hashedCodigo}, ${expiresAt}, NOW(), NOW());
+          `
+        ]);
+
+        try {
+          await enviarCorreo({
+            para: cleanCorreo,
+            asunto: 'Activa tu cuenta de VANESEV',
+            texto: `Tu código para activar tu cuenta de VANESEV es: ${codigo}\n\nEste código caduca en 10 minutos.`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #F6ECEC; border-radius: 8px;">
+                <h2 style="color: #7A3E4A; margin-top: 0;">Activa tu cuenta de VANESEV</h2>
+                <p style="color: #3B2228; font-size: 15px;">Usa el siguiente código de 6 dígitos en tu panel de administración para verificar tu correo y activar tu cuenta:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; color: #7A3E4A; background: #F6ECEC; padding: 16px; border-radius: 6px; margin: 24px 0;">
+                  ${codigo}
+                </div>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 0;">Este código caduca en 10 minutos. Si no has solicitado activar tu cuenta, ignora este mensaje.</p>
+              </div>
+            `
+          });
+        } catch (mailErr: any) {
+          console.error('[activar_cuenta_codigo] Error de envío SMTP:', mailErr?.message || mailErr);
+        }
+
+        return res.status(200).json({ success: true, message: 'Código de activación enviado por correo.' });
+      }
+
+      // ─── Activar mi cuenta: Paso 2 (Verificar código y activar cuenta) ───────
+      if (action === 'activar_cuenta') {
+        const authSession = await requireSession(req);
+        if (authSession.status !== 200) {
+          return res.status(authSession.status).json({ error: authSession.error });
+        }
+        const user = authSession.user;
+        if (!user.cuenta_prueba) {
+          return res.status(403).json({ error: 'Forbidden: Esta acción es solo para cuentas en periodo de puesta a punto (cuenta_prueba).' });
+        }
+
+        const { correo, codigo, nuevaContrasena } = body;
+        const cleanCorreo = String(correo || '').trim().toLowerCase();
+        const cleanCodigo = String(codigo || '').trim();
+        const cleanPass = String(nuevaContrasena || '');
+
+        if (!cleanCorreo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanCorreo)) {
+          return res.status(400).json({ error: 'Correo electrónico inválido.' });
+        }
+        if (!cleanCodigo || cleanCodigo.length !== 6) {
+          return res.status(400).json({ error: 'Código de verificación de 6 dígitos requerido.' });
+        }
+        if (cleanPass.length < 12) {
+          return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 12 caracteres.' });
+        }
+
+        // Verificar código en tabla verification
+        const identifier = `activar:${user.id}:${cleanCorreo}`;
+        const verRows = await sql`
+          SELECT id, value, "expiresAt" FROM "verification" WHERE identifier = ${identifier} LIMIT 1;
+        `;
+        if (verRows.length === 0) {
+          return res.status(400).json({ error: 'Código no encontrado o no solicitado.' });
+        }
+
+        const ver = verRows[0];
+        if (new Date(ver.expiresAt).getTime() < Date.now()) {
+          return res.status(400).json({ error: 'El código de activación ha caducado. Solicita uno nuevo.' });
+        }
+
+        const hashedInput = createHash('sha256').update(cleanCodigo).digest('hex');
+        if (ver.value !== hashedInput) {
+          return res.status(400).json({ error: 'Código de activación incorrecto.' });
+        }
+
+        // 409 si el correo ya pertenece a otro usuario
+        const conflictUsers = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanCorreo} AND id != ${user.id} LIMIT 1;
+        `;
+        if (conflictUsers.length > 0) {
+          return res.status(409).json({ error: 'El correo electrónico ya está registrado en otra cuenta.' });
+        }
+
+        // Identificar el tenant del usuario
+        const memberRows = await sql`
+          SELECT o.slug, o.id as "orgId"
+          FROM "member" m
+          JOIN "organization" o ON m."organizationId" = o.id
+          WHERE m."userId" = ${user.id}
+          LIMIT 1;
+        `;
+        const tenantSlug = memberRows[0]?.slug || (tenantId ? String(tenantId).trim().toLowerCase() : null);
+
+        // Hashear la nueva contraseña
+        const hashedPassword = await hashPassword(cleanPass);
+
+        // En UNA SOLA TRANSACCIÓN atómica:
+        // - cambia user.email al verificado, emailVerified = true, cuenta_prueba = false
+        // - guarda la nueva contraseña (hashPassword) en account
+        // - pone tenants.en_prueba = false
+        // - revoca TODAS sus sesiones
+        // - elimina el registro de verificación usado
+        // NO borra nada más (citas, clientas, sellos, bloqueos, escaneos, formulario de puesta a punto)
+        await sql.transaction([
+          sql`
+            UPDATE "user"
+            SET email = ${cleanCorreo}, "emailVerified" = true, cuenta_prueba = false, "updatedAt" = NOW()
+            WHERE id = ${user.id};
+          `,
+          sql`
+            UPDATE "account"
+            SET password = ${hashedPassword}, "updatedAt" = NOW()
+            WHERE "userId" = ${user.id} AND "providerId" = 'credential';
+          `,
+          sql`
+            UPDATE public.tenants
+            SET en_prueba = false, updated_at = NOW()
+            WHERE id = ${tenantSlug};
+          `,
+          sql`
+            DELETE FROM "session"
+            WHERE "userId" = ${user.id};
+          `,
+          sql`
+            DELETE FROM "verification"
+            WHERE identifier = ${identifier};
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          email: cleanCorreo,
+          message: 'Cuenta activada correctamente. Inicia sesión con tu nuevo correo y contraseña.'
+        });
+      }
+
+      // ─── Verificación de permisos de Salón para el resto de acciones ─────────
       const rawTenant = tenantId || req.query?.tenant;
       if (!rawTenant || !String(rawTenant).trim()) {
         return res.status(400).json({ error: 'Parámetro tenantId requerido.' });
@@ -142,6 +354,45 @@ export default async function handler(req: any, res: any) {
       const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
+      // ─── Formulario de puesta a punto: Solicitud de cambios (Orden B1-c §3.1)
+      if (action === 'solicitud_cambios') {
+        const { texto, quiereLlamada } = body;
+        const cleanTexto = String(texto || '').trim();
+        if (cleanTexto.length < 10 || cleanTexto.length > 3000) {
+          return res.status(400).json({ error: 'El texto debe tener entre 10 y 3.000 caracteres.' });
+        }
+
+        const clave = claveDeLimite('puesta_a_punto', cleanTenant);
+        const superado = await limiteSuperado(clave, 10, 86400); // Máximo 10 al día por salón
+        if (superado) {
+          return res.status(429).json({ error: 'Has alcanzado el límite de 10 solicitudes de puesta a punto al día para este salón.' });
+        }
+
+        const prioridad = Boolean(quiereLlamada) ? 'high' : 'normal';
+        const asunto = Boolean(quiereLlamada)
+          ? `Solicitud de puesta a punto (Requiere llamada) · ${cleanTenant}`
+          : `Solicitud de puesta a punto · ${cleanTenant}`;
+
+        const msgId = `msg-pap-${Date.now()}-${randomUUID().slice(0, 8)}`;
+        await sql`
+          INSERT INTO public.central_mailbox (id, sender, recipient, subject, body, category, priority, estado, is_read, created_at)
+          VALUES (
+            ${msgId},
+            ${`salon:${cleanTenant}`},
+            'karc0',
+            ${asunto},
+            ${cleanTexto},
+            'puesta_a_punto',
+            ${prioridad},
+            'recibida',
+            false,
+            NOW()
+          );
+        `;
+
+        return res.status(201).json({ success: true, id: msgId });
       }
 
       if (action === 'upsert_staff') {
@@ -306,7 +557,7 @@ export default async function handler(req: any, res: any) {
         }
       }
 
-      return res.status(400).json({ error: 'Acción desconocida (debe ser upsert_staff o upsert_zone).' });
+      return res.status(400).json({ error: 'Acción desconocida.' });
     } catch (err: any) {
       console.error('[Neon Upsert Team Error]:', err);
       return res.status(500).json({ error: 'Error al actualizar equipo o zona en base de datos.' });
