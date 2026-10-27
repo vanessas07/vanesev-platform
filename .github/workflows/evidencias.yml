@@ -8,8 +8,10 @@ on:
 
 # Una sola ejecución a la vez por rama: dos suites en paralelo se pisan en la base de staging.
 concurrency:
-  group: evidencias-${{ github.ref }}
-  cancel-in-progress: true
+  # Una sola ejecución a la vez EN TODO EL REPO (todas usan la misma base de staging y la misma
+  # vista previa): las demás esperan en cola y no se cancelan.
+  group: evidencias-staging-unica
+  cancel-in-progress: false
 
 jobs:
   generar-evidencias:

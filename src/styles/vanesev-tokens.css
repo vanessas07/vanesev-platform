@@ -1,15 +1,76 @@
+/* Identidad VANESEV «Obsidiana y ciruela» (G-036, sustituye a la Ciruela imperial de §2.1).
+   Un solo sistema de color para web, Central y admin: obsidiana para la acción, ciruela como acento,
+   champán metálico para filetes y detalles, y porcelana fría de fondo. */
 [data-brand="vanesev"] {
   --v-bg: #FBFAFC;
   --v-surface: #FFFFFF;
   --v-surface-2: #F4F2F7;
   --v-line: #E4E2EA;
-  --v-ink: #24152B;
+  --v-ink: #1A1020;
   --v-muted: #6E6478;
-  --v-brand: #5B2A6E;
-  --v-brand-hover: #4A2159;
-  --v-brand-soft: #EEE7F2;
+  --v-brand: #1F1226;          /* obsidiana: botón primario (blanco encima 17,9:1) */
+  --v-brand-hover: #2E1A38;
+  --v-brand-soft: #EFEAF1;
+  --v-plum: #4A1F5C;           /* ciruela: acento, cursivas y enlaces (11,9:1 sobre blanco) */
+  --v-champagne: #B89B6A;      /* champán metálico: filetes, aros y detalles (no para texto sobre claro) */
+  --v-champagne-ink: #7D6438;  /* champán para texto sobre claro (5,2:1) */
+  --v-champagne-light: #D9C49B;/* champán para texto sobre obsidiana */
+  --v-obsidian: #140B19;       /* secciones oscuras y pie */
   --v-platinum: #B9BCC6;
   --v-ok: #1F7A5A;
   --v-warn: #B26A00;
   --v-danger: #B3261E;
+  /* Canales RGB para que Tailwind admita opacidad (bg-v-brand/20, border-v-line/50…) */
+  --v-bg-rgb: 251 250 252;
+  --v-surface-rgb: 255 255 255;
+  --v-surface-2-rgb: 244 242 247;
+  --v-line-rgb: 228 226 234;
+  --v-ink-rgb: 26 16 32;
+  --v-muted-rgb: 110 100 120;
+  --v-brand-rgb: 31 18 38;
+  --v-brand-hover-rgb: 46 26 56;
+  --v-brand-soft-rgb: 239 234 241;
+  --v-plum-rgb: 74 31 92;
+  --v-champagne-rgb: 184 155 106;
+  --v-champagne-ink-rgb: 125 100 56;
+  --v-champagne-light-rgb: 217 196 155;
+  --v-obsidian-rgb: 20 11 25;
+  --v-platinum-rgb: 185 188 198;
+  --v-ok-rgb: 31 122 90;
+  --v-warn-rgb: 178 106 0;
+  --v-danger-rgb: 179 38 30;
+}
+
+/* Botón primario premium: obsidiana con aro de champán, brillo superior y elevación al pasar.
+   Se aplica a los botones con el color de marca, se escriban con el token o con el hex. */
+[data-brand="vanesev"] .bg-v-brand,
+[data-brand="vanesev"] .bg-\[\#1F1226\] {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 46%);
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 196, 155, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 24px -12px rgba(20, 11, 25, 0.55);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background-color 0.25s ease;
+}
+[data-brand="vanesev"] .bg-v-brand:hover,
+[data-brand="vanesev"] .bg-\[\#1F1226\]:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 196, 155, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 16px 32px -14px rgba(74, 31, 92, 0.55);
+}
+[data-brand="vanesev"] .bg-v-brand:disabled,
+[data-brand="vanesev"] .bg-\[\#1F1226\]:disabled {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-brand="vanesev"] .bg-v-brand,
+  [data-brand="vanesev"] .bg-\[\#1F1226\] {
+    transition: none;
+  }
+  [data-brand="vanesev"] .bg-v-brand:hover,
+  [data-brand="vanesev"] .bg-\[\#1F1226\]:hover {
+    transform: none;
+  }
 }
