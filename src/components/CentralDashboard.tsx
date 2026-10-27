@@ -9,6 +9,7 @@ import {
 import { motion } from 'framer-motion';
 import { authClient } from '../lib/authClient';
 import { CentralAuthGate } from './CentralAuthGate';
+import { VanesevLogo } from './VanesevLogo';
 import { DynamicQrManager } from './DynamicQrManager';
 import { CentralCompetitors } from './CentralCompetitors';
 import { SalonThemeStudio } from './SalonThemeStudio';
@@ -523,7 +524,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const tenantsCount = Math.max(2, (data?.tenants || []).length);
 
   return (
-    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-texto p-2 sm:p-4 lg:p-6">
+    <div className="v-panel min-h-screen text-[#1A1020] font-texto p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-[#F4F2F7] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
 
@@ -531,14 +532,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
         <header className="flex items-center justify-between gap-3">
           {/* Left: Circular Coral Brand Mark + Crisp Name */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #4A1F5C 0%, #2E1A38 100%)' }}
-            >
-              V
-            </div>
-            <span className="font-bold text-[#1A1020] text-sm sm:text-base tracking-tight truncate">
-              Vanesev Central
+            <VanesevLogo tono="claro" tamano={34} dedicatoria={false} />
+            <span className="hidden sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border border-[#C9A45C]/50 text-[#8A6A2E]">
+              Central
             </span>
           </div>
 
