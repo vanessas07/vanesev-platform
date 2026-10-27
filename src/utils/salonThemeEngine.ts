@@ -7,7 +7,8 @@ export type SalonPaletteId =
   | 'terracotta-medspa'
   | 'botanical-spa'
   | 'velvet-mauve'
-  | 'ivory-noir';
+  | 'ivory-noir'
+  | 'rosa-velvet-oro';
 
 export type SalonTypographyId = 'haute-couture' | 'vogue-editorial' | 'modern-minimal';
 
@@ -218,6 +219,29 @@ export const SALON_PALETTE_PRESETS: SalonPalettePreset[] = [
     badgeText: '#7D4925',
     gradientCss: 'linear-gradient(135deg, #292524 0%, #965D36 100%)',
     heroGradient: 'linear-gradient(135deg, #292524 0%, #965D36 100%)',
+  },
+  {
+    id: 'rosa-velvet-oro',
+    name: 'Rosa Velvet & Oro',
+    subtitle: 'Rosa empolvado, terciopelo marsala y detalles en pan de oro.',
+    idealSector: 'Capra Studio, Salones Boutique & Alta Estética',
+    canvasBg: '#F6ECEC',
+    bgPrimary: '#F6ECEC',
+    surfaceBg: '#FFFFFF',
+    softSurfaceBg: '#EEDCDC',
+    heroBg: '#2D1B20',
+    heroText: '#F6ECEC',
+    textPrimary: '#3B2228',
+    textSecondary: '#6B4A52',
+    accentPrimary: '#7A3E4A',
+    primary: '#7A3E4A',
+    accentSecondary: '#C5A059',
+    secondary: '#C5A059',
+    borderSubtle: '#E4CFD3',
+    badgeBg: '#F5E6E8',
+    badgeText: '#8A6A2E',
+    gradientCss: 'linear-gradient(135deg, #7A3E4A 0%, #C5A059 100%)',
+    heroGradient: 'linear-gradient(135deg, #7A3E4A 0%, #C5A059 100%)',
   },
 ];
 

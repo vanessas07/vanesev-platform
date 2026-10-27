@@ -25,6 +25,7 @@ import {
 import { ServiceItem } from '../types';
 import { QREncoder } from '../utils/qrEncoder';
 import { AppStore } from '../services/store';
+import { SalonApi, SalonPublico, OfertaSalon } from '../services/salonApi';
 import {
   getSalonThemeConfig,
   saveSalonThemeConfig,
@@ -136,6 +137,15 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
   const [showVipModal, setShowVipModal] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [publicData, setPublicData] = useState<SalonPublico | null>(null);
+
+  useEffect(() => {
+    SalonApi.publico(tenantSlug || 'capra-studio').then((res) => {
+      if (res.ok) {
+        setPublicData(res.data);
+      }
+    });
+  }, [tenantSlug]);
 
   // VIP Loyalty Passport interactive state
   const [vipPhoneInput, setVipPhoneInput] = useState('');
@@ -158,7 +168,10 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
     return () => window.removeEventListener('vanesev-theme-updated', handleUpdate);
   }, [tenantSlug]);
 
-  const palette = getPaletteById(themeConfig.paletteId);
+  const activePaletteId = (tenantSlug === 'capra-studio' && (!themeConfig.paletteId || themeConfig.paletteId === 'rose-cashmere'))
+    ? 'rosa-velvet-oro'
+    : themeConfig.paletteId;
+  const palette = getPaletteById(activePaletteId);
   const typography = getTypographyById(themeConfig.typographyId);
 
   const updateThemeField = <K extends keyof SalonThemeConfig>(
@@ -485,6 +498,183 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
           </div>
         </div>
       </header>
+
+      {/* ══ SECCIÓN D3: OFERTAS VIGENTES (CON PRECIO TACHADO VS ESPECIAL) ══ */}
+      {publicData?.ofertas && publicData.ofertas.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span
+                  className="text-[10px] font-bold uppercase tracking-widest block"
+                  style={{ color: palette.badgeText }}
+                >
+                  PROMOCIONES TEMPORALES
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold" style={{ color: palette.textPrimary }}>
+                  Ofertas Exclusivas de Temporada
+                </h3>
+              </div>
+              <span
+                className="px-3 py-1 rounded-full text-xs font-bold border"
+                style={{
+                  backgroundColor: palette.badgeBg,
+                  borderColor: palette.borderSubtle,
+                  color: palette.badgeText,
+                }}
+              >
+                {publicData.ofertas.length} {publicData.ofertas.length === 1 ? 'oferta activa' : 'ofertas activas'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {publicData.ofertas.map((of) => (
+                <div
+                  key={of.id || of.titulo}
+                  className="rounded-2xl p-5 border shadow-sm transition-all flex flex-col justify-between gap-3 bg-white"
+                  style={{ borderColor: palette.borderSubtle }}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-sm" style={{ color: palette.textPrimary }}>
+                        {of.titulo}
+                      </span>
+                      {of.servicioNombre && (
+                        <span
+                          className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                          style={{ backgroundColor: palette.softSurfaceBg, color: palette.accentPrimary }}
+                        >
+                          {of.servicioNombre}
+                        </span>
+                      )}
+                    </div>
+                    {of.texto && (
+                      <p className="text-xs leading-relaxed" style={{ color: palette.textSecondary }}>
+                        {of.texto}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t flex items-center justify-between gap-3" style={{ borderColor: palette.borderSubtle }}>
+                    <div className="space-y-0.5">
+                      {of.precioNormalUSD && (
+                        <span className="text-xs line-through block" style={{ color: palette.textSecondary }}>
+                          Normal: ${of.precioNormalUSD.toFixed(2)} USD
+                        </span>
+                      )}
+                      {of.precioEspecialUSD && (
+                        <span className="font-serif text-lg font-bold" style={{ color: palette.accentPrimary }}>
+                          Especial: ${of.precioEspecialUSD.toFixed(2)} USD
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetSrv = services.find((s) => s.id === of.servicioId);
+                        onOpenBooking(targetSrv);
+                      }}
+                      className="px-4 py-2 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer transition-transform hover:scale-[1.02]"
+                      style={{ background: palette.gradientCss }}
+                    >
+                      {of.botonTexto || 'Reservar con oferta'} &rarr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ══ SECCIÓN D3: HISTORIA DEL ESTUDIO (BLOQUE LANDING) ══ */}
+      {publicData?.landing?.historia && (
+        <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6">
+          <div
+            className="rounded-3xl p-6 sm:p-8 border shadow-sm space-y-2 bg-white"
+            style={{ borderColor: palette.borderSubtle }}
+          >
+            <span
+              className="text-[10px] font-bold uppercase tracking-widest block"
+              style={{ color: palette.badgeText }}
+            >
+              NUESTRA FILOSOFÍA
+            </span>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold" style={{ color: palette.textPrimary }}>
+              La Esencia de {themeConfig.businessName}
+            </h3>
+            <p className="text-xs sm:text-sm leading-relaxed max-w-3xl" style={{ color: palette.textSecondary }}>
+              {publicData.landing.historia}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ══ SECCIÓN D3: GALERÍA EDITORIAL (BLOQUE LANDING) ══ */}
+      {publicData?.landing?.galeria && publicData.landing.galeria.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6">
+          <div className="space-y-3">
+            <span
+              className="text-[10px] font-bold uppercase tracking-widest block"
+              style={{ color: palette.badgeText }}
+            >
+              PORTAFOLIO VISUAL
+            </span>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold" style={{ color: palette.textPrimary }}>
+              Galería de Trabajos Reales
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {publicData.landing.galeria.map((url, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl overflow-hidden aspect-square border shadow-xs group bg-stone-100"
+                  style={{ borderColor: palette.borderSubtle }}
+                >
+                  <img
+                    src={url}
+                    alt={`Galería ${i + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ══ SECCIÓN D3: PREGUNTAS FRECUENTES (BLOQUE LANDING) ══ */}
+      {publicData?.landing?.faq && publicData.landing.faq.length > 0 && (
+        <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6">
+          <div className="space-y-3">
+            <span
+              className="text-[10px] font-bold uppercase tracking-widest block"
+              style={{ color: palette.badgeText }}
+            >
+              RESOLUCIÓN DE DUDAS
+            </span>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold" style={{ color: palette.textPrimary }}>
+              Preguntas Frecuentes
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {publicData.landing.faq.map((item, i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-2xl border bg-white space-y-1 shadow-2xs"
+                  style={{ borderColor: palette.borderSubtle }}
+                >
+                  <p className="text-xs font-bold" style={{ color: palette.textPrimary }}>
+                    ¿{item.p}?
+                  </p>
+                  <p className="text-xs leading-relaxed" style={{ color: palette.textSecondary }}>
+                    {item.r}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ══ 3. RECOMENDACIÓN ESTRELLA DE LA DIRECTORA ══ */}
       {featuredService && (
