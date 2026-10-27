@@ -303,7 +303,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-sans selection:bg-[#4A1F5C]/15 selection:text-[#1A1020] overflow-x-hidden">
+    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-texto selection:bg-[#4A1F5C]/15 selection:text-[#1A1020] overflow-x-clip">
       {/* ═══════════════════════════════════════════════════════════════════════════
           1. FLOATING CAPSULE COMMERCIAL NAVBAR (100% MOBILE RESPONSIVE, ZERO ADMIN/LOGIN LEAKS)
       ═══════════════════════════════════════════════════════════════════════════ */}
@@ -456,7 +456,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </p>
 
             <TituloRevelado
-              className="font-cormorant mt-6 text-[44px] sm:text-6xl lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.02em] text-[#1A1020]"
+              className="font-lujo mt-6 text-[44px] sm:text-6xl lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.02em] text-[#1A1020]"
               partes={[{ texto: 'Tu salón de belleza, con' }, { texto: 'sistema y marca', acento: true }, { texto: 'propia.' }]}
             />
 
@@ -516,15 +516,15 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             {/* 3 Quick Proof Metrics */}
             <div className="mt-8 pt-6 border-t border-[#1A1020]/10 grid grid-cols-3 gap-4 max-w-lg">
               <div>
-                <p className="font-cormorant text-2xl sm:text-3xl font-bold text-[#1A1020]">0%</p>
+                <p className="font-lujo text-2xl sm:text-3xl font-bold text-[#1A1020]">0%</p>
                 <p className="text-[11px] font-semibold text-[#6E6478]">Comisión por cita</p>
               </div>
               <div>
-                <p className="font-cormorant text-2xl sm:text-3xl font-bold text-[#4A1F5C]">15 seg</p>
+                <p className="font-lujo text-2xl sm:text-3xl font-bold text-[#4A1F5C]">15 seg</p>
                 <p className="text-[11px] font-semibold text-[#6E6478]">Reserva en WhatsApp</p>
               </div>
               <div>
-                <p className="font-cormorant text-2xl sm:text-3xl font-bold text-[#1A1020]">100%</p>
+                <p className="font-lujo text-2xl sm:text-3xl font-bold text-[#1A1020]">100%</p>
                 <p className="text-[11px] font-semibold text-[#6E6478]">Diseño editable</p>
               </div>
             </div>
@@ -617,13 +617,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <div className="px-4 pt-4 pb-3 bg-white/90 backdrop-blur-md border-b border-black/5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-white font-cormorant font-bold text-xs"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white font-lujo font-bold text-xs"
                       style={{ background: phonePalette.heroGradient }}
                     >
                       CS
                     </div>
                     <div>
-                      <p className="font-cormorant font-bold text-xs leading-none">Capra Studio</p>
+                      <p className="font-lujo font-bold text-xs leading-none">Capra Studio</p>
                       <p className="text-[9px] text-[#6E6478] mt-0.5">vanesev.com/m/capra-studio</p>
                     </div>
                   </div>
@@ -677,7 +677,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                             <span className="text-[9px] uppercase tracking-widest font-bold opacity-90">
                               Mirada de Autor &bull; 60 Min
                             </span>
-                            <p className="font-cormorant text-sm font-semibold leading-tight">
+                            <p className="font-lujo text-sm font-semibold leading-tight">
                               Lifting de Pestañas + Keratina
                             </p>
                           </div>
@@ -703,7 +703,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                                 <p className="text-[11px] font-bold truncate">{srv.name}</p>
                                 <p className="text-[9px] text-[#6E6478]">{srv.time} &bull; Especialista</p>
                               </div>
-                              <span className="font-cormorant font-bold text-xs shrink-0" style={{ color: phonePalette.primary }}>
+                              <span className="font-lujo font-bold text-xs shrink-0" style={{ color: phonePalette.primary }}>
                                 {srv.price}
                               </span>
                             </button>
@@ -746,7 +746,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                             </span>
                             <Crown className="w-4 h-4" />
                           </div>
-                          <p className="font-cormorant text-lg font-semibold leading-tight">
+                          <p className="font-lujo text-lg font-semibold leading-tight">
                             {simulatedStamps} de 5 Visitas Selladas
                           </p>
                           <div className="grid grid-cols-5 gap-1.5 pt-1">
@@ -818,8 +818,8 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════════════
           3. INFINITE EDITORIAL MARQUEE STRIP (MARQUESINA COMERCIAL)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <div className="relative overflow-hidden border-y border-[#4A1F5C]/20 bg-[#1A1020] py-4 text-[#FBFAFC]">
-        <div className="flex w-max animate-[marquee_34s_linear_infinite] gap-10 whitespace-nowrap text-lg sm:text-2xl font-cormorant font-semibold">
+      <div className="relative overflow-hidden border-y border-[#C9A45C]/30 bg-[#F7F1E6] py-4 text-[#1A1020]">
+        <div className="flex w-max animate-[marquee_34s_linear_infinite] gap-10 whitespace-nowrap text-lg sm:text-2xl font-lujo font-semibold">
           {[
             'Tu marca, tus clientas',
             'Sin comisiones por cita',
@@ -836,7 +836,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
           ].map((item, idx) => (
             <span key={idx} className="flex items-center gap-10">
               <span>{item}</span>
-              <span className="h-2 w-2 rounded-full bg-[#1F1226]" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-[#C9A45C]" />
             </span>
           ))}
         </div>
@@ -854,7 +854,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#140B19]/90 via-[#140B19]/35 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-end px-6 pb-12 sm:pb-16 text-white">
-          <h2 className="font-cormorant max-w-4xl text-3xl sm:text-5xl lg:text-6xl font-semibold leading-[1.04]">
+          <h2 className="font-lujo max-w-4xl text-3xl sm:text-5xl lg:text-6xl font-semibold leading-[1.04]">
             El talento y las manos ya son tuyos.{' '}
             <span className="italic font-normal text-[#D9C49B]">
               Tus clientas y tu agenda también deberían serlo.
@@ -872,7 +872,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       <motion.section {...revelarSeccion} className="bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">¿Te suena?</p>
-          <h2 className="font-cormorant mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
+          <h2 className="font-lujo mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
             Lo que le está costando dinero a tu salón cada semana.
           </h2>
 
@@ -903,7 +903,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 key={item.num}
                 className="grid grid-cols-[48px_1fr] gap-4 border-t border-[#1A1020]/15 py-7"
               >
-                <span className="font-cormorant italic text-4xl leading-none text-[#4A1F5C]">
+                <span className="font-lujo italic text-4xl leading-none text-[#4A1F5C]">
                   {item.num}
                 </span>
                 <div>
@@ -942,7 +942,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       <motion.section {...revelarSeccion} id="signature" className="py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">Qué hacemos</p>
-          <h2 className="font-cormorant mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
+          <h2 className="font-lujo mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
             Carta QR, Pasaporte VIP y Dirección Ejecutiva.{' '}
             <span className="italic font-normal text-[#4A1F5C]">Todo hecho para tu salón.</span>
           </h2>
@@ -951,14 +951,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             {/* 01: VANESEV Atelier Signature */}
             <div
               onClick={() => openCheckoutWithPlan('Salon Couture Pro ($29/mes)')}
-              className="group relative grid items-center gap-6 overflow-hidden rounded-[28px] border border-[#4A1F5C]/25 p-7 sm:p-9 transition duration-300 md:grid-cols-[70px_1fr_auto] text-white shadow-lg cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #140B19 0%, #1F1226 50%, #4A1F5C 100%)' }}
+              className="v-tarjeta-lujo group relative grid items-center gap-6 overflow-hidden rounded-[28px] p-7 sm:p-9 transition duration-300 hover:-translate-y-0.5 md:grid-cols-[70px_1fr_auto] text-white cursor-pointer"
             >
-              <span className="font-cormorant text-2xl font-bold text-white/80">01</span>
+              <span className="v-oro-texto font-lujo text-4xl font-semibold">01</span>
               <div>
-                <h3 className="font-cormorant text-2xl sm:text-3xl font-semibold flex flex-wrap items-center gap-3">
+                <h3 className="font-lujo text-2xl sm:text-3xl font-semibold flex flex-wrap items-center gap-3">
                   <span>VANESEV Atelier Signature</span>
-                  <span className="rounded-full bg-white/20 backdrop-blur-md px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                  <span className="rounded-full border border-[#C9A45C]/60 bg-[#C9A45C]/10 px-3 py-1 font-texto text-[11px] font-semibold uppercase tracking-[0.18em] text-[#EBDDB8]">
                     Tu marca propia
                   </span>
                 </h3>
@@ -967,8 +966,8 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 </p>
               </div>
               <div className="md:text-right">
-                <p className="text-xs sm:text-sm text-white/85 font-semibold">Desde $29 USD / mes</p>
-                <p className="mt-1.5 font-bold text-white flex md:justify-end items-center gap-1">
+                <p className="text-xs sm:text-sm text-[#EBDDB8] font-semibold">Desde $29 USD / mes</p>
+                <p className="mt-1.5 font-semibold text-[#EBDDB8] flex md:justify-end items-center gap-1">
                   <span>Activar Signature</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </p>
@@ -978,11 +977,11 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             {/* 02: Carta & Recepción QR */}
             <div
               onClick={() => scrollToSection('carta-qr')}
-              className="group relative grid items-center gap-6 overflow-hidden rounded-[28px] border border-[#1A1020]/10 bg-white p-7 sm:p-9 transition duration-300 md:grid-cols-[70px_1fr_auto] hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+              className="v-tarjeta-clara group relative grid items-center gap-6 overflow-hidden rounded-[28px] bg-white p-7 sm:p-9 md:grid-cols-[70px_1fr_auto] cursor-pointer"
             >
-              <span className="font-cormorant text-2xl font-bold text-[#4A1F5C]">02</span>
+              <span className="v-oro-texto font-lujo text-4xl font-semibold">02</span>
               <div>
-                <h3 className="font-cormorant text-2xl sm:text-3xl font-semibold text-[#1A1020]">
+                <h3 className="font-lujo text-2xl sm:text-3xl font-semibold text-[#1A1020]">
                   Carta Digital &amp; Recepción QR (/m/tu-salon)
                 </h3>
                 <p className="mt-2 max-w-2xl text-sm sm:text-base text-[#6E6478] leading-relaxed">
@@ -1001,11 +1000,11 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             {/* 03: Maison & Academy */}
             <div
               onClick={() => openCheckoutWithPlan('Maison Multi-Sede ($59/mes)')}
-              className="group relative grid items-center gap-6 overflow-hidden rounded-[28px] border border-[#1A1020]/10 bg-white p-7 sm:p-9 transition duration-300 md:grid-cols-[70px_1fr_auto] hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+              className="v-tarjeta-clara group relative grid items-center gap-6 overflow-hidden rounded-[28px] bg-white p-7 sm:p-9 md:grid-cols-[70px_1fr_auto] cursor-pointer"
             >
-              <span className="font-cormorant text-2xl font-bold text-[#4A1F5C]">03</span>
+              <span className="v-oro-texto font-lujo text-4xl font-semibold">03</span>
               <div>
-                <h3 className="font-cormorant text-2xl sm:text-3xl font-semibold text-[#1A1020]">
+                <h3 className="font-lujo text-2xl sm:text-3xl font-semibold text-[#1A1020]">
                   Maison Multi-Cabina &amp; Academy
                 </h3>
                 <p className="mt-2 max-w-2xl text-sm sm:text-base text-[#6E6478] leading-relaxed">
@@ -1032,7 +1031,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
             La puerta de entrada &bull; Carta QR
           </p>
-          <h2 className="font-cormorant mt-3 max-w-4xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
+          <h2 className="font-lujo mt-3 max-w-4xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
             Empieza por tu catálogo interactivo.{' '}
             <span className="italic font-normal text-[#4A1F5C]">Listo en menos de 24 horas.</span>
           </h2>
@@ -1079,10 +1078,10 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 className="h-full rounded-[24px] bg-white border border-[#1A1020]/8 p-6 shadow-2xs flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_24px_50px_-28px_rgba(20,11,25,0.45)]"
               >
                 <div>
-                  <span className="font-cormorant italic text-2xl font-bold text-[#4A1F5C]">
+                  <span className="v-oro-texto font-lujo italic text-3xl font-semibold">
                     {sp.num}
                   </span>
-                  <h3 className="font-cormorant text-xl font-bold text-[#1A1020] mt-2">
+                  <h3 className="font-lujo text-xl font-bold text-[#1A1020] mt-2">
                     {sp.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6E6478] mt-2 leading-relaxed">
@@ -1105,7 +1104,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
               Identidad de Autor &bull; Cero Plantillas Clonadas
             </span>
-            <h2 className="font-cormorant mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020] leading-[1.04]">
+            <h2 className="font-lujo mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020] leading-[1.04]">
               Ningún salón se parece a otro.{' '}
               <span className="italic font-normal text-[#4A1F5C]">Pruébalo aquí en vivo.</span>
             </h2>
@@ -1309,7 +1308,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
               El siguiente nivel
             </p>
-            <h2 className="font-cormorant mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020]">
+            <h2 className="font-lujo mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020]">
               De carta QR a tu propio sistema Signature.
             </h2>
             <p className="mt-3 text-base text-[#6E6478]">
@@ -1364,7 +1363,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
                   ESPECIALIDADES DEL SECTOR BELLEZA &amp; WELLNESS
                 </span>
-                <h2 className="font-cormorant mt-2 text-3xl sm:text-4xl font-semibold text-[#1A1020]">
+                <h2 className="font-lujo mt-2 text-3xl sm:text-4xl font-semibold text-[#1A1020]">
                   Adaptado al flujo real de tu especialidad.
                 </h2>
               </div>
@@ -1398,7 +1397,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <span className="px-3 py-1 rounded-full bg-[#EFEAF1] text-[#4A1F5C] text-xs font-bold">
                   {activeSector.metrics}
                 </span>
-                <h3 className="font-cormorant text-2xl sm:text-3xl font-bold text-[#1A1020]">
+                <h3 className="font-lujo text-2xl sm:text-3xl font-bold text-[#1A1020]">
                   {activeSector.title}
                 </h3>
                 <p className="text-sm sm:text-base text-[#6E6478] leading-relaxed">
@@ -1430,7 +1429,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
               Planes funcionales &bull; Cero comisiones por cita
             </p>
-            <h2 className="font-cormorant mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020]">
+            <h2 className="font-lujo mt-3 text-3xl sm:text-5xl font-semibold text-[#1A1020]">
               Tres soluciones a medida. Sin comisiones intermedias.
             </h2>
             <p className="mt-3 text-sm sm:text-base text-[#6E6478]">
@@ -1490,7 +1489,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 key={idx}
                 className={`rounded-[30px] p-7 flex flex-col justify-between border transition-transform hover:-translate-y-1 ${
                   plan.highlighted
-                    ? 'bg-[#140B19] text-white border-[#4A1F5C] shadow-2xl relative'
+                    ? 'v-tarjeta-lujo text-white relative'
                     : 'bg-white text-[#1A1020] border-[#1A1020]/12 shadow-xs'
                 }`}
               >
@@ -1504,13 +1503,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 )}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-cormorant text-2xl font-bold">{plan.name}</h3>
+                    <h3 className="font-lujo text-2xl font-bold">{plan.name}</h3>
                     <p className={`text-xs mt-1 ${plan.highlighted ? "text-white/75" : "text-[#6E6478]"}`}>
                       {plan.subtitle}
                     </p>
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="font-cormorant text-3xl sm:text-4xl font-bold">{plan.price}</span>
+                    <span className="font-lujo text-3xl sm:text-4xl font-bold">{plan.price}</span>
                     <span className={`text-xs font-semibold ${plan.highlighted ? "text-white/75" : "text-[#6E6478]"}`}>
                       &bull; {plan.period}
                     </span>
@@ -1547,7 +1546,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#4A1F5C]">
                 Calculadora de Retorno Inmediato
               </span>
-              <h3 className="font-cormorant text-2xl sm:text-3xl font-semibold text-[#1A1020]">
+              <h3 className="font-lujo text-2xl sm:text-3xl font-semibold text-[#1A1020]">
                 ¿Cuánto dinero deja de percibir tu salón por mensajes respondidos tarde?
               </h3>
               <div className="space-y-4 pt-2">
@@ -1588,7 +1587,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-90 block">
                 Facturación Recuperable Estimada
               </span>
-              <p className="font-cormorant text-4xl sm:text-5xl font-bold">
+              <p className="font-lujo text-4xl sm:text-5xl font-bold">
                 +${monthlyRecoveredUSD.toLocaleString()} <span className="text-lg font-normal">USD / mes</span>
               </p>
               <p className="text-xs text-white/90">
@@ -1616,7 +1615,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7D6438]">
                 Salón de referencia en producción
               </p>
-              <h2 className="font-cormorant mt-3 text-3xl sm:text-5xl font-semibold leading-[1.04]">
+              <h2 className="font-lujo mt-3 text-3xl sm:text-5xl font-semibold leading-[1.04]">
                 Capra Studio agenda y fideliza con su propia marca, no con la de otros.
               </h2>
               <p className="mt-4 text-base text-[#4A4150] leading-relaxed">
@@ -1624,15 +1623,15 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               </p>
               <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-[#1A1020]/10 pt-6">
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#7D6438]">0%</dt>
+                  <dt className="font-lujo text-3xl sm:text-4xl font-bold text-[#7D6438]">0%</dt>
                   <dd className="mt-1 text-xs text-[#4A4150]">comisión por cita</dd>
                 </div>
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#1A1020]">100%</dt>
+                  <dt className="font-lujo text-3xl sm:text-4xl font-bold text-[#1A1020]">100%</dt>
                   <dd className="mt-1 text-xs text-[#4A4150]">clientas del salón</dd>
                 </div>
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#7D6438]">12</dt>
+                  <dt className="font-lujo text-3xl sm:text-4xl font-bold text-[#7D6438]">12</dt>
                   <dd className="mt-1 text-xs text-[#4A4150]">servicios activos</dd>
                 </div>
               </dl>
@@ -1664,7 +1663,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                   className="w-full h-72 object-cover"
                 />
                 <div className="p-4 bg-[#1A1020]/5 backdrop-blur-md">
-                  <p className="font-cormorant font-bold text-sm">Capra Studio</p>
+                  <p className="font-lujo font-bold text-sm">Capra Studio</p>
                   <p className="text-[11px] text-[#4A4150]">Paleta Rose Cashmere &amp; Silk</p>
                 </div>
               </div>
@@ -1675,7 +1674,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                   className="w-full h-72 object-cover"
                 />
                 <div className="p-4 bg-[#1A1020]/5 backdrop-blur-md">
-                  <p className="font-cormorant font-bold text-sm">Nail Bar &amp; Spa</p>
+                  <p className="font-lujo font-bold text-sm">Nail Bar &amp; Spa</p>
                   <p className="text-[11px] text-[#4A4150]">Catálogo Estructural</p>
                 </div>
               </div>
@@ -1695,7 +1694,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
                 Editorial &amp; Estrategia para Dueñas de Salón
               </p>
-              <h2 className="font-cormorant mt-2 text-3xl sm:text-4xl font-semibold text-[#1A1020]">
+              <h2 className="font-lujo mt-2 text-3xl sm:text-4xl font-semibold text-[#1A1020]">
                 Aprende a multiplicar la rentabilidad de tus sillones.
               </h2>
             </div>
@@ -1720,7 +1719,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                         <span>{art.category}</span>
                         <span className="text-[#6E6478]">{art.readTime}</span>
                       </div>
-                      <h3 className="font-cormorant text-lg font-bold text-[#1A1020] leading-snug group-hover:text-[#4A1F5C] transition-colors">
+                      <h3 className="font-lujo text-lg font-bold text-[#1A1020] leading-snug group-hover:text-[#4A1F5C] transition-colors">
                         {art.title}
                       </h3>
                       <p className="text-xs text-[#6E6478] mt-2 leading-relaxed line-clamp-3">
@@ -1743,7 +1742,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
                 Preguntas Frecuentes
               </p>
-              <h2 className="font-cormorant text-3xl sm:text-4xl font-semibold text-[#1A1020]">
+              <h2 className="font-lujo text-3xl sm:text-4xl font-semibold text-[#1A1020]">
                 Todo claro antes de empezar.
               </h2>
             </div>
@@ -1791,7 +1790,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         style={{ background: 'radial-gradient(120% 140% at 85% 0%, #4A1F5C 0%, #1F1226 45%, #140B19 100%)' }}
       >
         <div className="mx-auto max-w-3xl space-y-6">
-          <h2 className="font-cormorant text-4xl sm:text-6xl lg:text-7xl font-semibold leading-none">
+          <h2 className="font-lujo text-4xl sm:text-6xl lg:text-7xl font-semibold leading-none">
             Tu salón. Tu marca.{' '}
             <span className="italic font-normal text-[#D9C49B]">Hoy.</span>
           </h2>
@@ -2014,7 +2013,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4A1F5C] block">
                 PASO 1 DE 2 &bull; REGISTRO COMERCIAL DE SEDE
               </span>
-              <h3 className="font-cormorant text-2xl sm:text-3xl font-bold text-[#1A1020] mt-1">
+              <h3 className="font-lujo text-2xl sm:text-3xl font-bold text-[#1A1020] mt-1">
                 Activar mi Salón en VANESEV
               </h3>
               <p className="text-xs text-[#6E6478] mt-1">
@@ -2129,7 +2128,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4A1F5C] block">
                 PORTAL EJECUTIVO VERTIX &bull; ZONA CLIENTE
               </span>
-              <h3 className="font-cormorant text-2xl font-bold text-[#1A1020] mt-1">
+              <h3 className="font-lujo text-2xl font-bold text-[#1A1020] mt-1">
                 Iniciar Sesión en mi Salón
               </h3>
               <p className="text-xs text-[#6E6478] mt-1">
@@ -2218,7 +2217,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <span className="text-xs font-bold uppercase tracking-wider text-[#4A1F5C]">
                   {activeArticle.category} &bull; {activeArticle.readTime}
                 </span>
-                <h3 className="font-cormorant text-2xl sm:text-3xl font-bold text-[#1A1020]">
+                <h3 className="font-lujo text-2xl sm:text-3xl font-bold text-[#1A1020]">
                   {activeArticle.title}
                 </h3>
                 {activeArticle.content.map((p, i) => (
@@ -2265,7 +2264,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               className="w-full max-w-xl rounded-[28px] bg-white p-6 sm:p-8 shadow-2xl space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-cormorant text-xl font-bold text-[#1A1020]">{legalModalTitle}</h3>
+                <h3 className="font-lujo text-xl font-bold text-[#1A1020]">{legalModalTitle}</h3>
                 <button
                   type="button"
                   onClick={() => setLegalModalTitle(null)}

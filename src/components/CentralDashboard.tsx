@@ -523,7 +523,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const tenantsCount = Math.max(2, (data?.tenants || []).length);
 
   return (
-    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-texto p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-[#F4F2F7] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
 

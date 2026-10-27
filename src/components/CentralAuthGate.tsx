@@ -187,7 +187,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-v-bg text-v-ink flex flex-col justify-between p-4 sm:p-6 font-sans antialiased">
+    <div className="min-h-screen bg-v-bg text-v-ink flex flex-col justify-between p-4 sm:p-6 font-texto antialiased">
       {/* Cabecera Superior */}
       <div className="flex items-center justify-between max-w-5xl w-full mx-auto">
         <div className="flex items-center gap-2.5">

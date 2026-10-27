@@ -39,7 +39,7 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onOpen
             <Cookie className="w-5 h-5" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-cormorant font-semibold text-base text-v-ink leading-tight">
+            <h4 className="font-lujo font-semibold text-base text-v-ink leading-tight">
               Aviso de Privacidad &amp; Cookies
             </h4>
             <p className="text-xs text-v-muted leading-relaxed">
