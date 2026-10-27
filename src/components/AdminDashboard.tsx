@@ -292,7 +292,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     setActivarError(null);
     setActivarSuccess(null);
-    if (!activarCorreo.trim() || !/^[^s@]+@[^s@]+.[^s@]+$/.test(activarCorreo.trim())) {
+    if (!activarCorreo.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(activarCorreo.trim())) {
       setActivarError('Introduce un correo electrónico válido.');
       return;
     }

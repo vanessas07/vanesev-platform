@@ -1,6 +1,6 @@
 // Vercel Serverless Function: /api/team
 // Manages salon staff members and studio zones in Neon Serverless Postgres
-import { randomUUID, createHash, randomInt } from 'node:crypto';
+import { randomUUID, createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { hashPassword } from 'better-auth/crypto';
 import { getDb } from './_db.js';
 import { requireSession, requireTenantRole } from './_session.js';
@@ -109,8 +109,9 @@ export default async function handler(req: any, res: any) {
           WHERE tenant_id = ${cleanTenant}
           ORDER BY sort_order ASC, created_at ASC;
         `,
-        sql`
-          SELECT 
+        // El historial de puesta a punto es de la dueña: el staff no lo recibe.
+        isStaffOnly ? [] : sql`
+          SELECT
             id,
             sender,
             recipient,
@@ -232,7 +233,9 @@ export default async function handler(req: any, res: any) {
             `
           });
         } catch (mailErr: any) {
+          // Si el correo no sale, la dueña lo tiene que saber: no se responde «enviado».
           console.error('[activar_cuenta_codigo] Error de envío SMTP:', mailErr?.message || mailErr);
+          return res.status(502).json({ error: 'No se pudo enviar el código. Inténtalo de nuevo en unos minutos.' });
         }
 
         return res.status(200).json({ success: true, message: 'Código de activación enviado por correo.' });
@@ -278,8 +281,15 @@ export default async function handler(req: any, res: any) {
           return res.status(400).json({ error: 'El código de activación ha caducado. Solicita uno nuevo.' });
         }
 
-        const hashedInput = createHash('sha256').update(cleanCodigo).digest('hex');
-        if (ver.value !== hashedInput) {
+        // Máximo 5 intentos por código: al quinto fallo el código se anula y hay que pedir otro.
+        const claveIntentos = claveDeLimite('activar_intento', ver.id);
+        const hashedInput = Buffer.from(createHash('sha256').update(cleanCodigo).digest('hex'));
+        const guardado = Buffer.from(String(ver.value));
+        if (guardado.length !== hashedInput.length || !timingSafeEqual(guardado, hashedInput)) {
+          if (await limiteSuperado(claveIntentos, 4, 600)) {
+            await sql`DELETE FROM "verification" WHERE id = ${ver.id};`;
+            return res.status(429).json({ error: 'Demasiados intentos. Solicita un código nuevo.' });
+          }
           return res.status(400).json({ error: 'Código de activación incorrecto.' });
         }
 
@@ -291,15 +301,18 @@ export default async function handler(req: any, res: any) {
           return res.status(409).json({ error: 'El correo electrónico ya está registrado en otra cuenta.' });
         }
 
-        // Identificar el tenant del usuario
+        // El salón sale de su membresía de dueña, nunca del cuerpo de la petición.
         const memberRows = await sql`
           SELECT o.slug, o.id as "orgId"
           FROM "member" m
           JOIN "organization" o ON m."organizationId" = o.id
-          WHERE m."userId" = ${user.id}
+          WHERE m."userId" = ${user.id} AND m.role = 'owner'
           LIMIT 1;
         `;
-        const tenantSlug = memberRows[0]?.slug || (tenantId ? String(tenantId).trim().toLowerCase() : null);
+        const tenantSlug = memberRows[0]?.slug;
+        if (!tenantSlug) {
+          return res.status(403).json({ error: 'La cuenta no es dueña de ningún salón.' });
+        }
 
         // Hashear la nueva contraseña
         const hashedPassword = await hashPassword(cleanPass);

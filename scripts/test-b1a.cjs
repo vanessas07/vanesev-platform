@@ -126,6 +126,7 @@ function fechaFutura(dias) {
 
 // ─── Datos de partida (solo preparación) ───────────────────────────────────────
 const DOMINIO = 'ci.test.vanesev.internal';
+const TRIAL = 'andrea-nails@prueba.vanesev.internal';
 const email = (rol) => `ci-${RUN}-${rol}@${DOMINIO}`;
 const PASS = {
   superadmin: `Sa-${crypto.randomBytes(9).toString('base64url')}-1`,
@@ -169,6 +170,20 @@ async function limpiar() {
   await sql`DELETE FROM "rateLimit" WHERE key LIKE ${'email_otp:ci-' + RUN + '-%'}`;
   await sql`DELETE FROM "verification" WHERE identifier LIKE ${'%ci-' + RUN + '-%'}`;
   if (creados.equipo.length) await sql`DELETE FROM public.staff_members WHERE id = ANY(${creados.equipo})`;
+  const prueba = await sql`SELECT id FROM "user" WHERE email = ${TRIAL}`;
+  for (const { id } of prueba) {
+    await sql.transaction([
+      sql`DELETE FROM "session" WHERE "userId" = ${id}`,
+      sql`DELETE FROM "member" WHERE "userId" = ${id}`,
+      sql`DELETE FROM "account" WHERE "userId" = ${id}`,
+      sql`DELETE FROM "verification" WHERE identifier LIKE ${'activar:' + id + ':%'}`,
+      sql`DELETE FROM "user" WHERE id = ${id}`,
+    ]);
+  }
+  await sql`UPDATE public.tenants SET en_prueba = false WHERE id = 'andrea-nails'`;
+  await sql`DELETE FROM public.central_mailbox WHERE sender = 'salon:andrea-nails' AND body LIKE ${'CI ' + RUN + '%'}`;
+  await sql`DELETE FROM public.limite_frecuencia WHERE actualizado_en >= ${inicio.toISOString()}
+            AND (clave LIKE 'puesta_a_punto:%' OR clave LIKE 'activar_codigo:%' OR clave LIKE 'activar_intento:%')`;
   await limpiarRateLimitRunner();
 }
 
@@ -213,6 +228,9 @@ async function main() {
     ['POST', '/api/team', { action: 'upsert_staff', tenantId: 'capra-studio', name: 'x' }],
     ['DELETE', '/api/team?type=staff&id=no-existe'],
     ['GET', '/api/bookings?mine=1'],
+    ['POST', '/api/central', { action: 'create-trial-owner', payload: { organizationSlug: 'andrea-nails' } }],
+    ['POST', '/api/team', { action: 'activar_cuenta_codigo', correo: 'x@example.com' }],
+    ['POST', '/api/team', { action: 'solicitud_cambios', tenantId: 'andrea-nails', texto: 'texto de prueba' }],
   ];
   const fallos = [];
   for (const [method, ruta, body] of anonimas) {
@@ -406,6 +424,100 @@ async function main() {
   const ajenasVisibles = (mias.json?.bookings || []).some((b) => b.id !== idReservaClienta);
   comprobar('J3', '«Mis citas»: la clienta ve su cita (ligada a su correo) y ninguna ajena', mias.status === 200 && veLaSuya && !ajenasVisibles,
     `HTTP ${mias.status}, su cita ${veLaSuya ? 'sí' : 'NO'}, ajenas ${ajenasVisibles ? 'SÍ' : 'no'}`);
+
+  // ── K. Puesta a punto (B1-c): acceso temporal, peticiones y «Activar mi cuenta» ──
+  await limpiarRateLimitRunner();
+  const trialDueño = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'create-trial-owner', payload: { organizationSlug: 'andrea-nails' } } });
+  const trial = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'create-trial-owner', payload: { organizationSlug: 'andrea-nails' } } });
+  const trialRepe = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'create-trial-owner', payload: { organizationSlug: 'andrea-nails' } } });
+  const tempPass = trial.json?.temporaryPassword || '';
+  comprobar('K1', 'Central crea el acceso temporal: dueña 403, superadmin 200 (contraseña ≥ 16, una vez), repetido 409',
+    trialDueño.status === 403 && trial.status === 200 && trial.json?.email === TRIAL && tempPass.length >= 16 && trialRepe.status === 409 && !('temporaryPassword' in (trialRepe.json || {})),
+    `dueña ${trialDueño.status}, superadmin ${trial.status} (${tempPass.length} caracteres), repetido ${trialRepe.status}`);
+
+  const tLogin = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: TRIAL, password: tempPass } });
+  const tToken = tLogin.token;
+  const tEquipo = tToken ? await api('/api/team?tenant=andrea-nails', { token: tToken }) : { status: 0, json: null };
+  const tAjeno = tToken ? await api('/api/team?tenant=capra-studio', { token: tToken }) : { status: 0 };
+  const tOtp = await api('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: TRIAL, type: 'sign-in' } });
+  const tOtpEntra = await api('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: TRIAL, otp: '123456' } });
+  comprobar('K2', 'La dueña entra con el acceso temporal, ve «en puesta a punto», no ve otro salón y no entra por código',
+    tLogin.status === 200 && !!tToken && tEquipo.status === 200 && tEquipo.json?.enPrueba === true && tAjeno.status === 403 && tOtpEntra.status === 401,
+    `login ${tLogin.status}, equipo ${tEquipo.status} (enPrueba ${tEquipo.json?.enPrueba}), capra ${tAjeno.status}, código ${tOtp.status}/${tOtpEntra.status}`);
+
+  const corta = await api('/api/team', { method: 'POST', token: tToken, body: { action: 'solicitud_cambios', tenantId: 'andrea-nails', texto: 'corta' } });
+  const ajenaPide = await api('/api/team', { method: 'POST', token: owToken, body: { action: 'solicitud_cambios', tenantId: 'andrea-nails', texto: `CI ${RUN} ajena` } });
+  const staffPide = await api('/api/team', { method: 'POST', token: stToken, body: { action: 'solicitud_cambios', tenantId: 'capra-studio', texto: `CI ${RUN} staff` } });
+  const pide = await api('/api/team', { method: 'POST', token: tToken, body: { action: 'solicitud_cambios', tenantId: 'andrea-nails', texto: `CI ${RUN} cambiar el color del botón`, quiereLlamada: true } });
+  const idPeticion = pide.json?.id;
+  comprobar('K3', 'Formulario: texto corto 400, otro salón 403, staff 403, la dueña 201',
+    corta.status === 400 && ajenaPide.status === 403 && staffPide.status === 403 && pide.status === 201 && !!idPeticion,
+    `corta ${corta.status}, ajena ${ajenaPide.status}, staff ${staffPide.status}, dueña ${pide.status}`);
+
+  const snap = await api('/api/central', { token: saToken2fa });
+  const enCentral = (snap.json?.peticionesPuestaAPunto || []).find((x) => x.id === idPeticion);
+  const marcaMala = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'puesta_a_punto_estado', payload: { id: idPeticion, estado: 'borrada' } } });
+  const marcaDueña = await api('/api/central', { method: 'POST', token: tToken, body: { action: 'puesta_a_punto_estado', payload: { id: idPeticion, estado: 'hecha' } } });
+  const marca = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'puesta_a_punto_estado', payload: { id: idPeticion, estado: 'en_curso' } } });
+  const tRelee = await api('/api/team?tenant=andrea-nails', { token: tToken });
+  const laSuya = (tRelee.json?.peticiones || []).find((x) => x.id === idPeticion);
+  const stEquipo = await api('/api/team?tenant=capra-studio', { token: stToken });
+  comprobar('K4', 'Central ve la petición (prioridad alta) y la marca en curso; estado inválido 400, la dueña no marca 403; la dueña ve el estado; el staff no recibe peticiones',
+    enCentral?.priority === 'high' && marcaMala.status === 400 && marcaDueña.status === 403 && marca.status === 200 && laSuya?.estado === 'en_curso'
+      && stEquipo.status === 200 && (stEquipo.json?.peticiones || []).length === 0,
+    `central ${enCentral ? enCentral.priority : 'NO'}, inválido ${marcaMala.status}, dueña ${marcaDueña.status}, marca ${marca.status}, la ve ${laSuya?.estado || 'NO'}, staff ${(stEquipo.json?.peticiones || []).length}`);
+
+  await limpiarRateLimitRunner();
+  const nueva = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'reset-trial-password', payload: { organizationSlug: 'andrea-nails' } } });
+  const resetNoPrueba = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'reset-trial-password', payload: { organizationSlug: 'capra-studio' } } });
+  const tViejo = await api('/api/team?tenant=andrea-nails', { token: tToken });
+  const passVieja = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: TRIAL, password: tempPass } });
+  const tLogin2 = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: TRIAL, password: nueva.json?.temporaryPassword || '-' } });
+  const tToken2 = tLogin2.token;
+  comprobar('K5', 'Regenerar contraseña: nueva una vez, revoca la sesión, la vieja no entra, la nueva sí; sin acceso temporal 404',
+    nueva.status === 200 && (nueva.json?.temporaryPassword || '').length >= 16 && resetNoPrueba.status === 404 && tViejo.status === 401 && passVieja.status === 401 && tLogin2.status === 200 && !!tToken2,
+    `reset ${nueva.status}, sin acceso ${resetNoPrueba.status}, sesión vieja ${tViejo.status}, contraseña vieja ${passVieja.status}, nueva ${tLogin2.status}`);
+
+  const correoReal = email('activa');
+  const codigoNoPrueba = await api('/api/team', { method: 'POST', token: owToken, body: { action: 'activar_cuenta_codigo', correo: correoReal } });
+  const codigoOcupado = await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta_codigo', correo: email('owner') } });
+  const codigo1 = await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta_codigo', correo: correoReal } });
+  const idTrial = (await sql`SELECT id FROM "user" WHERE email = ${TRIAL}`)[0]?.id;
+  const ident = `activar:${idTrial}:${correoReal}`;
+  const filaCodigo = (await sql`SELECT value FROM "verification" WHERE identifier = ${ident}`)[0];
+  // Sin SMTP_PASS en Preview (G-028) el envío falla: la API debe decirlo (502), nunca «enviado».
+  comprobar('K6', 'Código de activación: cuenta normal 403, correo de otra cuenta 409, cuenta de prueba → código guardado con hash (200 o 502 si el SMTP falla)',
+    codigoNoPrueba.status === 403 && codigoOcupado.status === 409 && [200, 502].includes(codigo1.status) && !!filaCodigo && /^[0-9a-f]{64}$/.test(filaCodigo.value),
+    `normal ${codigoNoPrueba.status}, ocupado ${codigoOcupado.status}, envío ${codigo1.status}, guardado ${filaCodigo ? 'con hash' : 'NO'}`);
+
+  // El código real solo llega al correo: se sustituye por uno conocido (como el buzón en J2); lo probado es la activación por la API.
+  const conocido = '246810';
+  const fijarCodigo = () => sql`UPDATE "verification" SET value = ${crypto.createHash('sha256').update(conocido).digest('hex')} WHERE identifier = ${ident}`;
+  await fijarCodigo();
+  const intentosMalos = [];
+  for (let i = 0; i < 5; i++) {
+    intentosMalos.push((await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta', correo: correoReal, codigo: '000000', nuevaContrasena: 'Nueva-Clave-1234' } })).status);
+  }
+  const trasFallos = await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta', correo: correoReal, codigo: conocido, nuevaContrasena: 'Nueva-Clave-1234' } });
+  comprobar('K7', 'Activación: 4 códigos erróneos 400, el 5.º 429 y el código queda anulado (el correcto ya no sirve)',
+    intentosMalos.slice(0, 4).every((x) => x === 400) && intentosMalos[4] === 429 && trasFallos.status === 400,
+    `intentos ${intentosMalos.join('/')}, después ${trasFallos.status}`);
+
+  await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta_codigo', correo: correoReal } });
+  await fijarCodigo();
+  const nuevaClave = `Ac-${crypto.randomBytes(9).toString('base64url')}-1`;
+  const claveCorta = await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta', correo: correoReal, codigo: conocido, nuevaContrasena: 'corta' } });
+  const activa = await api('/api/team', { method: 'POST', token: tToken2, body: { action: 'activar_cuenta', correo: correoReal, codigo: conocido, nuevaContrasena: nuevaClave } });
+  await limpiarRateLimitRunner();
+  const sesionTemporal = await api('/api/team?tenant=andrea-nails', { token: tToken2 });
+  const accesoTemporal = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: TRIAL, password: nueva.json?.temporaryPassword || '-' } });
+  const real = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: correoReal, password: nuevaClave } });
+  const panelReal = real.token ? await api('/api/team?tenant=andrea-nails', { token: real.token }) : { status: 0, json: null };
+  const conserva = (panelReal.json?.peticiones || []).some((x) => x.id === idPeticion);
+  comprobar('K8', '«Activar mi cuenta»: contraseña corta 400, activa 200, la sesión y el acceso temporal dejan de servir, entra con su correo, el salón sale de puesta a punto y la petición se conserva',
+    claveCorta.status === 400 && activa.status === 200 && sesionTemporal.status === 401 && accesoTemporal.status === 401 && real.status === 200
+      && panelReal.status === 200 && panelReal.json?.enPrueba === false && conserva,
+    `corta ${claveCorta.status}, activa ${activa.status}, sesión temporal ${sesionTemporal.status}, acceso temporal ${accesoTemporal.status}, su correo ${real.status}, enPrueba ${panelReal.json?.enPrueba}, petición ${conserva ? 'conservada' : 'NO'}`);
 
   // ── G. Cron ──
   const cronSin = await api('/api/cron-reminders');
