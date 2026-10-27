@@ -9,7 +9,7 @@ interface VanesevLogoProps {
   tono?: 'claro' | 'oscuro';
   /** Tamaño del monograma en px (la palabra escala con él). */
   tamano?: number;
-  /** Muestra la línea «Suite digital de autor» bajo la palabra (G-037: la dedicatoria es un guiño, no una declaración). */
+  /** Muestra el lema «Tu marca. Tu agenda. Tus clientas.» (G-041) bajo la palabra (G-037: la dedicatoria es un guiño, no una declaración). */
   dedicatoria?: boolean;
   className?: string;
 }
@@ -48,11 +48,11 @@ export const VanesevLogo: React.FC<VanesevLogoProps> = ({ tono = 'claro', tamano
             className="block uppercase font-semibold truncate mt-1"
             style={{
               fontSize: Math.max(7, Math.round(tamano * 0.22)),
-              letterSpacing: '0.2em',
+              letterSpacing: '0.14em',
               color: oscuro ? '#D9C49B' : '#7D6438',
             }}
           >
-            Suite digital de autor
+            Tu marca. Tu agenda. Tus clientas.
           </span>
         )}
       </span>

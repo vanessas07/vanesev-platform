@@ -105,6 +105,26 @@
   background-clip: text;
   color: transparent;
 }
+/* Cifras de sección (01, 02…, precios): Bodoni recta y con peso, nunca cursiva (el «1» y el «4» en cursiva
+   quedan en un trazo finísimo). El oro claro solo sobre oscuro; sobre porcelana, oro tostado legible. */
+.v-cifra {
+  font-style: normal;
+  font-weight: 600 !important;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.02em;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.v-cifra-oscura {
+  background-image: linear-gradient(115deg, #F3E6C4 0%, #D9B872 40%, #F1E2BC 60%, #C9A45C 100%);
+}
+.v-cifra-clara {
+  background-image: linear-gradient(115deg, #A07A35 0%, #7A5A24 45%, #9C7A3C 70%, #5E4318 100%);
+}
+@media (forced-colors: active) {
+  .v-cifra { color: CanvasText; background: none; }
+}
 /* Tarjeta de lujo: obsidiana con halo de oro y borde degradado en oro. */
 .v-tarjeta-lujo {
   border: 1px solid transparent;
