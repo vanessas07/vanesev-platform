@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, KeyRound, AlertTriangle, ArrowRight, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Lock, KeyRound, AlertTriangle, ArrowRight, CheckCircle2, RefreshCw, Smartphone, Copy, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authClient } from '../lib/authClient';
 
@@ -8,16 +8,64 @@ interface CentralAuthGateProps {
   onNavigateToSaaS?: () => void;
 }
 
+/**
+ * Acceso a Central, todo desde la pantalla (karc0 no usa terminales):
+ *   login → (cuenta nueva) cambio de la contraseña provisional → alta de Google Authenticator
+ *   → códigos de respaldo → Central. Con el 2FA ya activo: login → código de 6 dígitos → Central.
+ */
+type Paso = 'login' | 'totp' | 'cambio' | 'alta' | 'respaldo';
+
+const inputClase =
+  'w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-[#52525B] focus:outline-none focus:border-[#F26A3D] transition-colors';
+const botonClase =
+  'w-full py-3.5 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold transition-all shadow-lg shadow-[#F26A3D]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50';
+
 export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
   onAuthenticated,
   onNavigateToSaaS,
 }) => {
+  const [paso, setPaso] = useState<Paso>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nueva, setNueva] = useState('');
+  const [repetida, setRepetida] = useState('');
   const [code, setCode] = useState('');
-  const [require2fa, setRequire2fa] = useState(false);
+  const [totpURI, setTotpURI] = useState('');
+  const [respaldo, setRespaldo] = useState<string[]>([]);
+  const [copiado, setCopiado] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const clave = (() => {
+    try {
+      return new URL(totpURI).searchParams.get('secret') || '';
+    } catch {
+      return '';
+    }
+  })();
+
+  const copiar = async (texto: string, que: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(que);
+      setTimeout(() => setCopiado(''), 2000);
+    } catch {
+      setCopiado('');
+    }
+  };
+
+  // El servidor genera y cifra el secreto; aquí solo se muestra para Google Authenticator.
+  const iniciarAlta = async (contrasena: string) => {
+    const res = await authClient.twoFactor.enable({ password: contrasena });
+    if (res.error || !(res.data as any)?.totpURI) {
+      setError(res.error?.message || 'No se pudo preparar Google Authenticator. Vuelve a intentarlo.');
+      return;
+    }
+    setTotpURI((res.data as any).totpURI);
+    setRespaldo((res.data as any).backupCodes || []);
+    setCode('');
+    setPaso('alta');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +73,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
     setSubmitting(true);
 
     try {
-      if (!require2fa) {
+      if (paso === 'login') {
         const res = await authClient.signIn.email({
           email: email.trim().toLowerCase(),
           password,
@@ -37,12 +85,57 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
         }
 
         if ((res.data as any)?.twoFactorRedirect) {
-          setRequire2fa(true);
-        } else {
-          // Central exige 2FA activo obligatoriamente. Si no lo tiene, se rechaza tajantemente.
-          setError('Activa el 2FA con scripts/activar-2fa-superadmin.cjs');
+          setPaso('totp');
+          return;
         }
-      } else {
+
+        // Sin 2FA todavía: es la primera entrada. Solo el superadmin sigue; Central exige el 2FA.
+        const sesion = await authClient.getSession();
+        const usuario = (sesion.data as any)?.user;
+        if (!usuario || usuario.platform_role !== 'superadmin_decisivo') {
+          await authClient.signOut();
+          setError('Esta cuenta no tiene acceso a Central.');
+          return;
+        }
+        if (usuario.must_reset) {
+          setPaso('cambio');
+          return;
+        }
+        await iniciarAlta(password);
+      } else if (paso === 'cambio') {
+        if (nueva.length < 12) {
+          setError('La nueva contraseña debe tener al menos 12 caracteres.');
+          return;
+        }
+        if (nueva !== repetida) {
+          setError('Las contraseñas no coinciden.');
+          return;
+        }
+        if (nueva === password) {
+          setError('La nueva contraseña tiene que ser distinta de la provisional.');
+          return;
+        }
+        const res = await authClient.changePassword({
+          currentPassword: password,
+          newPassword: nueva,
+          revokeOtherSessions: false,
+        });
+        if (res.error) {
+          setError(res.error.message || 'No se pudo cambiar la contraseña.');
+          return;
+        }
+        setPassword(nueva);
+        setNueva('');
+        setRepetida('');
+        await iniciarAlta(nueva);
+      } else if (paso === 'alta') {
+        const res = await authClient.twoFactor.verifyTotp({ code: code.trim() });
+        if (res.error) {
+          setError(res.error.message || 'Código incorrecto. Usa el que muestra ahora la app.');
+          return;
+        }
+        setPaso('respaldo');
+      } else if (paso === 'totp') {
         const res = await authClient.twoFactor.verifyTotp({
           code: code.trim(),
         });
@@ -53,6 +146,9 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
         }
 
         onAuthenticated();
+      } else {
+        setPassword('');
+        onAuthenticated();
       }
     } catch (err: any) {
       setError(err?.message || 'Error de conexión con el servidor de autenticación.');
@@ -60,6 +156,34 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
       setSubmitting(false);
     }
   };
+
+  const titulos: Record<Paso, [string, string]> = {
+    login: ['Acceso Super-Admin', 'Autenticación criptográfica con 2FA obligatorio'],
+    totp: ['Acceso Super-Admin', 'Autenticación criptográfica con 2FA obligatorio'],
+    cambio: ['Primera entrada', 'Paso 1 de 3 · Elige tu contraseña definitiva'],
+    alta: ['Google Authenticator', 'Paso 2 de 3 · Vincula tu móvil'],
+    respaldo: ['Códigos de respaldo', 'Paso 3 de 3 · Guárdalos antes de entrar'],
+  };
+
+  const campoCodigo = (
+    <div>
+      <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
+        Código de 6 dígitos de Google Authenticator
+      </label>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        required
+        autoFocus
+        maxLength={6}
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+        placeholder="123456"
+        className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-mono tracking-widest text-center focus:outline-none focus:border-[#F26A3D] transition-colors"
+      />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#0C0C0E] text-white flex flex-col justify-between p-4 sm:p-6 font-sans antialiased">
@@ -97,11 +221,11 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-[#F26A3D]/15 border border-[#F26A3D]/30 flex items-center justify-center text-[#F26A3D]">
-              <Lock className="w-6 h-6" />
+              {paso === 'alta' ? <Smartphone className="w-6 h-6" /> : paso === 'respaldo' ? <ShieldCheck className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">Acceso Super-Admin</h1>
-              <p className="text-xs text-[#A1A1AA]">Autenticación criptográfica con 2FA obligatorio</p>
+              <h1 className="text-lg font-bold text-white tracking-tight">{titulos[paso][0]}</h1>
+              <p className="text-xs text-[#A1A1AA]">{titulos[paso][1]}</p>
             </div>
           </div>
 
@@ -117,7 +241,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!require2fa ? (
+            {paso === 'login' && (
               <>
                 <div>
                   <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
@@ -126,10 +250,11 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   <input
                     type="email"
                     required
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="superadmin@vanesev.com"
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-[#52525B] focus:outline-none focus:border-[#F26A3D] transition-colors"
+                    className={inputClase}
                   />
                 </div>
 
@@ -140,19 +265,16 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   <input
                     type="password"
                     required
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••••••"
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-[#52525B] focus:outline-none focus:border-[#F26A3D] transition-colors"
+                    className={inputClase}
                   />
                 </div>
 
                 <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-3.5 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold transition-all shadow-lg shadow-[#F26A3D]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={submitting} className={botonClase}>
                     {submitting ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
@@ -167,7 +289,118 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {paso === 'cambio' && (
+              <>
+                <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+                  Has entrado con una contraseña provisional. Elige ahora la tuya (mínimo 12 caracteres); la provisional dejará de servir.
+                </p>
+                <div>
+                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">Nueva contraseña</label>
+                  <input
+                    type="password"
+                    required
+                    autoFocus
+                    autoComplete="new-password"
+                    value={nueva}
+                    onChange={(e) => setNueva(e.target.value)}
+                    placeholder="Mínimo 12 caracteres"
+                    className={inputClase}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">Repite la contraseña</label>
+                  <input
+                    type="password"
+                    required
+                    autoComplete="new-password"
+                    value={repetida}
+                    onChange={(e) => setRepetida(e.target.value)}
+                    className={inputClase}
+                  />
+                </div>
+                <div className="pt-2">
+                  <button type="submit" disabled={submitting || nueva.length < 12 || nueva !== repetida} className={botonClase}>
+                    {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Guardar y seguir</span>}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {paso === 'alta' && (
+              <>
+                <ol className="text-[11px] text-[#A1A1AA] leading-relaxed space-y-1.5 list-decimal pl-4">
+                  <li>Instala <strong className="text-white">Google Authenticator</strong> en tu móvil si no lo tienes.</li>
+                  <li>
+                    Si estás en el móvil, pulsa el botón de abajo. Si no, en la app: «+» → «Introducir clave de configuración»,
+                    nombre «VANESEV Central», pega la clave y elige «Basada en el tiempo».
+                  </li>
+                  <li>Escribe aquí el código de 6 dígitos que muestra la app.</li>
+                </ol>
+
+                <a
+                  href={totpURI}
+                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>Abrir en Google Authenticator</span>
+                </a>
+
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="text-[10px] text-[#A1A1AA] mb-1">Clave de configuración</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="text-xs font-mono text-white break-all">{clave.replace(/(.{4})/g, '$1 ').trim()}</code>
+                    <button
+                      type="button"
+                      onClick={() => copiar(clave, 'clave')}
+                      className="shrink-0 p-2 rounded-xl bg-white/10 hover:bg-white/15 cursor-pointer"
+                      aria-label="Copiar clave"
+                    >
+                      {copiado === 'clave' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {campoCodigo}
+
+                <div className="pt-2">
+                  <button type="submit" disabled={submitting || code.length < 6} className={botonClase}>
+                    {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Activar Google Authenticator</span>}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {paso === 'respaldo' && (
+              <>
+                <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+                  Google Authenticator está activo. Si pierdes el móvil, cada uno de estos códigos sirve <strong className="text-white">una sola vez</strong> en lugar
+                  del código de 6 dígitos. Guárdalos en un lugar seguro: no se volverán a mostrar.
+                </p>
+                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                  {respaldo.map((c) => (
+                    <code key={c} className="text-xs font-mono text-white text-center">{c}</code>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copiar(respaldo.join('\n'), 'respaldo')}
+                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {copiado === 'respaldo' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiado === 'respaldo' ? 'Copiados' : 'Copiar los códigos'}</span>
+                </button>
+                <div className="pt-2">
+                  <button type="submit" className={botonClase}>
+                    <span>Ya los he guardado · Entrar en Central</span>
+                    <CheckCircle2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            )}
+
+            {paso === 'totp' && (
               <>
                 <div className="p-3.5 rounded-2xl bg-[#F26A3D]/10 border border-[#F26A3D]/20 mb-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#F26A3D] mb-1">
@@ -179,28 +412,10 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
-                    Código TOTP de 6 Dígitos
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoFocus
-                    maxLength={6}
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="123456"
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-mono tracking-widest text-center focus:outline-none focus:border-[#F26A3D] transition-colors"
-                  />
-                </div>
+                {campoCodigo}
 
                 <div className="pt-2 space-y-2">
-                  <button
-                    type="submit"
-                    disabled={submitting || code.length < 6}
-                    className="w-full py-3.5 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold transition-all shadow-lg shadow-[#F26A3D]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={submitting || code.length < 6} className={botonClase}>
                     {submitting ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
@@ -217,7 +432,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setRequire2fa(false);
+                      setPaso('login');
                       setCode('');
                       setError('');
                     }}
