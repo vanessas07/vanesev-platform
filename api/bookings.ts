@@ -84,12 +84,18 @@ export default async function handler(req: any, res: any) {
       const cleanServiceId = String(serviceId).trim();
       const cleanPhone = String(clientPhone).replace(/\D/g, '');
       const cleanName = String(clientName).trim().slice(0, 80);
-      const cleanEmail = clientEmail ? String(clientEmail).trim().toLowerCase().slice(0, 80) : '';
+      let cleanEmail: string | null = null;
+      if (clientEmail !== undefined && clientEmail !== null && String(clientEmail).trim() !== '') {
+        const emailCandidate = String(clientEmail).trim().toLowerCase();
+        if (emailCandidate.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCandidate)) {
+          return res.status(400).json({ error: 'Formato de correo electrónico inválido o excede 120 caracteres.' });
+        }
+        cleanEmail = emailCandidate;
+      }
       const cleanInstagram = clientInstagram ? String(clientInstagram).replace('@', '').trim().slice(0, 40) : '';
       const cleanDate = String(date).trim();
       const cleanTime = String(timeSlot).trim().toUpperCase();
-      const rawNotes = notes ? String(notes).trim().slice(0, 300) : '';
-      const cleanNotes = [rawNotes, cleanEmail ? `Email: ${cleanEmail}` : ''].filter(Boolean).join(' | ');
+      const cleanNotes = notes ? String(notes).trim().slice(0, 300) : '';
       const validPayment = ['pago_movil', 'efectivo', 'binance'].includes(paymentMethod)
         ? paymentMethod
         : 'pago_movil';
@@ -194,7 +200,7 @@ export default async function handler(req: any, res: any) {
       // 3. Registrar Cita con precio oficial verificado en base de datos
       await sql`
         INSERT INTO public.bookings (
-          id, tenant_id, client_name, client_phone, client_instagram, service_id,
+          id, tenant_id, client_name, client_phone, client_email, client_instagram, service_id,
           service_name, service_price_usd, total_price_usd, staff_id, staff_name,
           zone_id, zone_name, date, time_slot, payment_method, notes, status,
           is_first_visit, discount_usd, created_at
@@ -203,6 +209,7 @@ export default async function handler(req: any, res: any) {
           ${cleanTenant},
           ${cleanName},
           ${cleanPhone},
+          ${cleanEmail},
           ${cleanInstagram},
           ${cleanServiceId},
           ${cleanServiceName},
@@ -230,6 +237,7 @@ export default async function handler(req: any, res: any) {
           tenantId: cleanTenant,
           clientName: cleanName,
           clientPhone: cleanPhone,
+          clientEmail: cleanEmail,
           serviceName: cleanServiceName,
           servicePriceUSD: officialPrice,
           totalPriceUSD: finalPriceUSD,
@@ -246,9 +254,57 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── GET: Obtener reservas del Salón (Protegido por Sesión y Rol) ────────────
+  // ─── GET: Obtener reservas del Salón (Protegido por Sesión y Rol) o de la Clienta (mine=1) ───
   if (req.method === 'GET') {
     try {
+      if (req.query?.mine === '1' || req.query?.mine === 'true') {
+        const sesion = await requireSession(req);
+        if (sesion.status !== 200) {
+          return res.status(sesion.status).json({ error: sesion.error });
+        }
+
+        const user = sesion.user;
+        if (!user?.emailVerified) {
+          return res.status(403).json({ error: 'Forbidden: Correo electrónico no verificado.' });
+        }
+
+        const userEmail = String(user.email || '').trim().toLowerCase();
+
+        const [bookingRows, stampRows] = await Promise.all([
+          sql`
+            SELECT 
+              id,
+              tenant_id as "tenantId",
+              service_name as "serviceName",
+              TO_CHAR(date, 'YYYY-MM-DD') as "date",
+              time_slot as "timeSlot",
+              status,
+              total_price_usd as "totalPriceUSD"
+            FROM public.bookings
+            WHERE client_email = ${userEmail}
+            ORDER BY date DESC, time_slot DESC
+            LIMIT 100;
+          `,
+          sql`
+            SELECT 
+              tenant_id as "tenantId",
+              COUNT(*)::int as "stampsCount"
+            FROM public.bookings
+            WHERE client_email = ${userEmail} AND status = 'completada'
+            GROUP BY tenant_id;
+          `,
+        ]);
+
+        return res.status(200).json({
+          bookings: bookingRows.map((r: any) => ({
+            ...r,
+            totalPriceUSD: Number(r.totalPriceUSD) || 0,
+          })),
+          stamps: stampRows,
+          databaseConnected: true,
+        });
+      }
+
       const tenantFilter = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
       if (!tenantFilter) {
         return res.status(400).json({ error: 'Parámetro tenant requerido.' });
@@ -266,6 +322,7 @@ export default async function handler(req: any, res: any) {
           tenant_id as "tenantId",
           client_name as "clientName",
           client_phone as "clientPhone",
+          client_email as "clientEmail",
           client_instagram as "clientInstagram",
           service_id as "serviceId",
           service_name as "serviceName",
