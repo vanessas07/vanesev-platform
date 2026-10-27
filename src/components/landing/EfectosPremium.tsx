@@ -318,3 +318,191 @@ export const UnDiaEnTuSalon: React.FC = () => {
     </section>
   );
 };
+
+// ─── Botón magnético: se desplaza hacia el cursor unos píxeles (solo con ratón) ─
+export const Magnetico: React.FC<{ children: React.ReactNode; fuerza?: number; className?: string }> = ({ children, fuerza = 0.28, className = '' }) => {
+  const reducir = useReducedMotion();
+  const x = useSpring(useMotionValue(0), { stiffness: 220, damping: 16, mass: 0.4 });
+  const y = useSpring(useMotionValue(0), { stiffness: 220, damping: 16, mass: 0.4 });
+  return (
+    <motion.div
+      className={`inline-flex ${className}`}
+      style={{ x, y }}
+      onMouseMove={(e) => {
+        if (reducir) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        x.set((e.clientX - (r.left + r.width / 2)) * fuerza);
+        y.set((e.clientY - (r.top + r.height / 2)) * fuerza);
+      }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// ─── Tarjeta con inclinación 3D y brillo de champán que sigue al cursor ──────
+export const TarjetaTilt: React.FC<{ children: React.ReactNode; className?: string; maximo?: number }> = ({ children, className = '', maximo = 7 }) => {
+  const reducir = useReducedMotion();
+  const rx = useSpring(useMotionValue(0), { stiffness: 160, damping: 18 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 160, damping: 18 });
+  const [luz, setLuz] = useState<{ x: number; y: number } | null>(null);
+  return (
+    <div style={{ perspective: 1100 }} className="h-full">
+      <motion.div
+        className={`relative h-full ${className}`}
+        style={{ rotateX: rx, rotateY: ry, transformStyle: 'preserve-3d' }}
+        whileHover={reducir ? undefined : { y: -4 }}
+        onMouseMove={(e) => {
+          if (reducir) return;
+          const r = e.currentTarget.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          ry.set((px - 0.5) * maximo * 2);
+          rx.set(-(py - 0.5) * maximo * 2);
+          setLuz({ x: px * 100, y: py * 100 });
+        }}
+        onMouseLeave={() => {
+          rx.set(0);
+          ry.set(0);
+          setLuz(null);
+        }}
+      >
+        {children}
+        {luz && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[inherit]"
+            style={{ background: `radial-gradient(420px circle at ${luz.x}% ${luz.y}%, rgba(217,196,155,0.22), transparent 55%)` }}
+          />
+        )}
+      </motion.div>
+    </div>
+  );
+};
+
+// ─── Cifra que cuenta hasta su valor al entrar en pantalla ───────────────────
+const CifraAnimada: React.FC<{ valor: number; prefijo?: string; sufijo?: string }> = ({ valor, prefijo = '', sufijo = '' }) => {
+  const reducir = useReducedMotion();
+  const [n, setN] = useState(reducir ? valor : 0);
+  return (
+    <motion.span
+      viewport={{ once: true }}
+      onViewportEnter={() => {
+        if (reducir) return;
+        const inicio = performance.now();
+        const paso = (t: number) => {
+          const k = Math.min(1, (t - inicio) / 1400);
+          setN(Math.round(valor * (1 - Math.pow(1 - k, 3))));
+          if (k < 1) requestAnimationFrame(paso);
+        };
+        requestAnimationFrame(paso);
+      }}
+    >
+      {prefijo}
+      {n.toLocaleString('es-ES')}
+      {sufijo}
+    </motion.span>
+  );
+};
+
+// ─── «Tu panel de dueña»: el admin, en un marco de navegador vivo ────────────
+const CITAS = [
+  { dia: 0, ini: 0, dur: 2, t: 'Manicura rusa', q: 'Valentina', c: '#1F1226' },
+  { dia: 0, ini: 3, dur: 1, t: 'Cejas', q: 'Marta', c: '#B89B6A' },
+  { dia: 1, ini: 1, dur: 2, t: 'Lifting', q: 'Ana', c: '#4A1F5C' },
+  { dia: 2, ini: 0, dur: 1, t: 'Pedicura', q: 'Laura', c: '#B89B6A' },
+  { dia: 2, ini: 2, dur: 2, t: 'Alisado', q: 'Sofía', c: '#1F1226' },
+  { dia: 3, ini: 1, dur: 1, t: 'Diseño', q: 'Valentina', c: '#4A1F5C' },
+  { dia: 3, ini: 3, dur: 1, t: 'Cejas', q: 'Marta', c: '#B89B6A' },
+  { dia: 4, ini: 0, dur: 2, t: 'Maquillaje', q: 'Ana', c: '#1F1226' },
+  { dia: 4, ini: 2, dur: 2, t: 'Novias', q: 'Laura', c: '#4A1F5C' },
+];
+
+export const PanelDeDuena: React.FC = () => {
+  const reducir = useReducedMotion();
+  return (
+    <section
+      id="panel-duena"
+      aria-label="Tu panel de dueña"
+      className="relative overflow-hidden px-4 sm:px-6 py-20 sm:py-28"
+      style={{ background: 'radial-gradient(70% 60% at 85% 20%, rgba(217,196,155,0.30) 0%, transparent 60%), #FBFAFC' }}
+    >
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+        <motion.div {...revelarSeccion}>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Tu panel de dueña</p>
+          <h2 className="mt-4 font-cormorant text-[38px] sm:text-5xl font-semibold leading-[1.02] tracking-tight text-[#1A1020]">
+            Todo tu salón, <span className="italic font-normal text-[#4A1F5C]">en una sola pantalla.</span>
+          </h2>
+          <p className="mt-5 max-w-md text-sm sm:text-base leading-relaxed text-[#4A4150]">
+            Agenda por especialista, caja en dólares y bolívares, ofertas, cupones, tarjetas regalo y tu kit de lanzamiento. Lo que ves funciona hoy: no es una maqueta.
+          </p>
+          <dl className="mt-8 grid max-w-md grid-cols-3 gap-4 border-t border-[#1A1020]/10 pt-6">
+            <div>
+              <dt className="font-cormorant text-3xl font-semibold text-[#1A1020]"><CifraAnimada valor={38} /></dt>
+              <dd className="text-[11px] font-semibold text-[#6E6478]">Citas esta semana</dd>
+            </div>
+            <div>
+              <dt className="font-cormorant text-3xl font-semibold text-[#4A1F5C]"><CifraAnimada valor={1240} prefijo="$" /></dt>
+              <dd className="text-[11px] font-semibold text-[#6E6478]">Caja de la semana</dd>
+            </div>
+            <div>
+              <dt className="font-cormorant text-3xl font-semibold text-[#1A1020]">0 %</dt>
+              <dd className="text-[11px] font-semibold text-[#6E6478]">Comisión por cita</dd>
+            </div>
+          </dl>
+        </motion.div>
+
+        <TarjetaTilt maximo={5} className="rounded-[22px]">
+          <div className="overflow-hidden rounded-[22px] border border-[#1A1020]/10 bg-white shadow-[0_50px_100px_-40px_rgba(20,11,25,0.45)]">
+            <div className="flex items-center gap-2 border-b border-[#1A1020]/8 bg-[#F4F2F7] px-4 py-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#E4E2EA]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#E4E2EA]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#E4E2EA]" />
+              <span className="ml-3 flex-1 truncate rounded-full bg-white px-3 py-1 text-[10px] text-[#6E6478]">vanesev.com/tu-salon/admin</span>
+            </div>
+            <div className="grid grid-cols-[84px_1fr] sm:grid-cols-[120px_1fr]">
+              <div className="space-y-1 border-r border-[#1A1020]/8 bg-[#FBFAFC] p-2.5 sm:p-3 text-[10px] font-semibold text-[#6E6478]">
+                {['Inicio', 'Agenda', 'Servicios', 'Ofertas', 'Cupones', 'Clientas', 'Caja'].map((m, i) => (
+                  <div key={m} className={`rounded-lg px-2 py-1.5 ${i === 1 ? 'bg-[#1F1226] text-[#D9C49B]' : ''}`}>{m}</div>
+                ))}
+              </div>
+              <div className="p-3 sm:p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="font-cormorant text-base sm:text-lg font-semibold text-[#1A1020]">Semana del 3 al 7</p>
+                  <span className="shrink-0 rounded-full bg-[#EFEAF1] px-2.5 py-1 text-[9px] font-bold text-[#4A1F5C]">4 especialistas</span>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {['Lun', 'Mar', 'Mié', 'Jue', 'Vie'].map((d) => (
+                    <p key={d} className="text-center text-[9px] font-bold uppercase text-[#6E6478]">{d}</p>
+                  ))}
+                  {[0, 1, 2, 3, 4].map((dia) => (
+                    <div key={dia} className="relative h-44 sm:h-52 rounded-lg bg-[#FBFAFC] ring-1 ring-[#1A1020]/5">
+                      {CITAS.filter((c) => c.dia === dia).map((c, i) => (
+                        <motion.div
+                          key={i}
+                          initial={reducir ? { opacity: 0 } : { opacity: 0, scale: 0.85, y: 8 }}
+                          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.15 + (dia * 2 + i) * 0.07, duration: 0.5, ease: CURVA }}
+                          className="absolute inset-x-1 rounded-md px-1.5 py-1 text-white"
+                          style={{ top: `${c.ini * 25 + 2}%`, height: `${c.dur * 25 - 4}%`, background: c.c }}
+                        >
+                          <p className="truncate text-[8px] font-bold leading-tight">{c.t}</p>
+                          <p className="truncate text-[7px] opacity-75">{c.q}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </TarjetaTilt>
+      </div>
+    </section>
+  );
+};
