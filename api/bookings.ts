@@ -5,6 +5,7 @@ import { getDb } from './_db.js';
 import { requireSession, requireTenantRole } from './_session.js';
 import { claveDeLimite, ipDeLaPeticion, limiteSuperado } from './_limite.js';
 import { applyCors } from './_cors.js';
+import { calcularPrecio, escriturasDeDescuentos, escriturasDeDevolucion, esLimiteDeDescuento } from './_precios.js';
 
 // Reserva pública: límites contados en la base (migración 0006).
 const RESERVAS_POR_IP_HORA = 5;
@@ -68,6 +69,8 @@ export default async function handler(req: any, res: any) {
         paymentMethod,
         isFirstVisit,
         notes,
+        cupon,
+        tarjetaRegalo,
       } = req.body || {};
 
       if (!clientName || !clientPhone || !date || !timeSlot || !serviceId) {
@@ -184,26 +187,37 @@ export default async function handler(req: any, res: any) {
         return res.status(409).json({ error: 'El horario seleccionado ya se encuentra ocupado o bloqueado.' });
       }
 
-      // 2. Blindaje Anti-Fraude: verificación estricta de primera visita
-      const previousBookings = await sql`
-        SELECT COUNT(*) as count FROM public.bookings 
-        WHERE tenant_id = ${cleanTenant} AND client_phone = ${cleanPhone} AND status != 'cancelada';
-      `;
-      const prevCount = Number(previousBookings[0]?.count || 0);
-      const eligibleFirstVisit = (prevCount === 0) && claimedFirst;
-      const discountUSD = eligibleFirstVisit ? 2.00 : 0.00;
-      const finalPriceUSD = Math.max(0, officialPrice - discountUSD);
+      // 2. Precio final: oferta, primera visita, cupón y tarjeta regalo (G-033), todo decidido aquí.
+      const calculo = await calcularPrecio(sql, {
+        tenant: cleanTenant,
+        servicioId: cleanServiceId,
+        precioBase: officialPrice,
+        fecha: cleanDate,
+        turno: cleanTime,
+        telefono: cleanPhone,
+        primeraVisitaReclamada: claimedFirst,
+        cupon: cupon ? String(cupon) : null,
+        tarjeta: tarjetaRegalo ? String(tarjetaRegalo) : null,
+      });
+      if (!calculo.ok) {
+        return res.status(calculo.status).json({ error: calculo.error });
+      }
+      const desglose = calculo.desglose;
+      const eligibleFirstVisit = desglose.primeraVisita > 0;
+      const discountUSD = desglose.primeraVisita;
+      const finalPriceUSD = desglose.total;
       // Id y estado los decide el servidor: la clienta no puede elegir el id ni dejar la cita «confirmada».
       const bookingStatus = 'en_whatsapp';
       const bookingId = `bk_${randomUUID()}`;
 
-      // 3. Registrar Cita con precio oficial verificado en base de datos
-      await sql`
+      // 3. Registrar la cita y, en la MISMA transacción, el uso del cupón y el cargo a la tarjeta regalo.
+      const insertarCita = sql`
         INSERT INTO public.bookings (
           id, tenant_id, client_name, client_phone, client_email, client_instagram, service_id,
           service_name, service_price_usd, total_price_usd, staff_id, staff_name,
           zone_id, zone_name, date, time_slot, payment_method, notes, status,
-          is_first_visit, discount_usd, created_at
+          is_first_visit, discount_usd, oferta_id, descuento_oferta_usd, cupon_id, descuento_cupon_usd,
+          tarjeta_regalo_id, pago_tarjeta_usd, created_at
         ) VALUES (
           ${bookingId},
           ${cleanTenant},
@@ -226,9 +240,23 @@ export default async function handler(req: any, res: any) {
           ${bookingStatus},
           ${eligibleFirstVisit},
           ${discountUSD},
+          ${desglose.oferta?.id ?? null},
+          ${desglose.oferta?.descuento ?? 0},
+          ${desglose.cupon?.id ?? null},
+          ${desglose.cupon?.descuento ?? 0},
+          ${desglose.tarjeta?.id ?? null},
+          ${desglose.tarjeta?.pago ?? 0},
           NOW()
         );
       `;
+      try {
+        await sql.transaction([insertarCita, ...escriturasDeDescuentos(sql, cleanTenant, bookingId, desglose)]);
+      } catch (errTx: any) {
+        if (esLimiteDeDescuento(errTx)) {
+          return res.status(409).json({ error: 'El cupón o la tarjeta regalo ya no están disponibles. Revisa el código e inténtalo de nuevo.' });
+        }
+        throw errTx;
+      }
 
       return res.status(201).json({
         success: true,
@@ -242,6 +270,14 @@ export default async function handler(req: any, res: any) {
           servicePriceUSD: officialPrice,
           totalPriceUSD: finalPriceUSD,
           discountUSD,
+          desglose: {
+            base: desglose.base,
+            oferta: desglose.oferta ? { titulo: desglose.oferta.titulo, descuento: desglose.oferta.descuento } : null,
+            primeraVisita: desglose.primeraVisita,
+            cupon: desglose.cupon ? { codigo: desglose.cupon.codigo, descuento: desglose.cupon.descuento } : null,
+            tarjetaRegalo: desglose.tarjeta ? { pago: desglose.tarjeta.pago, saldoRestante: desglose.tarjeta.saldoRestante } : null,
+            total: desglose.total,
+          },
           date: cleanDate,
           timeSlot: cleanTime,
           status: bookingStatus,
@@ -379,7 +415,7 @@ export default async function handler(req: any, res: any) {
 
       // C10 (§4.2): Carga la cita de la base de datos y toma SU tenant_id
       const targetBooking = await sql`
-        SELECT id, tenant_id, client_phone, client_name 
+        SELECT id, tenant_id, client_phone, client_name, status
         FROM public.bookings 
         WHERE id = ${cleanId} 
         LIMIT 1;
@@ -399,6 +435,9 @@ export default async function handler(req: any, res: any) {
 
       // Reprogramación de Cita (cambio de fecha y turno aislado por salón)
       if (action === 'reschedule' && date && timeSlot) {
+        if (targetBooking[0].status === 'cancelada') {
+          return res.status(409).json({ error: 'La cita está cancelada: crea una nueva reserva.' });
+        }
         const cleanDate = String(date).trim();
         const cleanTime = String(timeSlot).trim().toUpperCase();
         if (!fechaReal(cleanDate) || !TURNO_VALIDO.test(cleanTime)) {
@@ -451,7 +490,23 @@ export default async function handler(req: any, res: any) {
 
       // Actualizar estado de la cita y motivo si aplica, asegurando WHERE id AND tenant_id
       const reasonTag = cancellationReason ? `[Cancelación: ${String(cancellationReason).slice(0, 140)}]` : '';
-      if (reasonTag) {
+      // Una cita cancelada no puede volver a activarse: el cupón y el saldo ya se devolvieron.
+      if (targetBooking[0].status === 'cancelada' && cleanStatus !== 'cancelada') {
+        return res.status(409).json({ error: 'La cita está cancelada: crea una nueva reserva.' });
+      }
+      if (cleanStatus === 'cancelada') {
+        await sql.transaction([
+          sql`
+            UPDATE public.bookings
+            SET status = 'cancelada',
+                notes = CASE WHEN ${reasonTag} = '' THEN notes
+                             WHEN notes IS NULL OR notes = '' THEN ${reasonTag}
+                             ELSE notes || ' ' || ${reasonTag} END
+            WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
+          `,
+          ...escriturasDeDevolucion(sql, bookingTenant, cleanId),
+        ]);
+      } else if (reasonTag) {
         await sql`
           UPDATE public.bookings 
           SET status = ${cleanStatus},
@@ -558,10 +613,14 @@ export default async function handler(req: any, res: any) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
-      await sql`
-        DELETE FROM public.bookings 
-        WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
-      `;
+      // Antes de borrar, se devuelven el uso del cupón y el saldo de la tarjeta regalo (misma transacción).
+      await sql.transaction([
+        ...escriturasDeDevolucion(sql, bookingTenant, cleanId),
+        sql`
+          DELETE FROM public.bookings 
+          WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
+        `,
+      ]);
 
       return res.status(200).json({ success: true, deletedId: cleanId });
     } catch (err: any) {
