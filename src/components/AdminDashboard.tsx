@@ -118,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const fetchTenantTeamAndZones = async () => {
     setIsLoadingTeamDb(true);
     try {
-      const res = await fetch(`/api/central?mode=tenant_context&tenant=${encodeURIComponent(tenantSlug)}`);
+      const res = await fetch(`/api/team?tenant=${encodeURIComponent(tenantSlug)}`);
       if (res.ok) {
         const json = await res.json();
         if (Array.isArray(json.staff)) setDbStaff(json.staff);
@@ -140,18 +140,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!collaboratorForm.name.trim()) return;
     setIsLoadingTeamDb(true);
     try {
-      await fetch('/api/central', {
+      await fetch('/api/team', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'upsert_staff',
           tenantId: tenantSlug,
-          fullName: collaboratorForm.name,
+          name: collaboratorForm.name,
           roleTitle: collaboratorForm.role === 'admin' ? 'Directora / Master' : collaboratorForm.role === 'recepcion' ? 'Recepción & Front-Desk' : 'Especialista Senior',
-          specialties: collaboratorForm.specialty.split(',').map(s => s.trim()),
+          specialtyTags: collaboratorForm.specialty.split(',').map(s => s.trim()),
           phone: collaboratorForm.phone,
-          commissionPct: Number(collaboratorForm.commissionPercent || 50),
-          avatarColor: '#C5A059',
+          commissionPercent: Number(collaboratorForm.commissionPercent || 50),
         }),
       });
       setCollaboratorForm({
@@ -172,10 +171,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleDeleteStaffFromDb = async (id: string) => {
     setIsLoadingTeamDb(true);
     try {
-      await fetch('/api/central', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_staff', id }),
+      await fetch(`/api/team?type=staff&id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
       });
       await fetchTenantTeamAndZones();
     } finally {
@@ -188,7 +185,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!newZoneName.trim()) return;
     setIsLoadingTeamDb(true);
     try {
-      await fetch('/api/central', {
+      await fetch('/api/team', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -196,7 +193,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           tenantId: tenantSlug,
           name: newZoneName,
           capacity: Number(newZoneCapacity || 1),
-          colorTag: newZoneColor,
         }),
       });
       setNewZoneName('');
@@ -210,10 +206,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleDeleteZoneFromDb = async (id: string) => {
     setIsLoadingTeamDb(true);
     try {
-      await fetch('/api/central', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_zone', id }),
+      await fetch(`/api/team?type=zone&id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
       });
       await fetchTenantTeamAndZones();
     } finally {
