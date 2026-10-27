@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import {
-  Sparkles,
+
   Calendar,
   QrCode,
   ShieldCheck,
@@ -364,7 +364,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02] cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #9E3B52 0%, #D95F43 100%)' }}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Solicitar Propuesta</span>
             </button>
             <button
@@ -421,7 +421,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                   className="w-full py-3 rounded-full text-xs font-bold text-white flex items-center justify-center gap-2 shadow-md cursor-pointer"
                   style={{ background: 'linear-gradient(135deg, #9E3B52 0%, #D95F43 100%)' }}
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                   <span>Solicitar Propuesta para mi Salón</span>
                 </button>
                 <button
@@ -489,7 +489,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 onClick={() => window.open('/m/capra-studio', '_blank', 'noopener,noreferrer')}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-[#161214]/15 bg-white hover:bg-[#F3EDE2] px-7 py-4 text-sm sm:text-[15px] font-bold text-[#161214] shadow-xs transition-colors cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-[#9E3B52]" />
+                <ArrowUpRight className="w-4 h-4 text-[#5B2A6E]" strokeWidth={1.5} />
                 <span>Ver Demo en Vivo (/m/capra-studio)</span>
               </button>
             </div>

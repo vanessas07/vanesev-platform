@@ -2,7 +2,7 @@ import React from 'react';
 import { PromoOffer, ServiceItem } from '../types';
 import { Promotions } from './Promotions';
 import { Footer } from './Footer';
-import { ArrowLeft, Sparkles, Shield, Gift, Calendar, MessageCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Tag, Shield, Gift, Calendar, MessageCircle, Clock, CheckCircle2 } from 'lucide-react';
 
 interface PromoPageProps {
   promos: PromoOffer[];
@@ -83,7 +83,7 @@ export const PromoPage: React.FC<PromoPageProps> = ({
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-4">
             
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-950 text-xs font-bold border border-amber-300 shadow-xs">
-              <Sparkles className="w-4 h-4 text-amber-600" />
+              <Tag className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
               <span>Experiencias Integrales con Ahorro Garantizado</span>
             </div>
 

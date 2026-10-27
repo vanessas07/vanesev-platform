@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles,
+
   Calendar,
   Clock,
   Phone,
@@ -316,7 +316,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
                 borderColor: palette.borderSubtle,
               }}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Award className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span className="hidden sm:inline">Pasaporte VIP</span>
               <span className="sm:hidden">VIP</span>
             </button>
@@ -509,7 +509,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
                     color: palette.badgeText,
                   }}
                 >
-                  <Sparkles className="w-3 h-3" />
+                  <Award className="w-3 h-3" strokeWidth={1.5} />
                   <span>RECOMENDACIÓN DE LA DIRECTORA · TRATAMIENTO ESTRELLA</span>
                 </div>
                 <h2
@@ -1105,7 +1105,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
             borderColor: palette.borderSubtle,
           }}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Award className="w-3.5 h-3.5" strokeWidth={1.5} />
           <span>Sellos VIP</span>
         </button>
 

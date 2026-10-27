@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Sparkles, 
+  Palette, 
   Calendar, 
   Award, 
   ChevronLeft, 
@@ -133,7 +133,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking, gallerySlides }) => {
 
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sage-100 text-[10px] sm:text-xs font-bold text-sage-800 uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3 text-sage-600" />
+                  <Clock className="w-3 h-3 text-sage-600" strokeWidth={1.5} />
                   <span>7 Años de Experiencia</span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-warm-900 leading-none">
@@ -206,7 +206,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking, gallerySlides }) => {
                 {/* Visual Label */}
                 <div className="flex items-center justify-between px-1 pb-2.5 text-xs">
                   <span className="font-bold uppercase tracking-wider text-sage-700 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <Palette className="w-3.5 h-3.5 text-amber-500" strokeWidth={1.5} />
                     Diseños & Técnicas Reales
                   </span>
                   <span className="text-[11px] font-semibold text-warm-600">

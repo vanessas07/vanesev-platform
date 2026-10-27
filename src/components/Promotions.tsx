@@ -1,6 +1,6 @@
 import React from 'react';
 import { PromoOffer, ServiceItem } from '../types';
-import { Sparkles, Check, Tag, ArrowRight, Clock } from 'lucide-react';
+import { Check, Tag, ArrowRight, Clock } from 'lucide-react';
 
 interface PromotionsProps {
   promos: PromoOffer[];
@@ -26,7 +26,7 @@ export const Promotions: React.FC<PromotionsProps> = ({
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto space-y-2 mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-400/20 text-gold-600 text-xs font-semibold tracking-wider uppercase">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>Paquetes & Beneficios Exclusivos</span>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl text-warm-900 font-semibold">

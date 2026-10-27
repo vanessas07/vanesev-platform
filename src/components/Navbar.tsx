@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Sparkles, Shield, MessageCircle, Gift, User, Tag } from 'lucide-react';
+import { Calendar, Shield, MessageCircle, Gift, User, Tag } from 'lucide-react';
 
 interface NavbarProps {
   onOpenBooking: () => void;

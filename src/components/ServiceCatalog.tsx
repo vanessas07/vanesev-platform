@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ServiceItem, ServiceCategory } from '../types';
-import { Clock, Check, Sparkles, Heart, ArrowRight, Shield } from 'lucide-react';
+import { Clock, Check, Award, Heart, ArrowRight, Shield } from 'lucide-react';
 
 interface ServiceCatalogProps {
   services: ServiceItem[];
@@ -111,12 +111,12 @@ export const ServiceCatalog: React.FC<ServiceCatalogProps> = ({
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start z-10">
                       {service.badgeText ? (
                         <span className={`px-3 py-1 text-white text-[11px] font-bold tracking-wider uppercase rounded-full shadow-md flex items-center gap-1.5 ${service.badgeColor || 'bg-sage-800'}`}>
-                          <Sparkles className="w-3 h-3 text-amber-300" />
+                          <Award className="w-3 h-3 text-amber-300" strokeWidth={1.5} />
                           <span>{service.badgeText}</span>
                         </span>
                       ) : service.isPopular ? (
                         <span className="px-3 py-1 bg-sage-800 text-white text-[11px] font-bold tracking-wider uppercase rounded-full shadow-md flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-300" />
+                          <Award className="w-3 h-3 text-amber-300" strokeWidth={1.5} />
                           <span>Recomendado</span>
                         </span>
                       ) : null}

@@ -14,7 +14,8 @@ import {
   Calendar, 
   Clock, 
   DollarSign, 
-  Sparkles, 
+  Award,
+  Tag, 
   Check, 
   ShieldCheck, 
   Send, 
@@ -502,7 +503,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 >
                   <div className="space-y-0.5">
                     <span className="text-[10px] uppercase font-bold text-warm-700 tracking-wider flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <Award className="w-3.5 h-3.5 text-amber-600" strokeWidth={1.5} />
                       <span>Programa de Fidelización</span>
                     </span>
                     <p className="text-xs font-bold text-warm-900">
@@ -758,7 +759,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-wider text-sage-800 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-gold-500" />
+                          <Tag className="w-3.5 h-3.5 text-gold-500" strokeWidth={1.5} />
                           <span>Adicionales &amp; Personalización (Opcional)</span>
                         </span>
                       </div>
@@ -844,7 +845,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   ) : isExistingClient ? (
                     <div className="p-4 rounded-2xl bg-warm-100 border border-warm-300 text-warm-950 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />
+                        <Award className="w-5 h-5 text-amber-600 shrink-0" strokeWidth={1.5} />
                         <div>
                           <span className="text-xs sm:text-sm font-bold block">
                             ¡Clienta VIP Reconocida!
@@ -1115,7 +1116,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   {isExistingClient ? (
                     <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/90 flex items-start gap-3 shadow-xs">
                       <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
-                        <Sparkles className="w-5 h-5 text-amber-300" />
+                        <Award className="w-5 h-5 text-amber-300" strokeWidth={1.5} />
                       </div>
                       <div className="space-y-0.5 text-xs flex-1">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1230,7 +1231,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     )}
 
                     <div className="pt-1 text-[11px] text-warm-700 font-medium flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <Award className="w-3.5 h-3.5 text-amber-600 shrink-0" strokeWidth={1.5} />
                       <span>Suma 1 sello en tu Pasaporte de Fidelidad (5 visitas = {loyaltyRewardLabel}).</span>
                     </div>
                   </div>

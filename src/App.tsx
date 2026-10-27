@@ -34,7 +34,6 @@ const AdminDashboard = React.lazy(() =>
 import {
   Calendar,
   MessageCircle,
-  Sparkles,
   Download,
   Terminal,
   ShieldCheck,
@@ -887,7 +886,7 @@ export const App: React.FC = () => {
             className="p-2.5 rounded-full bg-sage-100 text-sage-800"
             title="Mi Ficha VIP"
           >
-            <Sparkles className="w-4 h-4 text-amber-600" />
+            <Award className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
           </button>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('open-pwa-install'))}

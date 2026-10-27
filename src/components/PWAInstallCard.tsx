@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Sparkles, Calendar, Award, Smartphone, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Download, Calendar, Award, Smartphone, CheckCircle2, ChevronRight } from 'lucide-react';
 
 interface PWAInstallCardProps {
   onOpenClientAccount: () => void;
@@ -68,7 +68,7 @@ export const PWAInstallCard: React.FC<PWAInstallCardProps> = ({
 
                 <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
                   <div className="w-7 h-7 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />
                   </div>
                   <h4 className="font-bold text-xs text-white">Reserva en 1 Toque</h4>
                   <p className="text-[11px] text-sage-300 leading-tight">
@@ -91,7 +91,7 @@ export const PWAInstallCard: React.FC<PWAInstallCardProps> = ({
                   onClick={onOpenClientAccount}
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <Award className="w-4 h-4 text-amber-300" strokeWidth={1.5} />
                   <span>Consultar Mi Ficha VIP</span>
                 </button>
               </div>

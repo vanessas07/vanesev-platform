@@ -13,7 +13,7 @@ import {
   KeyRound,
   LayoutDashboard, 
   Calendar, 
-  Sparkles, 
+  Scissors, 
   DollarSign, 
   Download, 
   Upload, 
@@ -82,7 +82,7 @@ type TabKey = 'overview' | 'bookings' | 'theme' | 'services' | 'team' | 'qr' | '
 const NAV_ITEMS: { key: TabKey; label: string; shortLabel: string; subtitle: string; Icon: React.FC<{ className?: string }> }[] = [
   { key: 'overview',  label: 'Panel & Programa VIP',     shortLabel: 'Overview',  subtitle: 'Supervisa facturación, metas operativas, módulos activos y reservas en tiempo real.', Icon: LayoutDashboard },
   { key: 'bookings',  label: 'Agenda & Reservas',        shortLabel: 'Agenda',    subtitle: 'Gestiona turnos confirmados, solicitudes en WhatsApp y citas presenciales.',          Icon: Calendar },
-  { key: 'services',  label: 'Catálogo de Servicios',    shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Sparkles },
+  { key: 'services',  label: 'Catálogo de Servicios',    shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Scissors },
   { key: 'theme',     label: 'Diseño & Identidad',       shortLabel: 'Diseño',    subtitle: 'Personaliza en vivo la paleta de colores, tipografía y tarjetas de tu carta QR.',   Icon: Palette },
   { key: 'crm',       label: 'Programa de Fidelidad',    shortLabel: 'Programa',  subtitle: 'Controla sellos acumulados en el Pasaporte VIP y recompensas de clientas.',         Icon: Award },
   { key: 'team',      label: 'Equipo & Cabinas',         shortLabel: 'Equipo',    subtitle: 'Configura especialistas, comisiones pactadas y capacidad por área o cabina.',       Icon: ShieldCheck },
@@ -1467,7 +1467,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {[
                 { key: 'overview' as TabKey, Icon: LayoutDashboard, title: 'Overview / Resumen' },
                 { key: 'bookings' as TabKey, Icon: Calendar, title: 'Agenda & Reservas' },
-                { key: 'services' as TabKey, Icon: Sparkles, title: 'Catálogo de Servicios' },
+                { key: 'services' as TabKey, Icon: Scissors, title: 'Catálogo de Servicios' },
                 { key: 'crm' as TabKey, Icon: Award, title: 'Pasaporte & Fidelidad VIP' },
                 { key: 'team' as TabKey, Icon: Users, title: 'Equipo & Cabinas' },
                 { key: 'analytics' as TabKey, Icon: BarChart3, title: 'Reportes & Finanzas' },
@@ -1769,7 +1769,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
                         <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
-                          <Sparkles className="w-4 h-4" />
+                          <Scissors className="w-4 h-4" strokeWidth={1.5} />
                         </div>
                         <p className="text-xs font-bold text-[#18181B]">Precios &amp; Servicios</p>
                         <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
@@ -1824,7 +1824,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div key={row.id} className="py-2.5 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded-full bg-[#FFF3EF] text-[#E35633] flex items-center justify-center shrink-0">
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <Scissors className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-[#18181B] truncate">{row.title}</p>
@@ -1988,7 +1988,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer"
                                   title="Marcar cita culminada con éxito y acreditar sello VIP"
                                 >
-                                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                  <Award className="w-3.5 h-3.5 text-amber-300" strokeWidth={1.5} />
                                   <span>Culminar &amp; Sello</span>
                                 </button>
 
@@ -2024,7 +2024,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs"
                                 title="Enviar confirmación de sello a la clienta por WhatsApp"
                               >
-                                <Sparkles className="w-3 h-3 text-amber-300" />
+                                <Award className="w-3 h-3 text-amber-300" strokeWidth={1.5} />
                                 <span>Notificar Sello</span>
                               </a>
                             )}
@@ -3811,7 +3811,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex items-center justify-between border-b border-sage-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <Award className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">

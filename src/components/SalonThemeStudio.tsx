@@ -4,7 +4,6 @@ import {
   Palette,
   Type,
   LayoutGrid,
-  Sparkles,
   CheckCircle2,
   Save,
   ExternalLink,
@@ -257,7 +256,7 @@ export const SalonThemeStudio: React.FC<SalonThemeStudioProps> = ({
           {/* 4. Studio Texts & Loyalty Rules */}
           <div className="bg-white rounded-3xl border border-stone-200/80 p-6 space-y-4 shadow-2xs">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#9E475B]" />
+              <Award className="w-4 h-4 text-[#9E475B]" strokeWidth={1.5} />
               <h4 className="font-serif text-lg text-stone-900">
                 4. Textos de Portada, Contacto &amp; Fidelización VIP
               </h4>
