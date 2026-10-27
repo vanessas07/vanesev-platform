@@ -80,12 +80,9 @@ Por directriz del usuario karc0 (verificada en `RULE[user_global]`):
 
 ## 6. Inspiración y Dedicatoria de Autor a Vanessa
 - El nombre **VANESEV** es un homenaje y regalo de cumpleaños #7 de su padre (karc0) a su hija Vanessa.
-- La web comercial mantiene guiños sutiles, permanentes y de alta elegancia:
-  - Subtítulo de marca en Navbar: `Dedicado a Vanessa · Suite Digital`
-  - Pill en Hero: `Inspirado en Vanessa · Suite Tecnológica de Autor para Salones`
-  - Badge VIP en simulador 3D: `Pasaporte VIP #001 · Vanessa V. — Cliente Fundadora 🩷`
-  - Footer de autor: `Creado con amor e inspirado en Vanessa`
-- Estos elementos deben mantenerse con la máxima sofisticación y sobriedad comercial.
+- **Desde el 28/10/2026 (G-037, karc0): la dedicatoria es un guiño, nunca una declaración.** Prohibido escribir «Inspirado en Vanessa», «Dedicado a Vanessa» o su nombre en la portada, en los elementos flotantes, en el logo o en el título de la página.
+- Guiños sutiles permitidos: el **«#001»** del Pasaporte VIP (la primera clienta fundadora) y **«Hecho con amor, para V.»** en letra pequeña en el pie.
+- Estos detalles deben mantenerse con la máxima sofisticación y sobriedad comercial.
 
 ---
 

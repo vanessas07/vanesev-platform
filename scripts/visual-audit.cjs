@@ -40,6 +40,10 @@ async function runAudit() {
     });
     const page = await context.newPage();
     page.on('pageerror', (err) => console.log(`[PAGE ERROR ${vp.name}]: ${err.message}`));
+    // React captura los fallos de pintado en su pantalla de aviso: solo se ven como console.error.
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') console.log(`[CONSOLE ERROR ${vp.name}]: ${msg.text().slice(0, 600)}`);
+    });
 
     for (const route of ROUTES) {
       const url = `${BASE_URL}${route.path}`;
@@ -138,8 +142,14 @@ async function runAudit() {
 
         await page.screenshot({ path: filePath, fullPage: false });
 
+        // Una página que cae en la pantalla de error de React NO está bien, aunque no desborde.
+        const pantallaDeError = await page.evaluate(() => document.body.innerText.includes('Estamos actualizando la plataforma'));
+        if (pantallaDeError) globalHasViolations = true;
+
         let statusStr = '✅ OK (0px)';
-        if (!authGateCheck.valid) {
+        if (pantallaDeError) {
+          statusStr = '❌ PANTALLA DE ERROR (la página no se pinta)';
+        } else if (!authGateCheck.valid) {
           statusStr = authGateCheck.note;
         } else if (clippingCheck.hasClipping) {
           statusStr = `❌ RECORTE (+${clippingCheck.offenders[0].diff}px en ${clippingCheck.offenders[0].tag})`;
@@ -187,6 +197,11 @@ async function runAudit() {
 
   if (process.env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md, 'utf8');
+  }
+
+  if (results.some((r) => r.status.includes('PANTALLA DE ERROR'))) {
+    console.error('❌ Alguna página cae en la pantalla de error.');
+    process.exit(1);
   }
 
   if (globalHasViolations && process.env.STRICT_AUDIT) {

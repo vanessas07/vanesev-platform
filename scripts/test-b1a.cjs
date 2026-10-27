@@ -182,9 +182,10 @@ async function limpiar() {
     ]);
   }
   await sql`UPDATE public.tenants SET en_prueba = false WHERE id = 'andrea-nails'`;
-  await sql`DELETE FROM public.ofertas WHERE tenant_id = 'capra-studio' AND titulo LIKE 'CI %'`;
-  await sql`DELETE FROM public.cupones WHERE tenant_id = 'capra-studio' AND descripcion LIKE 'CI %'`;
-  await sql`DELETE FROM public.tarjetas_regalo WHERE tenant_id = 'capra-studio' AND nota LIKE 'CI %'`;
+  // Solo lo de ESTA ejecución: otra ejecución en curso no debe perder sus datos.
+  await sql`DELETE FROM public.ofertas WHERE tenant_id = 'capra-studio' AND titulo LIKE ${'CI ' + RUN + '%'}`;
+  await sql`DELETE FROM public.cupones WHERE tenant_id = 'capra-studio' AND descripcion LIKE ${'CI ' + RUN + '%'}`;
+  await sql`DELETE FROM public.tarjetas_regalo WHERE tenant_id = 'capra-studio' AND nota LIKE ${'CI ' + RUN + '%'}`;
   if (originalCapra) {
     await sql`UPDATE public.tenants SET landing = ${JSON.stringify(originalCapra.landing || {})}::jsonb, tema = ${JSON.stringify(originalCapra.tema || {})}::jsonb,
               slogan = ${originalCapra.slogan} WHERE id = 'capra-studio'`;
