@@ -1,6 +1,7 @@
 // Vercel Serverless Function: /api/gallery
 // Manages carousel gallery images in Neon Serverless Postgres with strict tenant isolation
 import { getDb } from './_db.js';
+import { requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
@@ -9,7 +10,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -17,23 +18,22 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  // 1. Verificación obligatoria de tenant: sin tenant responde 400
-  const rawTenant = req.query?.tenant || (req.body && req.body.tenantId);
-  if (!rawTenant || !String(rawTenant).trim()) {
-    return res.status(400).json({ error: 'Parámetro tenant requerido.' });
-  }
-  const tenantSlug = String(rawTenant).trim().toLowerCase();
-
   const sql = getDb();
   if (!sql) {
     if (req.method === 'GET') {
       return res.status(200).json({ slides: [], databaseConnected: false });
     }
-    return res.status(500).json({ error: 'Base de datos no disponible.' });
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
   }
 
-  // ─── GET: Listar imágenes del carrusel filtradas estrictamente por tenant_id ─
+  // ─── GET: Listar imágenes del carrusel (Público, filtrado por tenant_id) ────
   if (req.method === 'GET') {
+    const rawTenant = req.query?.tenant;
+    if (!rawTenant || !String(rawTenant).trim()) {
+      return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+    }
+    const tenantSlug = String(rawTenant).trim().toLowerCase();
+
     try {
       const rows = await sql`
         SELECT 
@@ -62,9 +62,21 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Añadir o actualizar imagen por salón ────────────────────────────
+  // ─── POST: Añadir o actualizar imagen (C10: Requiere sesión y rol owner/admin) ─
   if (req.method === 'POST') {
     try {
+      const rawTenant = req.body?.tenantId || req.query?.tenant;
+      if (!rawTenant || !String(rawTenant).trim()) {
+        return res.status(400).json({ error: 'Parámetro tenantId requerido.' });
+      }
+      const tenantSlug = String(rawTenant).trim().toLowerCase();
+
+      // Validación estricta C10 (§4.2): solo owner o admin pueden modificar la galería
+      const authCheck = await requireTenantRole(req, tenantSlug, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
       const { id, name, imageUrl, tag, technique, title, subtitle, category } = req.body || {};
       const finalTitle = String(title || name || '').trim().slice(0, 120);
       const finalImage = String(imageUrl || '').trim();
@@ -94,7 +106,7 @@ export default async function handler(req: any, res: any) {
           category = EXCLUDED.category,
           image_url = EXCLUDED.image_url,
           is_active = EXCLUDED.is_active
-        WHERE public.gallery_slides.tenant_id = EXCLUDED.tenant_id;
+        WHERE public.gallery_slides.tenant_id = ${tenantSlug};
       `;
 
       return res.status(200).json({
@@ -115,7 +127,7 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── DELETE: Eliminar imagen por ID y tenant_id ───────────────────────────
+  // ─── DELETE: Eliminar imagen (C10: Requiere sesión y rol owner/admin) ───────
   if (req.method === 'DELETE') {
     try {
       const { id } = req.query || req.body || {};
@@ -123,12 +135,34 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'ID de imagen requerido.' });
       }
 
-      await sql`
-        DELETE FROM public.gallery_slides 
-        WHERE id = ${id} AND tenant_id = ${tenantSlug};
+      const cleanId = String(id).trim();
+
+      // C10 (§4.2): Carga la imagen de la BD para tomar su tenant_id
+      const targetSlide = await sql`
+        SELECT id, tenant_id 
+        FROM public.gallery_slides 
+        WHERE id = ${cleanId} 
+        LIMIT 1;
       `;
 
-      return res.status(200).json({ success: true, deletedId: id });
+      if (targetSlide.length === 0) {
+        return res.status(404).json({ error: 'Imagen no encontrada.' });
+      }
+
+      const slideTenant = String(targetSlide[0].tenant_id).toLowerCase();
+
+      // Validación estricta de sesión y rol owner/admin
+      const authCheck = await requireTenantRole(req, slideTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
+      await sql`
+        DELETE FROM public.gallery_slides 
+        WHERE id = ${cleanId} AND tenant_id = ${slideTenant};
+      `;
+
+      return res.status(200).json({ success: true, deletedId: cleanId });
     } catch (err: any) {
       console.error('[Neon Delete Gallery Error]:', err);
       return res.status(500).json({ error: 'Error al eliminar imagen de la galería.' });

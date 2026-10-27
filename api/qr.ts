@@ -3,6 +3,7 @@
 // Reference architecture: https://www.javiggil.com/56fc9cb32b97
 // 100% Editable target destination with zero re-printing of physical QR codes
 import { getDb } from './_db.js';
+import { requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
 
 function detectDevice(userAgent: string): string {
@@ -147,57 +148,55 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // ─── GET: Fetch QR Codes & Scan Stats ────────────────────────────────────
+    // ─── GET: Fetch QR Codes & Scan Stats (Aislado por tenant) ───────────────
     if (req.method === 'GET') {
       const tenant = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
-
-      let qrCodes;
-      let recentScans;
-      let statsToday;
-
-      if (tenant && tenant !== 'all') {
-        [qrCodes, recentScans, statsToday] = await Promise.all([
-          sql`
-            SELECT id, code, tenant_id, label, target_url, is_active, scan_count, created_at, updated_at
-            FROM public.qr_codes
-            WHERE tenant_id = ${tenant}
-            ORDER BY created_at ASC;
-          `,
-          sql`
-            SELECT id, code, tenant_id, scanned_at, device_type, country
-            FROM public.qr_scans
-            WHERE tenant_id = ${tenant}
-            ORDER BY scanned_at DESC
-            LIMIT 25;
-          `,
-          sql`
-            SELECT COUNT(*)::int as count_today
-            FROM public.qr_scans
-            WHERE tenant_id = ${tenant} AND scanned_at >= date_trunc('day', now());
-          `
-        ]);
-      } else {
-        [qrCodes, recentScans, statsToday] = await Promise.all([
-          sql`
-            SELECT id, code, tenant_id, label, target_url, is_active, scan_count, created_at, updated_at
-            FROM public.qr_codes
-            ORDER BY created_at ASC;
-          `,
-          sql`
-            SELECT id, code, tenant_id, scanned_at, device_type, country
-            FROM public.qr_scans
-            ORDER BY scanned_at DESC
-            LIMIT 50;
-          `,
-          sql`
-            SELECT COUNT(*)::int as count_today
-            FROM public.qr_scans
-            WHERE scanned_at >= date_trunc('day', now());
-          `
-        ]);
+      if (!tenant) {
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
       }
 
-      const totalScans = qrCodes.reduce((sum: number, q: any) => sum + (Number(q.scan_count) || 0), 0);
+      // Require session & tenant role
+      const authCheck = await requireTenantRole(req, tenant, ['owner', 'admin', 'staff']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
+      const qrCodes = await sql`
+        SELECT 
+          id,
+          code,
+          tenant_id as "tenantId",
+          label,
+          target_url as "targetUrl",
+          scan_count as "scanCount",
+          is_active as "isActive",
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM public.qr_codes
+        WHERE tenant_id = ${tenant}
+        ORDER BY created_at DESC;
+      `;
+
+      const statsToday = await sql`
+        SELECT COUNT(*)::int as count_today
+        FROM public.qr_scans
+        WHERE tenant_id = ${tenant} AND scanned_at >= CURRENT_DATE;
+      `;
+
+      const recentScans = await sql`
+        SELECT 
+          id,
+          code,
+          device_type as "deviceType",
+          country,
+          scanned_at as "scannedAt"
+        FROM public.qr_scans
+        WHERE tenant_id = ${tenant}
+        ORDER BY scanned_at DESC
+        LIMIT 50;
+      `;
+
+      const totalScans = qrCodes.reduce((sum: number, q: any) => sum + (Number(q.scanCount) || 0), 0);
 
       return res.status(200).json({
         qrCodes,
@@ -207,7 +206,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // ─── POST: Create or Update QR Code Destination ─────────────────────────
+    // ─── POST: Create or Update QR Code Destination (C10: Requiere sesión y rol owner/admin) ───
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const { action } = body;
@@ -222,18 +221,27 @@ export default async function handler(req: any, res: any) {
         const cleanCode = String(code).trim().toLowerCase();
         const cleanTarget = String(targetUrl).trim();
 
+        const targetQr = await sql`
+          SELECT id, tenant_id FROM public.qr_codes WHERE LOWER(code) = ${cleanCode} LIMIT 1;
+        `;
+        if (targetQr.length === 0) {
+          return res.status(404).json({ error: 'QR Code not found' });
+        }
+
+        const qrTenant = String(targetQr[0].tenant_id).toLowerCase();
+        const authCheck = await requireTenantRole(req, qrTenant, ['owner', 'admin']);
+        if (authCheck.status !== 200) {
+          return res.status(authCheck.status).json({ error: authCheck.error });
+        }
+
         const updated = await sql`
           UPDATE public.qr_codes
           SET target_url = ${cleanTarget},
               label = COALESCE(${label ? String(label).trim() : null}, label),
               updated_at = now()
-          WHERE LOWER(code) = ${cleanCode}
+          WHERE LOWER(code) = ${cleanCode} AND tenant_id = ${qrTenant}
           RETURNING *;
         `;
-
-        if (updated.length === 0) {
-          return res.status(404).json({ error: 'QR Code not found' });
-        }
 
         return res.status(200).json({ success: true, qr: updated[0] });
       }
@@ -245,8 +253,13 @@ export default async function handler(req: any, res: any) {
           return res.status(400).json({ error: 'code, tenantId, and targetUrl are required' });
         }
 
-        const cleanCode = String(code).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
         const cleanTenant = String(tenantId).trim().toLowerCase();
+        const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
+        if (authCheck.status !== 200) {
+          return res.status(authCheck.status).json({ error: authCheck.error });
+        }
+
+        const cleanCode = String(code).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
         const cleanTarget = String(targetUrl).trim();
         const cleanLabel = String(label || cleanCode).trim();
 
@@ -257,6 +270,7 @@ export default async function handler(req: any, res: any) {
           SET target_url = EXCLUDED.target_url,
               label = EXCLUDED.label,
               updated_at = now()
+          WHERE public.qr_codes.tenant_id = ${cleanTenant}
           RETURNING *;
         `;
 
@@ -266,10 +280,25 @@ export default async function handler(req: any, res: any) {
       // 3. Toggle Active Status
       if (action === 'toggle_active') {
         const { code, isActive } = body;
+        const cleanCode = String(code).trim().toLowerCase();
+
+        const targetQr = await sql`
+          SELECT id, tenant_id FROM public.qr_codes WHERE LOWER(code) = ${cleanCode} LIMIT 1;
+        `;
+        if (targetQr.length === 0) {
+          return res.status(404).json({ error: 'QR Code not found' });
+        }
+
+        const qrTenant = String(targetQr[0].tenant_id).toLowerCase();
+        const authCheck = await requireTenantRole(req, qrTenant, ['owner', 'admin']);
+        if (authCheck.status !== 200) {
+          return res.status(authCheck.status).json({ error: authCheck.error });
+        }
+
         const updated = await sql`
           UPDATE public.qr_codes
           SET is_active = ${Boolean(isActive)}, updated_at = now()
-          WHERE LOWER(code) = ${String(code).trim().toLowerCase()}
+          WHERE LOWER(code) = ${cleanCode} AND tenant_id = ${qrTenant}
           RETURNING *;
         `;
         return res.status(200).json({ success: true, qr: updated[0] });

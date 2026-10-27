@@ -2,6 +2,7 @@
 // Manages catalog services in Neon Serverless Postgres with PostgreSQL 18 RLS enforcement
 // Strict multi-tenant isolation: tenant parameter is required; zero cross-tenant default fallback.
 import { getDb, executeWithTenantRls } from './_db.js';
+import { requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
@@ -10,7 +11,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -19,18 +20,17 @@ export default async function handler(req: any, res: any) {
   }
 
   const sql = getDb();
+  if (!sql) {
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
+  }
 
-  // ─── GET: Listar servicios del catálogo (Con Aislamiento RLS en Postgres 18) ─
+  // ─── GET: Listar servicios del catálogo (Público con aislamiento por tenant) ─
   if (req.method === 'GET') {
     const rawTenant = req.query?.tenant;
     if (!rawTenant || !String(rawTenant).trim()) {
       return res.status(400).json({ error: 'Parámetro tenant requerido.' });
     }
     const tenantSlug = String(rawTenant).trim().toLowerCase();
-
-    if (!sql) {
-      return res.status(200).json({ services: [], databaseConnected: false });
-    }
 
     try {
       const rows = await executeWithTenantRls(tenantSlug, (tx) => tx`
@@ -92,12 +92,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST / PUT: Crear o actualizar servicio ────────────────────────────────
+  // ─── POST / PUT: Crear o actualizar servicio (C10: Requiere sesión y rol owner/admin) ───
   if (req.method === 'POST' || req.method === 'PUT') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const {
         id,
@@ -122,13 +118,19 @@ export default async function handler(req: any, res: any) {
       if (!rawTenant || !String(rawTenant).trim()) {
         return res.status(400).json({ error: 'Parámetro tenantId requerido.' });
       }
+      const cleanTenant = String(rawTenant).trim().toLowerCase();
+
+      // Validación estricta C10 (§4.2): solo owner o admin pueden modificar catálogo
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
 
       if (!name || !category || priceUSD === undefined) {
         return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, categoría, precio).' });
       }
 
       const serviceId = id || ('srv_' + Date.now());
-      const cleanTenant = String(rawTenant).trim().toLowerCase();
       const cleanPrice = Number(priceUSD) || 10;
       const cleanDuration = Number(durationMinutes) || 60;
       const cleanTags = Array.isArray(tags) ? tags : ['Servicio VIP'];
@@ -161,7 +163,7 @@ export default async function handler(req: any, res: any) {
           is_available = EXCLUDED.is_available,
           tags = EXCLUDED.tags,
           updated_at = NOW()
-        WHERE public.services.tenant_id = EXCLUDED.tenant_id;
+        WHERE public.services.tenant_id = ${cleanTenant};
       `;
 
       return res.status(200).json({
@@ -175,29 +177,42 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── DELETE: Eliminar servicio ──────────────────────────────────────────────
+  // ─── DELETE: Eliminar servicio (C10: Requiere sesión y rol owner/admin) ──────
   if (req.method === 'DELETE') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { id } = req.query || req.body || {};
-      const rawTenant = req.query?.tenant || req.body?.tenantId;
       if (!id) {
         return res.status(400).json({ error: 'ID de servicio requerido.' });
       }
-      if (!rawTenant || !String(rawTenant).trim()) {
-        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+
+      const cleanId = String(id).trim();
+
+      // C10 (§4.2): Carga el servicio de la BD para tomar su tenant_id
+      const targetService = await sql`
+        SELECT id, tenant_id 
+        FROM public.services 
+        WHERE id = ${cleanId} 
+        LIMIT 1;
+      `;
+
+      if (targetService.length === 0) {
+        return res.status(404).json({ error: 'Servicio no encontrado.' });
       }
-      const cleanTenant = String(rawTenant).trim().toLowerCase();
+
+      const serviceTenant = String(targetService[0].tenant_id).toLowerCase();
+
+      // Validación estricta de sesión y rol owner/admin
+      const authCheck = await requireTenantRole(req, serviceTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
 
       await sql`
         DELETE FROM public.services 
-        WHERE id = ${id} AND tenant_id = ${cleanTenant};
+        WHERE id = ${cleanId} AND tenant_id = ${serviceTenant};
       `;
 
-      return res.status(200).json({ success: true, deletedId: id });
+      return res.status(200).json({ success: true, deletedId: cleanId });
     } catch (err: any) {
       console.error('[Neon Delete Service Error]:', err);
       return res.status(500).json({ error: 'Error al eliminar servicio.' });

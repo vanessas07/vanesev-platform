@@ -2,67 +2,10 @@
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
 // Hardened with strict tenant_context whitelist and Superadmin Better Auth Session
 import crypto from 'node:crypto';
-import { neon } from '@neondatabase/serverless';
-import { auth } from './_better-auth.js';
+import { hashPassword } from 'better-auth/crypto';
+import { getDb } from './_db.js';
+import { requireCentral } from './_session.js';
 import { applyCors } from './_cors.js';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
-
-async function validateCentralSession(req: any) {
-  try {
-    const sql = getDb();
-    let session: any = null;
-    try {
-      session = await auth.api.getSession({ headers: new Headers(req.headers as any) });
-    } catch (e) {
-      session = null;
-    }
-
-    if (!session) {
-      const authHeader = req.headers?.authorization || req.headers?.Authorization;
-      if (authHeader && String(authHeader).startsWith('Bearer ')) {
-        const rawToken = String(authHeader).replace(/^Bearer\s+/i, '').trim();
-        if (rawToken && sql) {
-          const sessRows = await sql`
-            SELECT s.id, s."userId", s.token, u.platform_role, u.must_reset, u."twoFactorEnabled"
-            FROM "session" s
-            JOIN "user" u ON s."userId" = u.id
-            WHERE s.token = ${rawToken} AND s."expiresAt" > NOW()
-            LIMIT 1;
-          `;
-          if (sessRows.length > 0) {
-            const r = sessRows[0];
-            session = {
-              session: { id: r.id, userId: r.userId, token: r.token },
-              user: { id: r.userId, platform_role: r.platform_role, must_reset: r.must_reset, twoFactorEnabled: r.twoFactorEnabled },
-            };
-          }
-        }
-      }
-    }
-
-    if (!session || !session.user) {
-      return { status: 401, error: 'Unauthorized: Sesión de VANESEV Central requerida.' };
-    }
-
-    const user = session.user as any;
-    if (user.platform_role !== 'superadmin_decisivo') {
-      return { status: 403, error: 'Forbidden: Requiere rol superadmin_decisivo.' };
-    }
-
-    if (!user.twoFactorEnabled) {
-      return { status: 403, error: 'Forbidden: Se requiere autenticación de dos factores (2FA) configurada y verificada.' };
-    }
-
-    return { status: 200, user, session: session.session };
-  } catch (err: any) {
-    return { status: 401, error: 'Error validando sesión de superadmin.' };
-  }
-}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -148,7 +91,7 @@ export default async function handler(req: any, res: any) {
       }
 
       // 2. Seguridad Central: Requiere sesión válida de Superadmin con 2FA
-      const authCheck = await validateCentralSession(req);
+      const authCheck = await requireCentral(req);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }
@@ -200,7 +143,6 @@ export default async function handler(req: any, res: any) {
         infrastructure: {
           githubAccount: 'vanessas07',
           vercelAccount: 'vanesevapp-4342',
-          neonProjectId: 'super-frog-54108799',
           region: 'aws-us-east-1 (N. Virginia) <-> iad1',
           blobStore: 'vanesev-media-blob (Active)',
           realtimeStatus: 'Neon Live SQL Active',
@@ -210,7 +152,7 @@ export default async function handler(req: any, res: any) {
 
     // ─── POST: Mutaciones protegidas en Central ──────────────────────────────
     if (req.method === 'POST') {
-      const authCheck = await validateCentralSession(req);
+      const authCheck = await requireCentral(req);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
       }
@@ -235,7 +177,15 @@ export default async function handler(req: any, res: any) {
           return res.status(400).json({ error: 'Rol inválido. Debe ser owner, admin o staff.' });
         }
 
-        // Verificar que la organización exista
+        // 1. Si el correo existe en "user" → 409 Conflict sin tocar nada
+        const existingUsers = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (existingUsers.length > 0) {
+          return res.status(409).json({ error: `Conflict: El correo '${cleanEmail}' ya está registrado.` });
+        }
+
+        // 2. Verificar que la organización exista
         const orgRows = await sql`
           SELECT id, slug FROM "organization" WHERE slug = ${cleanOrgSlug} OR id = ${cleanOrgSlug} LIMIT 1;
         `;
@@ -244,41 +194,29 @@ export default async function handler(req: any, res: any) {
         }
         const org = orgRows[0];
 
-        // Generar contraseña aleatoria temporal de ≥ 16 caracteres
+        // 3. Generar contraseña aleatoria temporal de ≥ 16 caracteres y hashear con better-auth/crypto
         const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
-        const salt = crypto.randomBytes(16).toString('hex');
-        const key = crypto.scryptSync(tempPassword.normalize('NFKC'), salt, 64, {
-          N: 16384,
-          r: 16,
-          p: 1,
-          maxmem: 128 * 16384 * 16 * 2,
-        }).toString('hex');
-        const hashedPassword = `${key}:${salt}`;
+        const hashedPassword = await hashPassword(tempPassword);
 
         const newUserId = `usr_${crypto.randomBytes(8).toString('hex')}`;
         const newAccountId = `acc_${crypto.randomBytes(8).toString('hex')}`;
         const newMemberId = `mem_${crypto.randomBytes(8).toString('hex')}`;
 
-        // Insertar user con must_reset = true
-        await sql`
-          INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset)
-          VALUES (${newUserId}, ${cleanName}, ${cleanEmail}, false, NOW(), NOW(), true)
-          ON CONFLICT (email) DO UPDATE SET must_reset = true, "updatedAt" = NOW();
-        `;
-
-        // Insertar account
-        await sql`
-          INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
-          VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW())
-          ON CONFLICT (id) DO NOTHING;
-        `;
-
-        // Insertar member vinculado a la organización
-        await sql`
-          INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
-          VALUES (${newMemberId}, ${org.id}, ${newUserId}, ${cleanRole}, NOW())
-          ON CONFLICT (id) DO NOTHING;
-        `;
+        // 4. Crear user, account y member en una sola transacción atómica
+        await sql.transaction([
+          sql`
+            INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset)
+            VALUES (${newUserId}, ${cleanName}, ${cleanEmail}, false, NOW(), NOW(), true);
+          `,
+          sql`
+            INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+            VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW());
+          `,
+          sql`
+            INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
+            VALUES (${newMemberId}, ${org.id}, ${newUserId}, ${cleanRole}, NOW());
+          `
+        ]);
 
         return res.status(200).json({
           success: true,

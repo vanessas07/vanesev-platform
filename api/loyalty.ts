@@ -1,14 +1,8 @@
 // Vercel Serverless Function: /api/loyalty
 // Handles loyalty stamp queries and admin adjustments in Neon Postgres
-import { neon } from '@neondatabase/serverless';
-import { auth } from './_better-auth.js';
+import { getDb } from './_db.js';
+import { requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -17,82 +11,33 @@ export default async function handler(req: any, res: any) {
   // Strict CORS filter (closed, no wildcard)
   applyCors(req, res);
 
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
+
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
   const sql = getDb();
+  if (!sql) {
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
+  }
 
-  // ─── GET: Listar tarjetas de fidelización del salón para CRM ───────────────
+  // ─── GET: Listar tarjetas de fidelización del salón para CRM (Protegido por Sesión y Rol) ───
   if (req.method === 'GET') {
-    if (!sql) {
-      return res.status(200).json({ cards: [], stampsCount: 0, databaseConnected: false });
-    }
-
     try {
       const cleanTenant = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
       if (!cleanTenant) {
         return res.status(400).json({ error: 'Parámetro tenant requerido.' });
       }
 
-      // 1. Verificación de sesión con Better Auth (Orden B1-a §4.8)
-      let session: any = null;
-      try {
-        session = await auth.api.getSession({ headers: new Headers(req.headers as any) });
-      } catch (e) {
-        session = null;
-      }
-
-      if (!session) {
-        const authHeader = req.headers?.authorization || req.headers?.Authorization;
-        if (authHeader && String(authHeader).startsWith('Bearer ')) {
-          const rawToken = String(authHeader).replace(/^Bearer\s+/i, '').trim();
-          if (rawToken && sql) {
-            const sessRows = await sql`
-              SELECT s.id, s."userId", s.token, u.platform_role, u.must_reset
-              FROM "session" s
-              JOIN "user" u ON s."userId" = u.id
-              WHERE s.token = ${rawToken} AND s."expiresAt" > NOW()
-              LIMIT 1;
-            `;
-            if (sessRows.length > 0) {
-              const r = sessRows[0];
-              session = {
-                session: { id: r.id, userId: r.userId, token: r.token },
-                user: { id: r.userId, platform_role: r.platform_role, must_reset: r.must_reset },
-              };
-            }
-          }
-        }
-      }
-
-      if (!session || !session.user) {
-        return res.status(401).json({ error: 'Unauthorized: Sesión requerida para consultar fidelización.' });
-      }
-
-      const user = session.user as any;
-      if (user.must_reset) {
-        return res.status(403).json({ error: 'Forbidden: Debe restablecer su contraseña antes de continuar (MUST_RESET).' });
-      }
-
-      let isAllowed = false;
-      if (user.platform_role === 'superadmin_decisivo') {
-        isAllowed = true;
-      } else {
-        const memberRows = await sql`
-          SELECT m.role FROM "member" m
-          JOIN "organization" o ON m."organizationId" = o.id
-          WHERE m."userId" = ${user.id} AND o.slug = ${cleanTenant}
-          LIMIT 1;
-        `;
-        if (memberRows.length > 0) {
-          isAllowed = true;
-        }
-      }
-
-      if (!isAllowed) {
-        return res.status(403).json({ error: 'Forbidden: No tiene permisos sobre la organización solicitada.' });
+      // Orden B1-a v2 §4.1: requireTenantRole con roles owner, admin y staff
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin', 'staff']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       // Listar tarjetas exclusivamente de este salón
@@ -120,12 +65,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Ajustar sellos manualmente desde Admin ───────────────────────────
+  // ─── POST: Ajustar sellos manualmente desde Admin (C10: Requiere sesión y rol owner/admin) ───
   if (req.method === 'POST') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { phone, tenantId, clientName, stampsCount, action } = req.body || {};
       const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
@@ -135,30 +76,10 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'Teléfono y salón (tenantId) requeridos para ajustar fidelización.' });
       }
 
-      // 1. Verificación de sesión con Better Auth
-      const session = await auth.api.getSession({ headers: req.headers });
-      if (!session || !session.user) {
-        return res.status(401).json({ error: 'Unauthorized: Sesión requerida para ajustar fidelización.' });
-      }
-
-      const user = session.user as any;
-      let isAllowed = false;
-      if (user.platform_role === 'superadmin_decisivo') {
-        isAllowed = true;
-      } else {
-        const memberRows = await sql`
-          SELECT m.role FROM "member" m
-          JOIN "organization" o ON m."organizationId" = o.id
-          WHERE m."userId" = ${user.id} AND o.slug = ${cleanTenant}
-          LIMIT 1;
-        `;
-        if (memberRows.length > 0) {
-          isAllowed = true;
-        }
-      }
-
-      if (!isAllowed) {
-        return res.status(403).json({ error: 'Forbidden: No tiene permisos sobre la organización solicitada.' });
+      // Validación estricta C10 (§4.2): solo owner o admin pueden ajustar sellos manualmente
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       const name = clientName ? String(clientName).trim().slice(0, 80) : 'Clienta';
@@ -182,17 +103,21 @@ export default async function handler(req: any, res: any) {
         rewards = rewards.filter(r => r !== '¡7º Servicio 100% GRATIS!');
       }
 
-      // C8 Fix: ON CONFLICT actualiza datos solo si tenant_id coincide, previniendo secuestro entre salones
+      // C8: ON CONFLICT (phone) DO NOTHING + UPDATE con phone AND tenant_id
       await sql`
         INSERT INTO public.loyalty_cards (phone, tenant_id, client_name, stamps_count, last_visit, rewards_earned, updated_at)
         VALUES (${cleanPhone}, ${cleanTenant}, ${name}, ${targetStamps}, CURRENT_DATE, ${rewards}, NOW())
-        ON CONFLICT (phone) DO UPDATE SET
-          client_name = EXCLUDED.client_name,
-          stamps_count = ${targetStamps},
-          last_visit = CURRENT_DATE,
-          rewards_earned = ${rewards},
-          updated_at = NOW()
-        WHERE loyalty_cards.tenant_id = ${cleanTenant};
+        ON CONFLICT (phone) DO NOTHING;
+      `;
+
+      await sql`
+        UPDATE public.loyalty_cards 
+        SET client_name = ${name},
+            stamps_count = ${targetStamps},
+            last_visit = CURRENT_DATE,
+            rewards_earned = ${rewards},
+            updated_at = NOW()
+        WHERE phone = ${cleanPhone} AND tenant_id = ${cleanTenant};
       `;
 
       return res.status(200).json({

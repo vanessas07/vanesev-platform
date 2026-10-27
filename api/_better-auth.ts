@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { organization, twoFactor, phoneNumber, bearer } from "better-auth/plugins";
-import { createAuthMiddleware, APIError } from "better-auth/api";
+import { createAuthMiddleware, APIError, getSessionFromCtx } from "better-auth/api";
 import pg from "pg";
 
 const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
@@ -51,7 +51,6 @@ export const auth = betterAuth({
   trustedOrigins: [
     "https://vanesev.com",
     "https://www.vanesev.com",
-    "https://*.vanesev.com",
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ],
   rateLimit: {
@@ -239,20 +238,17 @@ export const auth = betterAuth({
         }
       }
 
-      // Hook 5: Control de MUST_RESET (mientras must_reset = true, toda ruta salvo change-password y sign-out retorna 403)
+      // Hook 5: Control de MUST_RESET (mientras must_reset = true, toda ruta salvo change-password, sign-out, get-session y two-factor retorna 403)
       const isExemptResetPath =
         ctx.path.startsWith("/change-password") ||
-        ctx.path.startsWith("/reset-password") ||
         ctx.path.startsWith("/sign-out") ||
-        ctx.path.startsWith("/sign-in") ||
-        ctx.path.startsWith("/two-factor") ||
         ctx.path.startsWith("/get-session") ||
-        ctx.path.startsWith("/ok");
+        ctx.path.startsWith("/two-factor");
 
       if (!isExemptResetPath) {
         try {
-          const session = ctx.context?.session as any;
-          if (session?.user && session.user.must_reset) {
+          const session = await getSessionFromCtx(ctx);
+          if (session?.user && (session.user as any).must_reset) {
             throw new APIError("FORBIDDEN", {
               message: "Debe restablecer su contraseña antes de continuar (MUST_RESET).",
             });
@@ -335,6 +331,25 @@ export const auth = betterAuth({
             }
           } catch (e: any) {
             console.error("[AUTH] Error al limpiar must_reset tras change-password:", e?.message || "Error desconocido");
+          }
+        }
+      }
+
+      // Al activar/verificar 2FA, revocar las demás sesiones del usuario (Orden B1-a v2 §4.5)
+      if (ctx.path.startsWith("/two-factor/verify-totp")) {
+        const ret = ctx.context?.returned as any;
+        const status = ctx.context?.response?.status;
+        const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 400 && ret?.status !== 401 && ret?.status !== 403) || status === 200;
+        if (isSuccess) {
+          try {
+            const session = await getSessionFromCtx(ctx);
+            const userId = session?.user?.id || ret?.user?.id;
+            const currentToken = session?.session?.token || ret?.session?.token;
+            if (userId && currentToken) {
+              await pool.query(`DELETE FROM "session" WHERE "userId" = $1 AND token != $2`, [userId, currentToken]);
+            }
+          } catch (e: any) {
+            console.error("[AUTH] Error al revocar sesiones previas tras activar 2FA:", e?.message || "Error desconocido");
           }
         }
       }

@@ -1,13 +1,8 @@
 // Vercel Serverless Function: /api/schedule
 // Handles calendar slot blocking and availability in Neon Postgres
-import { neon } from '@neondatabase/serverless';
+import { getDb } from './_db.js';
+import { requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -15,7 +10,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -24,13 +19,12 @@ export default async function handler(req: any, res: any) {
   }
 
   const sql = getDb();
+  if (!sql) {
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
+  }
 
-  // ─── GET: Obtener slots bloqueados (aislados por tenant_id) ─────────────────
+  // ─── GET: Obtener slots bloqueados (Público con filtro por tenant_id) ────────
   if (req.method === 'GET') {
-    if (!sql) {
-      return res.status(200).json({ blockedSlots: [], databaseConnected: false });
-    }
-
     try {
       const cleanTenant = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
       if (!cleanTenant) {
@@ -57,18 +51,20 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Toggle slot o bloquear/desbloquear día completo (aislado por tenant_id) ───
+  // ─── POST: Bloquear/desbloquear turnos (C10: Requiere sesión y rol owner/admin) ───
   if (req.method === 'POST') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { tenantId, action, date, timeSlot, slots, reason } = req.body || {};
       const cleanTenant = String(tenantId || req.query?.tenant || '').trim().toLowerCase();
 
       if (!date || !cleanTenant) {
         return res.status(400).json({ error: 'Fecha y salón (tenantId) requeridos.' });
+      }
+
+      // Validación estricta C10 (§4.2): solo owner o admin pueden modificar la agenda
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       const cleanDate = String(date).trim().slice(0, 10);
