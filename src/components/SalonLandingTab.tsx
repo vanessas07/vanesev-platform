@@ -15,7 +15,6 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Layers,
-  Sparkles
 } from 'lucide-react';
 
 interface SalonLandingTabProps {
