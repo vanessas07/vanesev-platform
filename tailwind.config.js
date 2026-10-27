@@ -94,6 +94,9 @@ export default {
         sans: ['Plus Jakarta Sans', 'sans-serif'],
         serif: ['Fraunces', 'Georgia', 'serif'],
         vogue: ['Bodoni Moda', 'Georgia', 'serif'],
+        // Identidad VANESEV (G-039): Bodoni Moda en titulares y Jost en texto; nada de Cormorant (es la de DKitchen).
+        lujo: ['"Bodoni Moda"', 'Didot', 'Georgia', 'serif'],
+        texto: ['Jost', '"Helvetica Neue"', 'Arial', 'sans-serif'],
         andrea: ['Cormorant Garamond', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },

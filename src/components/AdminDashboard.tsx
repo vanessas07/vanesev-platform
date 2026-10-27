@@ -1310,7 +1310,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const sectionHead = (title: string, sub: string, action?: React.ReactNode) => (
     <div className="border-b border-[#1E181A]/10 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h3 className="text-lg font-bold font-cormorant text-[#1E181A]">{title}</h3>
+        <h3 className="text-lg font-bold font-lujo text-[#1E181A]">{title}</h3>
         <p className="text-xs text-[#6E6266] mt-0.5">{sub}</p>
       </div>
       {action && <div>{action}</div>}
@@ -1321,7 +1321,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const progressPercent = Math.min(100, Math.max(28, Math.round(((bookings.length * 25 + services.length * 10) / 300) * 100)));
 
   return (
-    <div className="min-h-screen bg-v-bg text-v-ink font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-v-bg text-v-ink font-texto p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-v-surface-2 rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-v-line min-h-[calc(100vh-48px)] flex flex-col">
 
