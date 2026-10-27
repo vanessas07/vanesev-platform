@@ -165,7 +165,7 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({ onAuthenticated, o
           <span className="text-[10px] uppercase font-semibold tracking-[0.25em] text-v-champagne-ink block">
             Acceso del estudio &bull; Panel de gestión
           </span>
-          <h2 className="font-cormorant text-2xl sm:text-3xl font-semibold text-v-ink tracking-tight">
+          <h2 className="font-lujo text-2xl sm:text-3xl font-semibold text-v-ink tracking-tight">
             Tu panel de dueña
           </h2>
           <p className="text-xs text-v-muted">

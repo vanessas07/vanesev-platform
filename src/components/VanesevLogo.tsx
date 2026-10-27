@@ -20,7 +20,7 @@ export const VanesevLogo: React.FC<VanesevLogoProps> = ({ tono = 'claro', tamano
     <span className={`inline-flex items-center gap-2.5 min-w-0 ${className}`}>
       <span
         aria-hidden="true"
-        className="relative shrink-0 rounded-full flex items-center justify-center font-cormorant font-semibold"
+        className="relative shrink-0 rounded-full flex items-center justify-center font-lujo font-semibold"
         style={{
           width: tamano,
           height: tamano,
@@ -34,7 +34,7 @@ export const VanesevLogo: React.FC<VanesevLogoProps> = ({ tono = 'claro', tamano
       </span>
       <span className="leading-none min-w-0">
         <span
-          className="block font-cormorant font-semibold truncate"
+          className="block font-lujo font-semibold truncate"
           style={{
             fontSize: Math.round(tamano * 0.56),
             letterSpacing: '0.16em',

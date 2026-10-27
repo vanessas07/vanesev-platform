@@ -90,3 +90,47 @@
 @media (prefers-reduced-motion: reduce) {
   .v-reflejo { animation: none; opacity: 0; }
 }
+
+/* ─── Oro: el tercer color de VANESEV (G-039). Detalle, nunca superficie grande. ─── */
+[data-brand="vanesev"] {
+  --v-oro: #C9A45C;
+  --v-oro-claro: #EBDDB8;
+  --v-oro-ink: #8A6A2E;
+  --v-oro-degradado: linear-gradient(115deg, #F3E6C4 0%, #C9A45C 38%, #EBD9AE 58%, #9C7A3C 100%);
+}
+/* Texto metálico en oro (cifras, números de sección, palabras clave sobre oscuro). */
+.v-oro-texto {
+  background: linear-gradient(115deg, #F3E6C4 0%, #C9A45C 38%, #EBD9AE 58%, #A8853F 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Tarjeta de lujo: obsidiana con halo de oro y borde degradado en oro. */
+.v-tarjeta-lujo {
+  border: 1px solid transparent;
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(201, 164, 92, 0.26) 0%, rgba(201, 164, 92, 0) 50%) padding-box,
+    radial-gradient(80% 90% at 0% 100%, rgba(122, 62, 140, 0.45) 0%, rgba(122, 62, 140, 0) 60%) padding-box,
+    linear-gradient(135deg, #1F1226 0%, #2E1A38 55%, #3E2050 100%) padding-box,
+    linear-gradient(135deg, rgba(243, 230, 196, 0.85), rgba(201, 164, 92, 0.55) 40%, rgba(156, 122, 60, 0.25) 70%, rgba(235, 217, 174, 0.7)) border-box;
+  box-shadow: 0 30px 70px -36px rgba(20, 11, 25, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+/* Tarjeta clara con borde de oro al pasar. */
+.v-tarjeta-clara {
+  border: 1px solid rgba(26, 16, 32, 0.08);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.v-tarjeta-clara:hover {
+  border-color: rgba(201, 164, 92, 0.65);
+  box-shadow: 0 24px 54px -30px rgba(20, 11, 25, 0.35), 0 0 0 4px rgba(201, 164, 92, 0.08);
+  transform: translateY(-2px);
+}
+/* Filete fino de oro. */
+.v-filete-oro {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201, 164, 92, 0), rgba(201, 164, 92, 0.8), rgba(201, 164, 92, 0));
+}
+
+/* Bodoni Moda (G-039): peso medio y tracking fino en titulares; la seminegrita de Bodoni pesa demasiado. */
+.font-lujo { font-optical-sizing: auto; letter-spacing: -0.012em; }
+.font-lujo.font-semibold, .font-lujo.font-bold { font-weight: 500; }
