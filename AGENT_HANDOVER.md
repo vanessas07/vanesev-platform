@@ -1,19 +1,23 @@
-# VANESEV (`vanesev.com`) — MULTI-AGENT TECHNICAL HANDOVER
+# VANESEV (`vanesev.com`) — Traspaso técnico para agentes
 
-## 1. MANDATORY OPERATIONAL RULES
-1. **ZERO LOCAL COMPILATION:** Never run `npm install`, `npm run build`, `vite build`, or `tsc` on the local Windows PC (3.83 GB RAM). `node_modules` is intentionally absent locally. All builds and typechecks run in GitHub Actions (`.github/workflows/ci-cloud-verify.yml` on `staging`, 7 GB RAM VM) and Vercel (`iad1`, 8 GB RAM VM).
-2. **BRANCH WORKFLOW:** Edit on `staging` -> `git push vanesev staging` -> verify GitHub Actions passes -> promote to `main` (`git push vanesev +staging:main`) -> deploy to Vercel (`npx vercel --prod --yes`).
-3. **PROJECT ISOLATION:** Never touch `dkitchen corporate` or `vaksar-project`. Desktop documentation lives in `C:\Users\karc0\OneDrive\Desktop\vanesev app\`.
-4. **CENTRAL SYNC (`/central`):** Before starting work, query `public.central_mailbox`, `public.central_incidents`, and `public.central_tasks` in Neon DB (`GET /api/central`) to read instructions left by `karc0`. When finishing a session, insert a record in `public.central_sessions` and `public.central_docs`.
+> Reescrito por Claude Code (director técnico) el 27/10/2026. La versión anterior ordenaba
+> `git push +staging:main` y `npx vercel --prod`, hoy prohibidos. Manda `AGENTS.md`; esto es un resumen.
 
-## 2. CRITICAL ARCHITECTURAL INVARIANTS (DO NOT BREAK)
-- **PostgreSQL 18 Row-Level Security (RLS) in Neon (`api/_db.ts`):**
-  - Neon's default owner role (`vanesev_owner`) has `rolbypassrls = true` and `cloud_admin` blocks `ALTER ROLE vanesev_owner NOBYPASSRLS`.
-  - Therefore, RLS is enforced via the non-bypass role `vanesev_rls_enforced` (`rolbypassrls = false`) + `ENABLE/FORCE ROW LEVEL SECURITY` on `services`, `staff_members`, `studio_zones`, `bookings`, `blocked_slots`, and `loyalty_cards`.
-  - Always use `executeWithTenantRls(tenantId, (tx) => tx\`...\`, role)` from `./_db.js`, which batches `SET LOCAL ROLE vanesev_rls_enforced` + `set_config('app.current_tenant', ...)` + the query inside a single HTTP `sql.transaction([...])`.
-- **ESM Imports in `api/*.ts`:**
-  - `package.json` uses `"type": "module"`. Any relative import inside `api/` MUST include the `.js` extension (`import { getDb, executeWithTenantRls } from './_db.js';`), otherwise Vercel's Node runtime fails with `FUNCTION_INVOCATION_FAILED`.
-- **Public Hydration vs. Super-Admin in `api/central.ts`:**
-  - `GET /api/central?mode=tenant_context&tenant=<slug>` MUST remain public so `BookingModal.tsx` can hydrate specialists (`staff_members`) and cabin zones (`studio_zones`) for clients.
-- **Code-Splitting (`src/App.tsx`):**
-  - `CentralDashboard`, `AdminDashboard`, and `VanesevLanding` are lazy-loaded via `React.lazy()` + `<Suspense>` so public salon clients on mobile data never download admin/governance bundles.
+## 1. Reglas operativas
+1. **Sin compilación local** (`npm run build`, `tsc`, `vite build`, `vercel build`): el equipo tiene 3,83 GB de RAM. Los builds y las pruebas corren en GitHub Actions y en Vercel. Solo se permite `node --check` o `ts.transpileModule` para la sintaxis.
+2. **Ramas:** se trabaja en `feat/...`. Nada llega a `staging` ni a `main` sin PR; `main` exige el APROBADO de Claude Code en `RESPUESTAS_CLAUDE`. Prohibidos el push directo, el force-push y `npx vercel --prod`.
+3. **Evidencias:** las genera `.github/workflows/evidencias.yml` y las escribe y custodia Claude Code (`scripts/test-*.cjs`, decisión G-007). El agente ejecutor no los modifica.
+4. **Aislamiento:** VANESEV no se mezcla con ningún otro proyecto (código, despliegues, memoria `mem.cjs --p vanesev`).
+5. **Secretos:** nunca en el repo, en reportes ni en registros. Se crean por stdin en Vercel o en GitHub Actions.
+6. **Neon:** las migraciones numeradas (`db/migrations/NNNN_*.sql`) se aplican solo en la rama de staging con `scripts/aplicar-migracion-staging.cjs`. Producción, solo con autorización escrita de karc0.
+
+## 2. Invariantes de arquitectura (no romper)
+- **Autenticación:** better-auth (`api/_better-auth.ts`, ruta `api/auth/[...all].ts`) con `organization` (salón = organización, `slug = tenants.id`), `twoFactor`, `phoneNumber` y `bearer`.
+- **Sesión en las APIs:** siempre con `api/_session.ts` (`requireSession`, `requireTenantRole`, `requireCentral`). Para PATCH/DELETE: sesión primero (401), después buscar el registro, después el rol.
+- **Central:** `platform_role = 'superadmin_decisivo'` + 2FA activo + sesión posterior a activarlo. `GET /api/central?mode=tenant_context` es la única vista pública (lista blanca).
+- **Escrituras:** cada consulta lleva `WHERE tenant_id`; los ids y estados sensibles los genera el servidor; precios desde la base, nunca del cuerpo de la petición.
+- **Freno de frecuencia:** `api/_limite.ts` (contador en Neon, IP o teléfono en HMAC con `IP_HASH_PEPPER`). Nunca en memoria.
+- **QR:** `/r/<código>` (salón) y `/q/<código>` (campaña, solo Central) → `api/qr.ts`. Destinos solo internos (una sola `/` inicial); 302 sin caché.
+- **RLS:** `executeWithTenantRls` de `api/_db.ts` **no garantiza RLS** (si falla el cambio de rol, repite la consulta sin él). El aislamiento real llega en el B2 (rol `vanesev_app` sin BYPASSRLS + RLS FORCE). Hasta entonces, el `WHERE tenant_id` es obligatorio.
+- **ESM:** los imports relativos dentro de `api/` llevan la extensión `.js`.
+- **Presupuesto de funciones (Vercel Hobby):** máximo 12. Los archivos de `api/` que empiezan por `_` no cuentan.

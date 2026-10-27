@@ -1,0 +1,37 @@
+=== PRUEBA 3: INTENTOS REPETIDOS -> 429 TOO MANY REQUESTS (BETTER-AUTH RATE LIMIT EN DB) ===
+FECHA: 2026-10-27 00:58 UTC+1
+DEPLOYMENT: https://vanesev-platform-ats8t0aa5-vanesevapp-4342.vercel.app
+
+COMANDO EJECUTADO:
+$ 1..4 | ForEach-Object {
+    Write-Host "Intento $_ :"
+    npx vercel curl /api/auth/sign-in/email --deployment https://vanesev-platform-ats8t0aa5-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -s -i -X POST -H "Content-Type: application/json" -d '@payload_bad_password.json' | Select-String -Pattern "HTTP/|Retry-After|message|TOO_MANY_REQUESTS"
+  }
+
+SALIDA REAL:
+Intento 1 :
+Retrieving project…
+Retrieving project…
+HTTP/1.1 401 Unauthorized
+{"message":"Invalid email or password","code":"INVALID_EMAIL_OR_PASSWORD"}
+
+Intento 2 :
+Retrieving project…
+Retrieving project…
+HTTP/1.1 401 Unauthorized
+{"message":"Invalid email or password","code":"INVALID_EMAIL_OR_PASSWORD"}
+
+Intento 3 :
+Retrieving project…
+Retrieving project…
+HTTP/1.1 401 Unauthorized
+{"message":"Invalid email or password","code":"INVALID_EMAIL_OR_PASSWORD"}
+
+Intento 4 :
+Retrieving project…
+Retrieving project…
+HTTP/1.1 429 Too Many Requests
+X-Retry-After: 4
+{"message":"Too many requests. Please try again later."}
+
+VEREDICTO: ✅ CUMPLE (La regla customRules /sign-in/email max: 3 intentos en 10s bloqueó el intento 4 devolviendo HTTP/1.1 429 Too Many Requests con cabecera X-Retry-After: 4 persistido en la tabla rateLimit de Postgres).

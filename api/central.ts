@@ -1,20 +1,17 @@
 // Vercel Serverless Function: /api/central
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
-// Hardened with strict tenant_context whitelist and Superadmin Session Authentication
-import { neon } from '@neondatabase/serverless';
-import { validateSuperadminSession, applyCors } from './_auth.js';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
+// Hardened with strict tenant_context whitelist and Superadmin Better Auth Session
+import crypto from 'node:crypto';
+import { hashPassword } from 'better-auth/crypto';
+import { getDb } from './_db.js';
+import { requireCentral } from './_session.js';
+import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
-  // Strict CORS filter: exact *.vanesev.com or localhost outside production
+  // Strict CORS filter: exact *.vanesev.com or Vercel Preview
   applyCors(req, res);
 
   if (req.method === 'OPTIONS') {
@@ -93,10 +90,10 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ tenant, services, staff, zones });
       }
 
-      // 2. Seguridad Central: Requiere sesión válida de Superadmin
-      const auth = await validateSuperadminSession(req, sql);
-      if (!auth.valid) {
-        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
+      // 2. Seguridad Central: Requiere sesión válida de Superadmin con 2FA
+      const authCheck = await requireCentral(req);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       // Snapshot completo de Central para superadmin autenticado
@@ -110,7 +107,8 @@ export default async function handler(req: any, res: any) {
         docs,
         staff,
         zones,
-        bookingStats
+        bookingStats,
+        peticionesPuestaAPunto
       ] = await Promise.all([
         sql`SELECT * FROM public.tenants ORDER BY is_lifetime_free DESC, created_at ASC`,
         sql`SELECT * FROM public.central_sessions ORDER BY session_date DESC`,
@@ -129,7 +127,8 @@ export default async function handler(req: any, res: any) {
             COALESCE(SUM(total_price_usd) FILTER (WHERE status != 'cancelada'), 0)::numeric AS total_revenue_usd
           FROM public.bookings
           GROUP BY tenant_id
-        `
+        `,
+        sql`SELECT * FROM public.central_mailbox WHERE category = 'puesta_a_punto' ORDER BY created_at DESC`
       ]);
 
       return res.status(200).json({
@@ -143,10 +142,10 @@ export default async function handler(req: any, res: any) {
         staff,
         zones,
         bookingStats,
+        peticionesPuestaAPunto,
         infrastructure: {
           githubAccount: 'vanessas07',
           vercelAccount: 'vanesevapp-4342',
-          neonProjectId: 'super-frog-54108799',
           region: 'aws-us-east-1 (N. Virginia) <-> iad1',
           blobStore: 'vanesev-media-blob (Active)',
           realtimeStatus: 'Neon Live SQL Active',
@@ -156,14 +155,210 @@ export default async function handler(req: any, res: any) {
 
     // ─── POST: Mutaciones protegidas en Central ──────────────────────────────
     if (req.method === 'POST') {
-      const auth = await validateSuperadminSession(req, sql);
-      if (!auth.valid) {
-        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
+      const authCheck = await requireCentral(req);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       const bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const action = bodyObj.action;
       const payload = bodyObj.payload || bodyObj;
+
+      // Acción de Alta de Staff / Admin de Salón desde Central (Orden B1-a §4.6)
+      if (action === 'create-staff' || action === 'create_staff') {
+        const { email, name, organizationSlug, role } = payload || {};
+        if (!email || !organizationSlug || !role) {
+          return res.status(400).json({ error: 'Campos requeridos faltantes (email, organizationSlug, role).' });
+        }
+
+        const cleanEmail = String(email).trim().toLowerCase();
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanRole = String(role).trim().toLowerCase();
+        const cleanName = String(name || cleanEmail.split('@')[0]).trim();
+
+        if (!['owner', 'admin', 'staff'].includes(cleanRole)) {
+          return res.status(400).json({ error: 'Rol inválido. Debe ser owner, admin o staff.' });
+        }
+
+        // 1. Si el correo existe en "user" → 409 Conflict sin tocar nada
+        const existingUsers = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (existingUsers.length > 0) {
+          return res.status(409).json({ error: `Conflict: El correo '${cleanEmail}' ya está registrado.` });
+        }
+
+        // 2. Verificar que la organización exista
+        const orgRows = await sql`
+          SELECT id, slug FROM "organization" WHERE slug = ${cleanOrgSlug} OR id = ${cleanOrgSlug} LIMIT 1;
+        `;
+        if (orgRows.length === 0) {
+          return res.status(404).json({ error: `Organización "${cleanOrgSlug}" no encontrada.` });
+        }
+        const org = orgRows[0];
+
+        // 3. Generar contraseña aleatoria temporal de ≥ 16 caracteres y hashear con better-auth/crypto
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const hashedPassword = await hashPassword(tempPassword);
+
+        const newUserId = `usr_${crypto.randomBytes(8).toString('hex')}`;
+        const newAccountId = `acc_${crypto.randomBytes(8).toString('hex')}`;
+        const newMemberId = `mem_${crypto.randomBytes(8).toString('hex')}`;
+
+        // 4. Crear user, account y member en una sola transacción atómica
+        await sql.transaction([
+          sql`
+            INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset)
+            VALUES (${newUserId}, ${cleanName}, ${cleanEmail}, false, NOW(), NOW(), true);
+          `,
+          sql`
+            INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+            VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW());
+          `,
+          sql`
+            INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
+            VALUES (${newMemberId}, ${org.id}, ${newUserId}, ${cleanRole}, NOW());
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          userId: newUserId,
+          email: cleanEmail,
+          role: cleanRole,
+          organizationSlug: org.slug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
+
+      // Acción de Alta de Dueña en Puesta a Punto desde Central (Orden B1-c §2.1)
+      if (action === 'create-trial-owner' || action === 'create_trial_owner') {
+        const { organizationSlug } = payload || bodyObj || {};
+        if (!organizationSlug) {
+          return res.status(400).json({ error: 'Parámetro organizationSlug requerido.' });
+        }
+
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanEmail = `${cleanOrgSlug}@prueba.vanesev.internal`;
+
+        // 1. Si el usuario existe en "user" → 409 Conflict
+        const existingUsers = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (existingUsers.length > 0) {
+          return res.status(409).json({ error: `Conflict: El usuario de prueba '${cleanEmail}' ya existe.` });
+        }
+
+        // 2. Verificar que la organización exista
+        const orgRows = await sql`
+          SELECT id, slug, name FROM "organization" WHERE slug = ${cleanOrgSlug} OR id = ${cleanOrgSlug} LIMIT 1;
+        `;
+        if (orgRows.length === 0) {
+          return res.status(404).json({ error: `Organización "${cleanOrgSlug}" no encontrada.` });
+        }
+        const org = orgRows[0];
+
+        // 3. Generar contraseña aleatoria temporal de ≥ 16 caracteres y hashear con better-auth/crypto
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const hashedPassword = await hashPassword(tempPassword);
+
+        const newUserId = `usr_${crypto.randomBytes(8).toString('hex')}`;
+        const newAccountId = `acc_${crypto.randomBytes(8).toString('hex')}`;
+        const newMemberId = `mem_${crypto.randomBytes(8).toString('hex')}`;
+
+        // 4. Crear user, account, member y actualizar tenant en una sola transacción atómica
+        await sql.transaction([
+          sql`
+            INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset, cuenta_prueba)
+            VALUES (${newUserId}, ${`Dueña ${org.name || cleanOrgSlug}`}, ${cleanEmail}, true, NOW(), NOW(), false, true);
+          `,
+          sql`
+            INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+            VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW());
+          `,
+          sql`
+            INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
+            VALUES (${newMemberId}, ${org.id}, ${newUserId}, 'owner', NOW());
+          `,
+          sql`
+            UPDATE public.tenants
+            SET en_prueba = true, updated_at = NOW()
+            WHERE id = ${org.slug} OR id = ${cleanOrgSlug};
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          userId: newUserId,
+          email: cleanEmail,
+          role: 'owner',
+          organizationSlug: org.slug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
+
+      // Acción de Regenerar Contraseña Temporal para Dueña en Puesta a Punto (Orden B1-c §2.2)
+      if (action === 'reset-trial-password' || action === 'reset_trial_password') {
+        const { organizationSlug } = payload || bodyObj || {};
+        if (!organizationSlug) {
+          return res.status(400).json({ error: 'Parámetro organizationSlug requerido.' });
+        }
+
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanEmail = `${cleanOrgSlug}@prueba.vanesev.internal`;
+
+        const users = await sql`
+          SELECT id, email, cuenta_prueba FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (users.length === 0) {
+          return res.status(404).json({ error: `Usuario de prueba para "${cleanOrgSlug}" no encontrado.` });
+        }
+
+        const u = users[0];
+        if (!u.cuenta_prueba) {
+          return res.status(400).json({ error: 'La cuenta no es una cuenta de puesta a punto (cuenta_prueba).' });
+        }
+
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const hashedPassword = await hashPassword(tempPassword);
+
+        await sql.transaction([
+          sql`
+            UPDATE "account"
+            SET password = ${hashedPassword}, "updatedAt" = NOW()
+            WHERE "userId" = ${u.id} AND "providerId" = 'credential';
+          `,
+          sql`
+            DELETE FROM "session"
+            WHERE "userId" = ${u.id};
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          email: cleanEmail,
+          organizationSlug: cleanOrgSlug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
+
+      // Acción de Cambio de Estado en Peticiones de Puesta a Punto (Orden B1-c §2.3)
+      if (action === 'puesta_a_punto_estado') {
+        const { id, estado } = payload || bodyObj || {};
+        if (!id || !estado) {
+          return res.status(400).json({ error: 'Parámetros id y estado requeridos.' });
+        }
+        const cleanEstado = String(estado).trim().toLowerCase();
+        if (!['recibida', 'en_curso', 'hecha'].includes(cleanEstado)) {
+          return res.status(400).json({ error: 'Estado inválido. Debe ser recibida, en_curso o hecha.' });
+        }
+        await sql`
+          UPDATE public.central_mailbox
+          SET estado = ${cleanEstado}
+          WHERE id = ${String(id)};
+        `;
+        return res.status(200).json({ ok: true, id, estado: cleanEstado });
+      }
 
       if (action === 'review_session') {
         const { id, reviewStatus, karc0Feedback } = payload || {};

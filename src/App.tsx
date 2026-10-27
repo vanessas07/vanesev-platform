@@ -10,6 +10,7 @@ import { PaymentMethods } from './components/PaymentMethods';
 import { Footer } from './components/Footer';
 import { BookingModal } from './components/BookingModal';
 import { AdminAuthGate } from './components/AdminAuthGate';
+import { authClient } from './lib/authClient';
 import { SharePage } from './components/SharePage';
 import { ClubInviteSection } from './components/ClubInviteSection';
 import { PWAInstallModal } from './components/PWAInstallModal';
@@ -352,7 +353,13 @@ export const App: React.FC = () => {
   const [isAdminRoute, setIsAdminRoute] = useState(initialRoute.isAdmin);
 
   // Super Admin session state with 2FA protection
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => AppStore.isAdminAuthenticated());
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+
+  useEffect(() => {
+    authClient.getSession().then((res) => {
+      if (res?.data?.user) setIsAdminAuthenticated(true);
+    }).catch(() => {});
+  }, []);
 
   // Routing state for Share / Referral Page
   const [isShareRoute, setIsShareRoute] = useState(() => {
@@ -685,7 +692,7 @@ export const App: React.FC = () => {
 
   // ─── ZONA 3: PROTECTED ADMIN PRO V2 DEL SALÓN ACTIVO ──────────────────────
   if (isAdminRoute) {
-    if (!isAdminAuthenticated && activeTenant === 'andrea-nails') {
+    if (!isAdminAuthenticated) {
       return (
         <AdminAuthGate
           onAuthenticated={() => {
@@ -710,9 +717,10 @@ export const App: React.FC = () => {
           onRefreshData={() => refreshData(activeTenant)}
           onExitToCatalog={handleExitToCatalog}
           onLogout={() => {
-            AppStore.clearAdminSession();
+            authClient.signOut().finally(() => {
             setIsAdminAuthenticated(false);
             handleExitToCatalog();
+          });
           }}
         />
       </Suspense>

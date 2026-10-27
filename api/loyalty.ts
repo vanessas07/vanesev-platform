@@ -1,20 +1,19 @@
 // Vercel Serverless Function: /api/loyalty
 // Handles loyalty stamp queries and admin adjustments in Neon Postgres
-import { neon } from '@neondatabase/serverless';
-
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!connectionString) return null;
-  return neon(connectionString);
-}
+import { getDb } from './_db.js';
+import { requireTenantRole } from './_session.js';
+import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // Strict CORS filter (closed, no wildcard)
+  applyCors(req, res);
+
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -23,73 +22,25 @@ export default async function handler(req: any, res: any) {
   }
 
   const sql = getDb();
+  if (!sql) {
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
+  }
 
-  // ─── GET: Consultar tarjeta por teléfono O listar todas para CRM ───────────
+  // ─── GET: Listar tarjetas de fidelización del salón para CRM (Protegido por Sesión y Rol) ───
   if (req.method === 'GET') {
-    if (!sql) {
-      return res.status(200).json({ cards: [], stampsCount: 0, databaseConnected: false });
-    }
-
     try {
-      const { phone, tenant } = req.query || {};
-      const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
-      const cleanTenant = tenant ? String(tenant).trim().toLowerCase() : '';
-
+      const cleanTenant = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
       if (!cleanTenant) {
-        return res.status(200).json({ cards: [], found: false, stampsCount: 0, databaseConnected: true });
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
       }
 
-      // Si se consulta un teléfono específico dentro de este salón
-      if (cleanPhone) {
-        const rows = await sql`
-          SELECT 
-            phone,
-            tenant_id as "tenantId",
-            client_name as "clientName",
-            stamps_count as "stampsCount",
-            TO_CHAR(last_visit, 'YYYY-MM-DD') as "lastVisit",
-            rewards_earned as "rewardsEarned"
-          FROM public.loyalty_cards
-          WHERE phone = ${cleanPhone} AND tenant_id = ${cleanTenant}
-          LIMIT 1;
-        `;
-
-        function maskName(name: string): string {
-          if (!name) return 'Clienta VIP';
-          const parts = name.trim().split(/\s+/);
-          return parts.map(p => p.length > 2 ? p[0] + '*'.repeat(Math.min(p.length - 2, 4)) + p[p.length - 1] : p[0] + '*').join(' ');
-        }
-
-        if (rows.length > 0) {
-          const card = rows[0];
-          return res.status(200).json({
-            found: true,
-            phone: card.phone,
-            tenantId: card.tenantId,
-            clientName: maskName(card.clientName),
-            maskedName: maskName(card.clientName),
-            stampsCount: card.stampsCount,
-            maxStamps: 6,
-            lastVisit: card.lastVisit,
-            rewardsEarned: card.rewardsEarned || [],
-            rewardEligible: card.stampsCount >= 6,
-            databaseConnected: true,
-          });
-        }
-
-        return res.status(200).json({
-          found: false,
-          phone: cleanPhone,
-          tenantId: cleanTenant,
-          stampsCount: 0,
-          maxStamps: 6,
-          rewardsEarned: [],
-          rewardEligible: false,
-          databaseConnected: true,
-        });
+      // Orden B1-a v2 §4.1: requireTenantRole con roles owner, admin y staff
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin', 'staff']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
-      // Si no se pasa teléfono, listar únicamente las tarjetas de este salón (tenant_id)
+      // Listar tarjetas exclusivamente de este salón
       const allRows = await sql`
         SELECT 
           phone,
@@ -114,12 +65,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── POST: Ajustar sellos manualmente desde Admin ───────────────────────────
+  // ─── POST: Ajustar sellos manualmente desde Admin (C10: Requiere sesión y rol owner/admin) ───
   if (req.method === 'POST') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { phone, tenantId, clientName, stampsCount, action } = req.body || {};
       const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
@@ -127,6 +74,12 @@ export default async function handler(req: any, res: any) {
 
       if (!cleanPhone || !cleanTenant) {
         return res.status(400).json({ error: 'Teléfono y salón (tenantId) requeridos para ajustar fidelización.' });
+      }
+
+      // Validación estricta C10 (§4.2): solo owner o admin pueden ajustar sellos manualmente
+      const authCheck = await requireTenantRole(req, cleanTenant, ['owner', 'admin']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       const name = clientName ? String(clientName).trim().slice(0, 80) : 'Clienta';
@@ -150,16 +103,21 @@ export default async function handler(req: any, res: any) {
         rewards = rewards.filter(r => r !== '¡7º Servicio 100% GRATIS!');
       }
 
+      // C8: ON CONFLICT (phone) DO NOTHING + UPDATE con phone AND tenant_id
       await sql`
         INSERT INTO public.loyalty_cards (phone, tenant_id, client_name, stamps_count, last_visit, rewards_earned, updated_at)
         VALUES (${cleanPhone}, ${cleanTenant}, ${name}, ${targetStamps}, CURRENT_DATE, ${rewards}, NOW())
-        ON CONFLICT (phone) DO UPDATE SET
-          tenant_id = EXCLUDED.tenant_id,
-          client_name = EXCLUDED.client_name,
-          stamps_count = ${targetStamps},
-          last_visit = CURRENT_DATE,
-          rewards_earned = ${rewards},
-          updated_at = NOW();
+        ON CONFLICT (phone) DO NOTHING;
+      `;
+
+      await sql`
+        UPDATE public.loyalty_cards 
+        SET client_name = ${name},
+            stamps_count = ${targetStamps},
+            last_visit = CURRENT_DATE,
+            rewards_earned = ${rewards},
+            updated_at = NOW()
+        WHERE phone = ${cleanPhone} AND tenant_id = ${cleanTenant};
       `;
 
       return res.status(200).json({

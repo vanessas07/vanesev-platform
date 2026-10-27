@@ -1,22 +1,41 @@
 // Vercel Serverless Function: /api/bookings
 // High-performance Neon Serverless Postgres integration with Anti-Tampering & Anti-Hacking Security
-import { neon } from '@neondatabase/serverless';
+import { randomUUID } from 'node:crypto';
+import { getDb } from './_db.js';
+import { requireSession, requireTenantRole } from './_session.js';
+import { claveDeLimite, ipDeLaPeticion, limiteSuperado } from './_limite.js';
+import { applyCors } from './_cors.js';
 
-function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!connectionString) {
-    return null;
-  }
-  return neon(connectionString);
+// Reserva pública: límites contados en la base (migración 0006).
+const RESERVAS_POR_IP_HORA = 5;
+const RESERVAS_POR_TELEFONO_HORA = 3;
+const DIAS_MAXIMOS_DE_ANTELACION = 90;
+const TURNO_VALIDO = /^((0?[1-9]|1[0-2]):[0-5]\d (AM|PM)|([01]\d|2[0-3]):[0-5]\d)$/;
+
+/** Fecha de hoy (YYYY-MM-DD) en Venezuela, donde operan los salones. */
+function hoyEnCaracas(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas' }).format(new Date());
+}
+
+function sumarDias(fecha: string, dias: number): string {
+  const d = new Date(`${fecha}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+function fechaReal(fecha: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+  const d = new Date(`${fecha}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === fecha;
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PATCH,DELETE');
+
+  applyCors(req, res);
+
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
@@ -28,8 +47,11 @@ export default async function handler(req: any, res: any) {
   }
 
   const sql = getDb();
+  if (!sql) {
+    return res.status(503).json({ error: 'Base de datos no disponible.' });
+  }
 
-  // ─── POST: Crear y blindar cita (Anti-Hacking & Anti-Tampering) ─────────────
+  // ─── POST: Crear y blindar cita (Público para Clientas, precio desde DB) ───
   if (req.method === 'POST') {
     try {
       const {
@@ -37,15 +59,10 @@ export default async function handler(req: any, res: any) {
         clientName,
         clientPhone,
         clientEmail,
-        clientPin,
         clientInstagram,
         serviceId,
-        serviceName,
-        servicePriceUSD,
         staffId,
-        staffName,
         zoneId,
-        zoneName,
         date,
         timeSlot,
         paymentMethod,
@@ -53,142 +70,183 @@ export default async function handler(req: any, res: any) {
         notes,
       } = req.body || {};
 
-      if (!clientName || !clientPhone || !date || !timeSlot || !serviceName) {
+      if (!clientName || !clientPhone || !date || !timeSlot || !serviceId) {
         return res.status(400).json({
-          error: 'Campos obligatorios faltantes (nombre, teléfono, fecha, hora, servicio).',
+          error: 'Campos obligatorios faltantes (nombre, teléfono, fecha, hora, serviceId).',
         });
       }
 
       if (!tenantId || !String(tenantId).trim()) {
         return res.status(400).json({ error: 'Parámetro tenantId requerido para registrar la cita.' });
       }
+
       const cleanTenant = String(tenantId).trim().toLowerCase();
+      const cleanServiceId = String(serviceId).trim();
       const cleanPhone = String(clientPhone).replace(/\D/g, '');
       const cleanName = String(clientName).trim().slice(0, 80);
-      const cleanEmail = clientEmail ? String(clientEmail).trim().toLowerCase().slice(0, 80) : '';
-      const cleanPin = clientPin ? String(clientPin).trim().slice(0, 10) : '';
+      let cleanEmail: string | null = null;
+      if (clientEmail !== undefined && clientEmail !== null && String(clientEmail).trim() !== '') {
+        const emailCandidate = String(clientEmail).trim().toLowerCase();
+        if (emailCandidate.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCandidate)) {
+          return res.status(400).json({ error: 'Formato de correo electrónico inválido o excede 120 caracteres.' });
+        }
+        cleanEmail = emailCandidate;
+      }
       const cleanInstagram = clientInstagram ? String(clientInstagram).replace('@', '').trim().slice(0, 40) : '';
-      const cleanDate = String(date).trim().slice(0, 10);
-      const cleanTime = String(timeSlot).trim().slice(0, 10);
-      const rawNotes = notes ? String(notes).trim().slice(0, 300) : '';
-      const cleanNotes = [rawNotes, cleanEmail ? `Email: ${cleanEmail}` : ''].filter(Boolean).join(' | ');
+      const cleanDate = String(date).trim();
+      const cleanTime = String(timeSlot).trim().toUpperCase();
+      const cleanNotes = notes ? String(notes).trim().slice(0, 300) : '';
       const validPayment = ['pago_movil', 'efectivo', 'binance'].includes(paymentMethod)
         ? paymentMethod
         : 'pago_movil';
-      const cleanPrice = Number(servicePriceUSD) || 10.00;
       const claimedFirst = Boolean(isFirstVisit);
 
       if (cleanPhone.length < 7 || cleanPhone.length > 15) {
         return res.status(400).json({ error: 'Número de teléfono inválido (debe contener entre 7 y 15 dígitos).' });
       }
 
-      if (sql) {
-        try {
-          // 1. Blindaje de Disponibilidad por Salón/Tenant
-          const existingSlot = await sql`
-            SELECT 1 FROM public.blocked_slots 
-            WHERE tenant_id = ${cleanTenant} AND date = ${cleanDate}::date AND time_slot = ${cleanTime}
-            UNION ALL
-            SELECT 1 FROM public.bookings 
-            WHERE tenant_id = ${cleanTenant} AND date = ${cleanDate}::date AND time_slot = ${cleanTime} AND status IN ('en_whatsapp', 'pendiente', 'confirmada');
-          `;
-
-          if (existingSlot.length > 0) {
-            return res.status(409).json({ error: 'El horario seleccionado ya se encuentra ocupado o bloqueado.' });
-          }
-
-          // 2. Blindaje Anti-Fraude: verificación estricta de primera visita
-          const previousBookings = await sql`
-            SELECT COUNT(*) as count FROM public.bookings 
-            WHERE tenant_id = ${cleanTenant} AND client_phone = ${cleanPhone} AND status != 'cancelada';
-          `;
-          const prevCount = Number(previousBookings[0]?.count || 0);
-          const eligibleFirstVisit = (prevCount === 0) && claimedFirst;
-          const discountUSD = eligibleFirstVisit ? 2.00 : 0.00;
-          const finalPriceUSD = Math.max(0, cleanPrice - discountUSD);
-          const allowedStatus = ['en_whatsapp', 'pendiente', 'confirmada'];
-          const bookingStatus = allowedStatus.includes(req.body?.status) ? req.body.status : 'en_whatsapp';
-          const bookingId = req.body?.id || `booking_${Date.now()}_${cleanPhone.slice(-4)}`;
-
-          // 3. Registrar Cita con soporte de Especialista (staff) y Zona (studio_zone)
-          await sql`
-            INSERT INTO public.bookings (
-              id, tenant_id, client_name, client_phone, client_instagram, service_id,
-              service_name, service_price_usd, total_price_usd, staff_id, staff_name,
-              zone_id, zone_name, date, time_slot, payment_method, notes, status,
-              is_first_visit, discount_usd, created_at
-            ) VALUES (
-              ${bookingId}, ${cleanTenant}, ${cleanName}, ${cleanPhone}, ${cleanInstagram}, ${String(serviceId || '')},
-              ${String(serviceName)}, ${cleanPrice}, ${finalPriceUSD}, ${staffId || null}, ${staffName || null},
-              ${zoneId || null}, ${zoneName || null}, ${cleanDate}::date, ${cleanTime}, ${validPayment},
-              ${cleanNotes}, ${bookingStatus}, ${eligibleFirstVisit}, ${discountUSD}, NOW()
-            );
-          `;
-
-          // 4. Inicializar ficha en loyalty_cards si no existe (target_stamps = 5)
-          const loyaltyCardRows = await sql`
-            SELECT stamps_count FROM public.loyalty_cards WHERE phone = ${cleanPhone};
-          `;
-
-          let verifiedStamps = 0;
-          if (loyaltyCardRows.length === 0) {
-            await sql`
-              INSERT INTO public.loyalty_cards (phone, tenant_id, client_name, stamps_count, target_stamps, last_visit, rewards_earned, updated_at)
-              VALUES (${cleanPhone}, ${cleanTenant}, ${cleanName}, 0, 5, ${cleanDate}::date, ARRAY[]::TEXT[], NOW())
-              ON CONFLICT (phone) DO NOTHING;
-            `;
-          } else {
-            verifiedStamps = Number(loyaltyCardRows[0]?.stamps_count || 0);
-          }
-
-          return res.status(200).json({
-            success: true,
-            booking: {
-              id: bookingId,
-              tenantId: cleanTenant,
-              clientName: cleanName,
-              clientPhone: cleanPhone,
-              clientEmail: cleanEmail || undefined,
-              clientInstagram: cleanInstagram || undefined,
-              serviceId,
-              serviceName,
-              servicePriceUSD: cleanPrice,
-              totalPriceUSD: finalPriceUSD,
-              staffId: staffId || undefined,
-              staffName: staffName || undefined,
-              zoneId: zoneId || undefined,
-              zoneName: zoneName || undefined,
-              date: cleanDate,
-              timeSlot: cleanTime,
-              paymentMethod: validPayment,
-              isFirstVisit: eligibleFirstVisit,
-              discountUSD,
-              notes: cleanNotes || undefined,
-              status: 'pendiente',
-            },
-            verifiedStamps,
-            databaseConnected: true,
-          });
-        } catch (dbErr: any) {
-          console.error('[Neon Booking Error]:', dbErr);
-          return res.status(500).json({ error: 'Error al procesar reserva en base de datos.' });
-        }
+      // Fecha real, no pasada y como mucho a 90 días; turno con formato de agenda.
+      const hoy = hoyEnCaracas();
+      if (!fechaReal(cleanDate) || cleanDate < hoy || cleanDate > sumarDias(hoy, DIAS_MAXIMOS_DE_ANTELACION)) {
+        return res.status(400).json({ error: `Fecha inválida: debe estar entre hoy y los próximos ${DIAS_MAXIMOS_DE_ANTELACION} días.` });
+      }
+      if (!TURNO_VALIDO.test(cleanTime)) {
+        return res.status(400).json({ error: 'Turno (timeSlot) con formato inválido.' });
       }
 
-      // Fallback si no hay conexión
-      return res.status(200).json({
+      // Freno anti-bots: por IP y por teléfono en el salón (HMAC, nunca en claro).
+      const ip = ipDeLaPeticion(req);
+      const [porIp, porTelefono] = await Promise.all([
+        limiteSuperado(claveDeLimite('reserva-ip', ip), RESERVAS_POR_IP_HORA, 3600),
+        limiteSuperado(claveDeLimite('reserva-tel', `${cleanTenant}|${cleanPhone}`), RESERVAS_POR_TELEFONO_HORA, 3600),
+      ]);
+      if (porIp || porTelefono) {
+        res.setHeader('Retry-After', '3600');
+        return res.status(429).json({ error: 'Demasiadas reservas seguidas. Inténtalo de nuevo más tarde.' });
+      }
+
+      // Orden B1-a v2 §4.2: El precio sale exclusivamente de services en la BD, servicePriceUSD del body se ignora.
+      const serviceRows = await sql`
+        SELECT id, name, price_usd, is_available 
+        FROM public.services 
+        WHERE id = ${cleanServiceId} AND tenant_id = ${cleanTenant} AND is_available = true 
+        LIMIT 1;
+      `;
+
+      if (serviceRows.length === 0) {
+        return res.status(400).json({ error: 'Servicio no encontrado o no disponible para este salón.' });
+      }
+
+      // Especialista y zona: solo del mismo salón, y con el nombre que figura en la base.
+      let cleanStaffId: string | null = null;
+      let cleanStaffName: string | null = null;
+      if (staffId) {
+        const staffRows = await sql`
+          SELECT id, name FROM public.staff_members
+          WHERE id = ${String(staffId)} AND tenant_id = ${cleanTenant} AND is_active = true
+          LIMIT 1;
+        `;
+        if (staffRows.length === 0) {
+          return res.status(400).json({ error: 'Especialista no encontrado en este salón.' });
+        }
+        cleanStaffId = staffRows[0].id;
+        cleanStaffName = staffRows[0].name;
+      }
+      let cleanZoneId: string | null = null;
+      let cleanZoneName: string | null = null;
+      if (zoneId) {
+        const zoneRows = await sql`
+          SELECT id, name FROM public.studio_zones
+          WHERE id = ${String(zoneId)} AND tenant_id = ${cleanTenant} AND is_active = true
+          LIMIT 1;
+        `;
+        if (zoneRows.length === 0) {
+          return res.status(400).json({ error: 'Zona no encontrada en este salón.' });
+        }
+        cleanZoneId = zoneRows[0].id;
+        cleanZoneName = zoneRows[0].name;
+      }
+
+      const officialService = serviceRows[0];
+      const officialPrice = Number(officialService.price_usd) || 10.0;
+      const cleanServiceName = String(officialService.name);
+
+      // 1. Blindaje de Disponibilidad por Salón/Tenant
+      const existingSlot = await sql`
+        SELECT 1 FROM public.blocked_slots 
+        WHERE tenant_id = ${cleanTenant} AND date = ${cleanDate}::date AND time_slot = ${cleanTime}
+        UNION ALL
+        SELECT 1 FROM public.bookings 
+        WHERE tenant_id = ${cleanTenant} AND date = ${cleanDate}::date AND time_slot = ${cleanTime} AND status IN ('en_whatsapp', 'pendiente', 'confirmada');
+      `;
+
+      if (existingSlot.length > 0) {
+        return res.status(409).json({ error: 'El horario seleccionado ya se encuentra ocupado o bloqueado.' });
+      }
+
+      // 2. Blindaje Anti-Fraude: verificación estricta de primera visita
+      const previousBookings = await sql`
+        SELECT COUNT(*) as count FROM public.bookings 
+        WHERE tenant_id = ${cleanTenant} AND client_phone = ${cleanPhone} AND status != 'cancelada';
+      `;
+      const prevCount = Number(previousBookings[0]?.count || 0);
+      const eligibleFirstVisit = (prevCount === 0) && claimedFirst;
+      const discountUSD = eligibleFirstVisit ? 2.00 : 0.00;
+      const finalPriceUSD = Math.max(0, officialPrice - discountUSD);
+      // Id y estado los decide el servidor: la clienta no puede elegir el id ni dejar la cita «confirmada».
+      const bookingStatus = 'en_whatsapp';
+      const bookingId = `bk_${randomUUID()}`;
+
+      // 3. Registrar Cita con precio oficial verificado en base de datos
+      await sql`
+        INSERT INTO public.bookings (
+          id, tenant_id, client_name, client_phone, client_email, client_instagram, service_id,
+          service_name, service_price_usd, total_price_usd, staff_id, staff_name,
+          zone_id, zone_name, date, time_slot, payment_method, notes, status,
+          is_first_visit, discount_usd, created_at
+        ) VALUES (
+          ${bookingId},
+          ${cleanTenant},
+          ${cleanName},
+          ${cleanPhone},
+          ${cleanEmail},
+          ${cleanInstagram},
+          ${cleanServiceId},
+          ${cleanServiceName},
+          ${officialPrice},
+          ${finalPriceUSD},
+          ${cleanStaffId},
+          ${cleanStaffName},
+          ${cleanZoneId},
+          ${cleanZoneName},
+          ${cleanDate}::date,
+          ${cleanTime},
+          ${validPayment},
+          ${cleanNotes},
+          ${bookingStatus},
+          ${eligibleFirstVisit},
+          ${discountUSD},
+          NOW()
+        );
+      `;
+
+      return res.status(201).json({
         success: true,
         booking: {
-          id: 'cita_' + Date.now(),
+          id: bookingId,
+          tenantId: cleanTenant,
           clientName: cleanName,
           clientPhone: cleanPhone,
-          serviceName,
+          clientEmail: cleanEmail,
+          serviceName: cleanServiceName,
+          servicePriceUSD: officialPrice,
+          totalPriceUSD: finalPriceUSD,
+          discountUSD,
           date: cleanDate,
           timeSlot: cleanTime,
-          totalPriceUSD: cleanPrice,
-          status: 'pendiente'
+          status: bookingStatus,
         },
-        databaseConnected: false,
+        databaseConnected: true,
       });
     } catch (err: any) {
       console.error('Error processing booking:', err);
@@ -196,83 +254,97 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── GET: Obtener reservas para el Admin o para la Ficha VIP de la Clienta ──
+  // ─── GET: Obtener reservas del Salón (Protegido por Sesión y Rol) o de la Clienta (mine=1) ───
   if (req.method === 'GET') {
-    if (!sql) {
-      return res.status(200).json({ bookings: [], databaseConnected: false });
-    }
-
     try {
-      const clientPhoneFilter = req.query?.clientPhone ? String(req.query.clientPhone).replace(/\D/g, '') : '';
-      const tenantFilter = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
+      if (req.query?.mine === '1' || req.query?.mine === 'true') {
+        const sesion = await requireSession(req);
+        if (sesion.status !== 200) {
+          return res.status(sesion.status).json({ error: sesion.error });
+        }
 
-      let rows: any[] = [];
-      if (clientPhoneFilter && clientPhoneFilter.length >= 7) {
-        const suffix = clientPhoneFilter.slice(-9);
-        rows = tenantFilter
-          ? await sql`
-              SELECT 
-                id,
-                tenant_id as "tenantId",
-                client_name as "clientName",
-                client_phone as "clientPhone",
-                client_instagram as "clientInstagram",
-                service_id as "serviceId",
-                service_name as "serviceName",
-                service_price_usd as "servicePriceUSD",
-                total_price_usd as "totalPriceUSD",
-                staff_id as "staffId",
-                staff_name as "staffName",
-                zone_id as "zoneId",
-                zone_name as "zoneName",
-                TO_CHAR(date, 'YYYY-MM-DD') as "date",
-                time_slot as "timeSlot",
-                payment_method as "paymentMethod",
-                notes,
-                status,
-                is_first_visit as "isFirstVisit",
-                discount_usd as "discountUSD",
-                created_at as "createdAt"
-              FROM public.bookings
-              WHERE tenant_id = ${tenantFilter}
-                AND RIGHT(REGEXP_REPLACE(client_phone, '\D', '', 'g'), 9) = ${suffix}
-              ORDER BY date DESC, created_at DESC
-              LIMIT 50;
-            `
-          : [];
-      } else if (tenantFilter) {
-        rows = await sql`
-          SELECT 
-            id,
-            tenant_id as "tenantId",
-            client_name as "clientName",
-            client_phone as "clientPhone",
-            client_instagram as "clientInstagram",
-            service_id as "serviceId",
-            service_name as "serviceName",
-            service_price_usd as "servicePriceUSD",
-            total_price_usd as "totalPriceUSD",
-            staff_id as "staffId",
-            staff_name as "staffName",
-            zone_id as "zoneId",
-            zone_name as "zoneName",
-            TO_CHAR(date, 'YYYY-MM-DD') as "date",
-            time_slot as "timeSlot",
-            payment_method as "paymentMethod",
-            notes,
-            status,
-            is_first_visit as "isFirstVisit",
-            discount_usd as "discountUSD",
-            created_at as "createdAt"
-          FROM public.bookings
-          WHERE tenant_id = ${tenantFilter}
-          ORDER BY created_at DESC
-          LIMIT 200;
-        `;
-      } else {
-        // NUNCA devolver citas sin filtro de salón (prohibido mezclar clientes)
-        rows = [];
+        const user = sesion.user;
+        if (!user?.emailVerified) {
+          return res.status(403).json({ error: 'Forbidden: Correo electrónico no verificado.' });
+        }
+
+        const userEmail = String(user.email || '').trim().toLowerCase();
+
+        const [bookingRows, stampRows] = await Promise.all([
+          sql`
+            SELECT 
+              id,
+              tenant_id as "tenantId",
+              service_name as "serviceName",
+              TO_CHAR(date, 'YYYY-MM-DD') as "date",
+              time_slot as "timeSlot",
+              status,
+              total_price_usd as "totalPriceUSD"
+            FROM public.bookings
+            WHERE client_email = ${userEmail}
+            ORDER BY date DESC, time_slot DESC
+            LIMIT 100;
+          `,
+          sql`
+            SELECT 
+              tenant_id as "tenantId",
+              COUNT(*)::int as "stampsCount"
+            FROM public.bookings
+            WHERE client_email = ${userEmail} AND status = 'completada'
+            GROUP BY tenant_id;
+          `,
+        ]);
+
+        return res.status(200).json({
+          bookings: bookingRows.map((r: any) => ({
+            ...r,
+            totalPriceUSD: Number(r.totalPriceUSD) || 0,
+          })),
+          stamps: stampRows,
+          databaseConnected: true,
+        });
       }
+
+      const tenantFilter = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
+      if (!tenantFilter) {
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
+      }
+
+      // Orden B1-a v2 §4.1: requireTenantRole con roles owner, admin y staff
+      const authCheck = await requireTenantRole(req, tenantFilter, ['owner', 'admin', 'staff']);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
+      const rows = await sql`
+        SELECT 
+          id,
+          tenant_id as "tenantId",
+          client_name as "clientName",
+          client_phone as "clientPhone",
+          client_email as "clientEmail",
+          client_instagram as "clientInstagram",
+          service_id as "serviceId",
+          service_name as "serviceName",
+          service_price_usd as "servicePriceUSD",
+          total_price_usd as "totalPriceUSD",
+          staff_id as "staffId",
+          staff_name as "staffName",
+          zone_id as "zoneId",
+          zone_name as "zoneName",
+          TO_CHAR(date, 'YYYY-MM-DD') as "date",
+          time_slot as "timeSlot",
+          payment_method as "paymentMethod",
+          notes,
+          status,
+          is_first_visit as "isFirstVisit",
+          discount_usd as "discountUSD",
+          created_at as "createdAt"
+        FROM public.bookings
+        WHERE tenant_id = ${tenantFilter}
+        ORDER BY created_at DESC
+        LIMIT 200;
+      `;
 
       return res.status(200).json({
         bookings: rows.map((r: any) => ({
@@ -289,26 +361,51 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── PATCH: Actualizar estado y validar fidelización oficial ────────────────
+  // ─── PATCH: Actualizar estado y reprogramar cita (Protegido por Sesión y Rol) 
   if (req.method === 'PATCH') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
-      const { id, tenantId, status, action, date, timeSlot, cancellationReason } = req.body || {};
+      const { id, status, action, date, timeSlot, cancellationReason } = req.body || {};
       if (!id) {
         return res.status(400).json({ error: 'id de cita es requerido.' });
       }
 
+      const cleanId = String(id).trim();
+
+      // Sesión antes de buscar: un anónimo recibe 401 y no puede averiguar qué citas existen.
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
+      // C10 (§4.2): Carga la cita de la base de datos y toma SU tenant_id
+      const targetBooking = await sql`
+        SELECT id, tenant_id, client_phone, client_name 
+        FROM public.bookings 
+        WHERE id = ${cleanId} 
+        LIMIT 1;
+      `;
+
+      if (targetBooking.length === 0) {
+        return res.status(404).json({ error: 'Cita no encontrada.' });
+      }
+
+      const bookingTenant = String(targetBooking[0].tenant_id).toLowerCase();
+
+      // Validación estricta de sesión y rol del salón
+      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin', 'staff'], sesion);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
       // Reprogramación de Cita (cambio de fecha y turno aislado por salón)
       if (action === 'reschedule' && date && timeSlot) {
-        const cleanDate = String(date).trim().slice(0, 10);
-        const cleanTime = String(timeSlot).trim().slice(0, 10);
-        const targetBooking = await sql`SELECT tenant_id FROM public.bookings WHERE id = ${id} LIMIT 1;`;
-        const bookingTenant = String(targetBooking[0]?.tenant_id || tenantId || '').trim().toLowerCase();
+        const cleanDate = String(date).trim();
+        const cleanTime = String(timeSlot).trim().toUpperCase();
+        if (!fechaReal(cleanDate) || !TURNO_VALIDO.test(cleanTime)) {
+          return res.status(400).json({ error: 'Fecha o turno con formato inválido.' });
+        }
 
-        // Validar que el nuevo turno no esté ocupado por otra cita activa ni bloqueado en ESE MISMO SALÓN
+        // Validar que el nuevo turno no esté ocupado ni bloqueado en ESE MISMO SALÓN
         const occupied = await sql`
           SELECT 1 FROM public.blocked_slots 
           WHERE tenant_id = ${bookingTenant} AND date = ${cleanDate}::date AND time_slot = ${cleanTime}
@@ -316,7 +413,7 @@ export default async function handler(req: any, res: any) {
           SELECT 1 FROM public.bookings 
           WHERE tenant_id = ${bookingTenant}
             AND date = ${cleanDate}::date AND time_slot = ${cleanTime} 
-            AND id != ${id} 
+            AND id != ${cleanId} 
             AND status IN ('en_whatsapp', 'pendiente', 'confirmada');
         `;
 
@@ -327,7 +424,7 @@ export default async function handler(req: any, res: any) {
         await sql`
           UPDATE public.bookings 
           SET date = ${cleanDate}::date, time_slot = ${cleanTime}, status = 'confirmada'
-          WHERE id = ${id};
+          WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
         `;
 
         return res.status(200).json({ 
@@ -343,97 +440,130 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'status o acción de reprogramación requerida.' });
       }
 
-      // Actualizar estado de la cita y motivo si aplica
+      // Orden B1-a v2 §4.2: status solo de una lista cerrada
+      const ALLOWED_STATUSES = ['pendiente', 'confirmada', 'en_whatsapp', 'completada', 'cancelada', 'no_asistio'];
+      const cleanStatus = String(status).trim().toLowerCase();
+      if (!ALLOWED_STATUSES.includes(cleanStatus)) {
+        return res.status(400).json({ 
+          error: `Estado inválido ('${status}'). Debe ser uno de: ${ALLOWED_STATUSES.join(', ')}.` 
+        });
+      }
+
+      // Actualizar estado de la cita y motivo si aplica, asegurando WHERE id AND tenant_id
       const reasonTag = cancellationReason ? `[Cancelación: ${String(cancellationReason).slice(0, 140)}]` : '';
       if (reasonTag) {
         await sql`
           UPDATE public.bookings 
-          SET status = ${status},
+          SET status = ${cleanStatus},
               notes = CASE 
                 WHEN notes IS NULL OR notes = '' THEN ${reasonTag}
                 ELSE notes || ' ' || ${reasonTag}
               END
-          WHERE id = ${id};
+          WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
         `;
       } else {
         await sql`
           UPDATE public.bookings 
-          SET status = ${status}
-          WHERE id = ${id};
+          SET status = ${cleanStatus}
+          WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
         `;
       }
 
-      // Si la cita pasa a 'completada', acreditar oficialmente el sello a la clienta (Regla 5 visitas = Cejas gratis)
-      if (status === 'completada') {
-        const bookingRows = await sql`
-          SELECT client_phone, client_name FROM public.bookings WHERE id = ${id};
+      // Orden B1-a v2 §4.3 (C8 en bookings.ts): recuento y fidelización con tenant_id
+      if (cleanStatus === 'completada') {
+        const clientPhone = targetBooking[0].client_phone;
+        const clientName = targetBooking[0].client_name;
+
+        // Contar cuántas citas COMPLETADAS reales tiene exclusivamente en este salón
+        const countRows = await sql`
+          SELECT COUNT(*)::int as count 
+          FROM public.bookings 
+          WHERE client_phone = ${clientPhone} AND tenant_id = ${bookingTenant} AND status = 'completada';
+        `;
+        const totalCompleted = Number(countRows[0]?.count || 1);
+        const cycleStamps = totalCompleted % 6 === 0 ? 5 : Math.min(5, totalCompleted % 6);
+        const rewards = totalCompleted >= 5 ? ['¡5ª Visita: Depilación de Cejas 100% GRATIS!'] : [];
+
+        // C8: ON CONFLICT (phone) DO NOTHING + UPDATE con phone AND tenant_id
+        await sql`
+          INSERT INTO public.loyalty_cards (tenant_id, phone, client_name, stamps_count, last_visit, rewards_earned, updated_at)
+          VALUES (${bookingTenant}, ${clientPhone}, ${clientName}, ${cycleStamps}, CURRENT_DATE, ${rewards}, NOW())
+          ON CONFLICT (phone) DO NOTHING;
         `;
 
-        if (bookingRows.length > 0) {
-          const clientPhone = bookingRows[0].client_phone;
-          const clientName = bookingRows[0].client_name;
-
-          // Contar cuántas citas COMPLETADAS reales tiene
-          const countRows = await sql`
-            SELECT COUNT(*) as count FROM public.bookings 
-            WHERE client_phone = ${clientPhone} AND status = 'completada';
-          `;
-          const totalCompleted = Number(countRows[0]?.count || 1);
-          // Regla Andrea Labrador: 5 visitas completadas para ganar Depilación de Cejas de cortesía
-          const cycleStamps = totalCompleted % 6 === 0 ? 5 : Math.min(5, totalCompleted % 6);
-          const rewards = totalCompleted >= 5 ? ['¡5ª Visita: Depilación de Cejas 100% GRATIS!'] : [];
-
-          await sql`
-            INSERT INTO public.loyalty_cards (phone, client_name, stamps_count, last_visit, rewards_earned, updated_at)
-            VALUES (${clientPhone}, ${clientName}, ${cycleStamps}, CURRENT_DATE, ${rewards}, NOW())
-            ON CONFLICT (phone) DO UPDATE SET
-              client_name = EXCLUDED.client_name,
+        await sql`
+          UPDATE public.loyalty_cards 
+          SET client_name = ${clientName},
               stamps_count = ${cycleStamps},
               last_visit = CURRENT_DATE,
               rewards_earned = ${rewards},
-              updated_at = NOW();
-          `;
+              updated_at = NOW()
+          WHERE phone = ${clientPhone} AND tenant_id = ${bookingTenant};
+        `;
 
-          return res.status(200).json({
-            success: true,
-            id,
-            status,
-            loyalty: {
-              phone: clientPhone,
-              clientName,
-              stampsCount: cycleStamps,
-              totalCompleted,
-              hasFreeReward: cycleStamps >= 5
-            }
-          });
-        }
+        return res.status(200).json({
+          success: true,
+          id: cleanId,
+          status: cleanStatus,
+          loyalty: {
+            phone: clientPhone,
+            clientName,
+            stampsCount: cycleStamps,
+            totalCompleted,
+            hasFreeReward: cycleStamps >= 5
+          }
+        });
       }
 
-      return res.status(200).json({ success: true, id, status });
+      return res.status(200).json({ success: true, id: cleanId, status: cleanStatus });
     } catch (err: any) {
       console.error('[Neon Update Booking Error]:', err);
       return res.status(500).json({ error: 'Error al actualizar reserva.' });
     }
   }
 
-  // ─── DELETE: Eliminar reserva ────────────────────────────────────────────────
+  // ─── DELETE: Eliminar reserva (Protegido por Sesión y Rol) ──────────────────
   if (req.method === 'DELETE') {
-    if (!sql) {
-      return res.status(500).json({ error: 'Base de datos no disponible.' });
-    }
-
     try {
       const { id } = req.query || req.body || {};
       if (!id) {
         return res.status(400).json({ error: 'id de reserva requerido.' });
       }
 
-      await sql`
-        DELETE FROM public.bookings 
-        WHERE id = ${id};
+      const cleanId = String(id).trim();
+
+      // Sesión antes de buscar (401 para anónimos, sin revelar si la cita existe).
+      const sesion = await requireSession(req);
+      if (sesion.status !== 200) {
+        return res.status(sesion.status).json({ error: sesion.error });
+      }
+
+      // C10 (§4.2): Carga la cita de la BD para tomar SU tenant_id
+      const targetBooking = await sql`
+        SELECT id, tenant_id 
+        FROM public.bookings 
+        WHERE id = ${cleanId} 
+        LIMIT 1;
       `;
 
-      return res.status(200).json({ success: true, deletedId: id });
+      if (targetBooking.length === 0) {
+        return res.status(404).json({ error: 'Cita no encontrada.' });
+      }
+
+      const bookingTenant = String(targetBooking[0].tenant_id).toLowerCase();
+
+      // Borrar solo dueño o admin (decisión de karc0, 27/10): el staff cambia estados, no borra.
+      const authCheck = await requireTenantRole(req, bookingTenant, ['owner', 'admin'], sesion);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
+      }
+
+      await sql`
+        DELETE FROM public.bookings 
+        WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
+      `;
+
+      return res.status(200).json({ success: true, deletedId: cleanId });
     } catch (err: any) {
       console.error('[Neon Delete Booking Error]:', err);
       return res.status(500).json({ error: 'Error al eliminar reserva.' });

@@ -1,0 +1,90 @@
+=== PRUEBA 6: MIEMBRO DEL SALÓN A PIDE DATOS DEL SALÓN B: 403 FORBIDDEN ===
+FECHA: 2026-10-27 01:10 UTC+1
+DEPLOYMENT: https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app
+
+6.1. CREACIÓN DE ORGANIZACIÓN A (CAPRA STUDIO) POR USUARIO A (POST /api/auth/organization/create):
+$ npx vercel curl /api/auth/organization/create --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***" -d '@payload_create_org_a.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:10:05 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::hnbb2-1793059804895-f42d0281f82d
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"name":"Capra Studio","slug":"capra-studio","logo":null,"createdAt":"2026-10-27T00:10:05.039Z","id":"eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu","members":[{"organizationId":"eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu","userId":"v6kZz2LZM7NWhavoBuQO8wR39K0CHDUt","role":"owner","createdAt":"2026-10-27T00:10:05.048Z","id":"80F72D3w40ldkbjG46mEZdxHUj4uG2Tl"}]}
+
+6.2. CREACIÓN DE USUARIO B (STAFF ANDREA) Y SU ORGANIZACIÓN B (ANDREA NAILS):
+Usuario B: staff.andrea@vanesev.com (ID: kQeAmivSNdCvwUacvuMNo6JRlxc9Tiuo)
+Organización B ID: 9wv1jDbt5cltV0XxG5XXf118o3YZLWAA
+
+SALIDA REAL CREACIÓN ORG B:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:10:30 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::kfzhl-1793059830665-265bfb304eb7
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"name":"Andrea Nails","slug":"andrea-nails","logo":null,"createdAt":"2026-10-27T00:10:30.801Z","id":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","members":[{"organizationId":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","userId":"kQeAmivSNdCvwUacvuMNo6JRlxc9Tiuo","role":"owner","createdAt":"2026-10-27T00:10:30.805Z","id":"1tHuOMvRV64HiEJeLV2F48oNI9WTAyWo"}]}
+
+6.3. USUARIO B PIDE DATOS DEL SALÓN A (ORGANIZATIONID: eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu) -> 403 FORBIDDEN:
+$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***"
+
+SALIDA REAL:
+HTTP/1.1 403 Forbidden
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:10:43 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: BYPASS
+X-Vercel-Id: cdg1::iad1::hnbb2-1793059843520-243a802017ec
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"message":"User is not a member of the organization","code":"USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION"}
+
+6.4. USUARIO B PIDE DATOS DE SU PROPIO SALÓN B -> 200 OK:
+$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=9wv1jDbt5cltV0XxG5XXf118o3YZLWAA" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***"
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:10:55 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: BYPASS
+X-Vercel-Id: cdg1::iad1::pmnsz-1793059854836-05f3b28d5b85
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"name":"Andrea Nails","slug":"andrea-nails","logo":null,"createdAt":"2026-10-27T00:10:30.801Z","metadata":null,"id":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","invitations":[],"members":[{"organizationId":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","userId":"kQeAmivSNdCvwUacvuMNo6JRlxc9Tiuo","role":"owner","createdAt":"2026-10-27T00:10:30.805Z","id":"1tHuOMvRV64HiEJeLV2F48oNI9WTAyWo","user":{"id":"kQeAmivSNdCvwUacvuMNo6JRlxc9Tiuo","name":"Directora Andrea","email":"staff.andrea@vanesev.com","image":null}}]}
+
+VEREDICTO: ✅ CUMPLE (Aislamiento multitenant estricto a nivel de organización. Un miembro del Salón B recibe HTTP 403 Forbidden con código USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION al consultar los datos del Salón A).

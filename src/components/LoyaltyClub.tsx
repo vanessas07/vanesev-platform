@@ -32,19 +32,8 @@ export const LoyaltyClub: React.FC<LoyaltyClubProps> = ({
       return;
     }
 
-    // Buscar en Neon DB
-    const remote = await AppStore.checkClientProfileRemote(searchPhone);
-    if (remote.found) {
-      setSearchedCard({
-        phone: searchPhone,
-        clientName: remote.clientName || 'Clienta VIP',
-        stampsCount: remote.stampsCount,
-        lastVisit: remote.lastVisit || new Date().toISOString().split('T')[0],
-        rewardsEarned: remote.stampsCount >= 5 ? [rewardLabel] : [],
-      });
-    } else {
-      setSearchedCard(null);
-    }
+    // Sin consulta pública por teléfono (era la fuga C4): los sellos se ven en «Mi cuenta» con el correo.
+    setSearchedCard(null);
     setIsSearching(false);
   };
 
