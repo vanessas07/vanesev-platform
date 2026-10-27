@@ -44,13 +44,13 @@ jobs:
       - name: Ejecutar Pruebas Automatizadas de Correcciones de Autenticación (Sección 3)
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING || secrets.DATABASE_URL }}
+          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
         run: |
-          node scripts/test-correcciones.cjs > evidencias_out/correcciones-auth.txt 2>&1 || true
-          cat evidencias_out/correcciones-auth.txt
+          node scripts/test-correcciones.cjs 2>&1 | tee evidencias_out/correcciones-auth.txt
 
       - name: Subir Artefacto de Evidencias
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: evidencias-${{ github.sha }}
           path: evidencias_out/

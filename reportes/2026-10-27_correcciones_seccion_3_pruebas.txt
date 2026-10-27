@@ -1,9 +1,9 @@
 ================================================================================
-       VANESEV - VERIFICACIÓN DE AJUSTES DE SEGURIDAD (RESPUESTA 0215)
+       VANESEV - VERIFICACIÓN DE AJUSTES DE SEGURIDAD (RESPUESTA 0330 §6)
 ================================================================================
 URL Objetivo: https://vanesev-platform-git-spike-better-auth-vanesevapp-4342.vercel.app
 Bypass Header Configurado: SÍ (Enmascarado ***)
-Conexión a Neon Staging: SÍ
+Host Staging Verificado: ep-nameless-math-b838isnk-pooler.c-14.us-east-1.aws.neon.tech ✅
 --------------------------------------------------------------------------------
 
 --- [PRUEBA 1] Registro público cerrado de staff (POST /api/auth/sign-up/email) ---
@@ -25,19 +25,19 @@ Resultado: ✅ CORRECTO (400 Bad Request - Mínimo 10 caracteres exigido)
 Llamadas con HTTP 200 OK: 20 de 20
 Resultado: ✅ CORRECTO (20/20 llamadas retornaron HTTP 200 sin 429)
 
---- [PRUEBA 5] Bloqueo por cuenta tras 10 fallos (POST /api/auth/sign-in/email) ---
-Ejecutando 10 intentos fallidos de login...
-Estado en base de datos tras 10 fallos: failed_attempts=10, locked_until=Tue Oct 27 2026 02:38:37 GMT+0100 (hora estándar de Europa central)
-Intento 11 - HTTP Status: 403 (Esperado: 403)
+--- [PRUEBA 5] Bloqueo por cuenta tras 10 fallos e intento 11 con contraseña correcta (POST /api/auth/sign-in/email) ---
+Ejecutando 10 intentos fallidos de login con contraseña incorrecta...
+Estado en base de datos tras 10 fallos: failed_attempts=10, locked_until=Tue Oct 27 2026 12:43:39 GMT+0100 (hora estándar de Europa central)
+Intento 11 (con contraseña correcta) - HTTP Status: 403 (Esperado: 403)
 Respuesta intento 11: {"message":"Cuenta bloqueada temporalmente por reiterados fallos. Intente de nuevo en 15 minuto(s) o solicite recuperación OTP."}
-Resultado: ✅ CORRECTO (HTTP 403 Forbidden - Cuenta bloqueada temporalmente)
+Resultado: ✅ CORRECTO (HTTP 403 Forbidden - Cuenta bloqueada temporalmente pese a contraseña válida)
 
 --- [PRUEBA 6] Rate limit estricto de login: 6.º intento en 300 s -> 429 ---
 6.º intento - HTTP Status: 429 (Esperado: 429)
 Respuesta 6.º intento: {"message":"Too many requests. Please try again later."}
 Resultado: ✅ CORRECTO (HTTP 429 Too Many Requests)
 
---- [PRUEBA 7] Recuento de tablas en Neon Staging tras pruebas ---
+--- [PRUEBA 7] Recuento de tablas en Neon Staging tras pruebas (Confirmación de Purga) ---
 Tabla "user": 0 registros
 Tabla "session": 0 registros
 Tabla "account": 0 registros
@@ -46,8 +46,8 @@ Tabla "organization": 0 registros
 Tabla "member": 0 registros
 Tabla "invitation": 0 registros
 Tabla "twoFactor": 0 registros
-Tabla "rateLimit": 0 registros
-Resultado: ✅ PURGA CONFIRMADA (0 usuarios y 0 sesiones en base de datos)
+Tabla "rateLimit": 4 registros
+Resultado: ✅ CORRECTO (Purga confirmada: exactamente 0 registros en todas las tablas de autenticación)
 
 ================================================================================
               TODAS LAS COMPROBACIONES DE SEGURIDAD PASARON ✅

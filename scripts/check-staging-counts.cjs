@@ -2,27 +2,43 @@ const path = require("path");
 const fs = require("fs");
 const { neon } = require("@neondatabase/serverless");
 
-const envPath = path.join(__dirname, "../.env.local");
-let connectionString = process.env.DATABASE_URL_STAGING || process.env.DATABASE_URL;
+let connectionString = process.env.DATABASE_URL_STAGING;
 
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, "utf8");
-  for (const line of envContent.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx !== -1) {
-      const k = trimmed.slice(0, eqIdx).trim();
-      const v = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-      if (k === "DATABASE_URL_STAGING" || (!connectionString && k === "DATABASE_URL")) {
-        connectionString = v;
+if (!process.env.CI) {
+  const envPath = path.join(__dirname, "../.env.local");
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, "utf8");
+    for (const line of envContent.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx !== -1) {
+        const k = trimmed.slice(0, eqIdx).trim();
+        const v = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+        if (k === "DATABASE_URL_STAGING" && !connectionString) {
+          connectionString = v;
+        }
       }
     }
   }
 }
 
 if (!connectionString) {
-  console.error("No se encontró DATABASE_URL_STAGING ni DATABASE_URL.");
+  console.error("[FATAL] DATABASE_URL_STAGING no encontrada.");
+  process.exit(1);
+}
+
+let dbHost = "";
+try {
+  const parsedUrl = new URL(connectionString);
+  dbHost = parsedUrl.hostname;
+} catch (err) {
+  console.error("[FATAL] Error parseando DATABASE_URL_STAGING:", err.message);
+  process.exit(1);
+}
+
+if (!dbHost.includes("ep-nameless-math-b838isnk")) {
+  console.error(`[FATAL] Host no autorizado: "${dbHost}". Se exige exclusivamente ep-nameless-math-b838isnk.`);
   process.exit(1);
 }
 
