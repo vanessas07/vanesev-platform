@@ -33,32 +33,32 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onOpen
 
   return (
     <div className="fixed bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#16291F] text-white border border-amber-300/40 shadow-luxury space-y-3">
+      <div className="p-4 sm:p-5 rounded-3xl bg-v-surface text-v-ink border border-v-line shadow-luxury space-y-3">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-amber-400 text-sage-950 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+          <div className="w-9 h-9 rounded-2xl bg-v-brand-soft text-v-brand flex items-center justify-center shrink-0 shadow-sm mt-0.5">
             <Cookie className="w-5 h-5" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-serif font-bold text-sm text-white leading-tight">
+            <h4 className="font-cormorant font-semibold text-base text-v-ink leading-tight">
               Aviso de Privacidad &amp; Cookies
             </h4>
-            <p className="text-xs text-sage-200 leading-relaxed">
+            <p className="text-xs text-v-muted leading-relaxed">
               Utilizamos cookies técnicas y almacenamiento local seguro para recordar tu sesión, tus sellos VIP y ofrecerte la mejor experiencia en el catálogo.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-v-line">
           <button
             onClick={() => onOpenLegal('cookies')}
-            className="text-[11px] text-amber-300 hover:text-amber-200 underline underline-offset-2 transition-colors font-medium"
+            className="text-[11px] text-v-brand hover:text-v-brand-hover underline underline-offset-2 transition-colors font-medium cursor-pointer"
           >
             Ver detalles de cookies
           </button>
 
           <button
             onClick={handleAccept}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-sage-950 font-bold text-xs rounded-full shadow-md transition-all active:scale-95"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-v-brand hover:bg-v-brand-hover text-white font-bold text-xs rounded-full shadow-md transition-all active:scale-95 cursor-pointer"
           >
             <Check className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Aceptar y Continuar</span>

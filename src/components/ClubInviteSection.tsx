@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Award, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface ClubInviteSectionProps {
   onNavigateToShare: () => void;
@@ -71,7 +71,7 @@ export const ClubInviteSection: React.FC<ClubInviteSectionProps> = ({ onNavigate
                   href="#club-vip"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-sage-950 font-bold text-xs sm:text-sm rounded-full shadow-lg transition-all active:scale-95"
                 >
-                  <Sparkles className="w-4 h-4 shrink-0 text-sage-900" />
+                  <Award className="w-4 h-4 shrink-0 text-sage-900" strokeWidth={1.5} />
                   <span>Ver Mi Tarjeta de Fidelización</span>
                   <ArrowRight className="w-3.5 h-3.5 shrink-0 text-sage-900" />
                 </a>

@@ -13,7 +13,7 @@ import {
   KeyRound,
   LayoutDashboard, 
   Calendar, 
-  Sparkles, 
+  Scissors, 
   DollarSign, 
   Download, 
   Upload, 
@@ -82,7 +82,7 @@ type TabKey = 'overview' | 'bookings' | 'theme' | 'services' | 'team' | 'qr' | '
 const NAV_ITEMS: { key: TabKey; label: string; shortLabel: string; subtitle: string; Icon: React.FC<{ className?: string }> }[] = [
   { key: 'overview',  label: 'Panel & Programa VIP',     shortLabel: 'Overview',  subtitle: 'Supervisa facturación, metas operativas, módulos activos y reservas en tiempo real.', Icon: LayoutDashboard },
   { key: 'bookings',  label: 'Agenda & Reservas',        shortLabel: 'Agenda',    subtitle: 'Gestiona turnos confirmados, solicitudes en WhatsApp y citas presenciales.',          Icon: Calendar },
-  { key: 'services',  label: 'Catálogo de Servicios',    shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Sparkles },
+  { key: 'services',  label: 'Catálogo de Servicios',    shortLabel: 'Servicios', subtitle: 'Administra precios en USD/Bs., tiempos de sillón y fotografías editoriales.',        Icon: Scissors },
   { key: 'theme',     label: 'Diseño & Identidad',       shortLabel: 'Diseño',    subtitle: 'Personaliza en vivo la paleta de colores, tipografía y tarjetas de tu carta QR.',   Icon: Palette },
   { key: 'crm',       label: 'Programa de Fidelidad',    shortLabel: 'Programa',  subtitle: 'Controla sellos acumulados en el Pasaporte VIP y recompensas de clientas.',         Icon: Award },
   { key: 'team',      label: 'Equipo & Cabinas',         shortLabel: 'Equipo',    subtitle: 'Configura especialistas, comisiones pactadas y capacidad por área o cabina.',       Icon: ShieldCheck },
@@ -1265,7 +1265,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const sectionHead = (title: string, sub: string, action?: React.ReactNode) => (
     <div className="border-b border-[#1E181A]/10 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h3 className="text-lg font-bold font-display text-[#1E181A]">{title}</h3>
+        <h3 className="text-lg font-bold font-cormorant text-[#1E181A]">{title}</h3>
         <p className="text-xs text-[#6E6266] mt-0.5">{sub}</p>
       </div>
       {action && <div>{action}</div>}
@@ -1276,9 +1276,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const progressPercent = Math.min(100, Math.max(28, Math.round(((bookings.length * 25 + services.length * 10) / 300) * 100)));
 
   return (
-    <div className="min-h-screen bg-[#E6E6EB] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-v-bg text-v-ink font-sans p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
-      <div className="max-w-[1440px] mx-auto bg-[#F5F5F8] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
+      <div className="max-w-[1440px] mx-auto bg-v-surface-2 rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-v-line min-h-[calc(100vh-48px)] flex flex-col">
 
         {/* Franja discreta: Periodo de puesta a punto (Orden B1-c §5) */}
         {enPrueba && (
@@ -1311,7 +1311,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #F26A3D 0%, #D94824 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5B2A6E 0%, #4A2159 100%)' }}
             >
               {tenantInitials}
             </div>
@@ -1371,7 +1371,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={onExitToCatalog}
-                className="text-[#F26A3D] hover:text-[#D94824] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                className="text-[#5B2A6E] hover:text-[#4A2159] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                 title="Ver Carta Pública del Salón"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1467,7 +1467,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {[
                 { key: 'overview' as TabKey, Icon: LayoutDashboard, title: 'Overview / Resumen' },
                 { key: 'bookings' as TabKey, Icon: Calendar, title: 'Agenda & Reservas' },
-                { key: 'services' as TabKey, Icon: Sparkles, title: 'Catálogo de Servicios' },
+                { key: 'services' as TabKey, Icon: Scissors, title: 'Catálogo de Servicios' },
                 { key: 'crm' as TabKey, Icon: Award, title: 'Pasaporte & Fidelidad VIP' },
                 { key: 'team' as TabKey, Icon: Users, title: 'Equipo & Cabinas' },
                 { key: 'analytics' as TabKey, Icon: BarChart3, title: 'Reportes & Finanzas' },
@@ -1488,7 +1488,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   >
                     <Icon className="w-4 h-4" />
                     {key === 'bookings' && enWhatsAppCount > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-[#F26A3D] absolute top-0.5 right-0.5" />
+                      <span className="w-2 h-2 rounded-full bg-[#5B2A6E] absolute top-0.5 right-0.5" />
                     )}
                   </button>
                 );
@@ -1734,7 +1734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => navigate('theme')}
-                          className="px-3 py-1 rounded-full bg-[#F26A3D] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                          className="px-3 py-1 rounded-full bg-[#5B2A6E] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                           <span>Editar</span>
@@ -1769,7 +1769,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
                         <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
-                          <Sparkles className="w-4 h-4" />
+                          <Scissors className="w-4 h-4" strokeWidth={1.5} />
                         </div>
                         <p className="text-xs font-bold text-[#18181B]">Precios &amp; Servicios</p>
                         <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
@@ -1824,7 +1824,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div key={row.id} className="py-2.5 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded-full bg-[#FFF3EF] text-[#E35633] flex items-center justify-center shrink-0">
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <Scissors className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-[#18181B] truncate">{row.title}</p>
@@ -1988,7 +1988,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer"
                                   title="Marcar cita culminada con éxito y acreditar sello VIP"
                                 >
-                                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                  <Award className="w-3.5 h-3.5 text-amber-300" strokeWidth={1.5} />
                                   <span>Culminar &amp; Sello</span>
                                 </button>
 
@@ -2024,7 +2024,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs"
                                 title="Enviar confirmación de sello a la clienta por WhatsApp"
                               >
-                                <Sparkles className="w-3 h-3 text-amber-300" />
+                                <Award className="w-3 h-3 text-amber-300" strokeWidth={1.5} />
                                 <span>Notificar Sello</span>
                               </a>
                             )}
@@ -3811,7 +3811,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex items-center justify-between border-b border-sage-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <Award className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, 
   Check, 
   Award, 
   Calendar, 
@@ -157,7 +156,7 @@ Deseo consultar mis sellos acumulados en el *Programa de Fidelización* o agenda
           {/* Real-time Phone Lookup Form */}
           <form onSubmit={handleLookupPhone} className="p-4 rounded-2xl bg-[#FBF9F6] border border-sage-200 space-y-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-600" />
+              <Award className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
               <span className="text-xs uppercase font-bold tracking-wider text-warm-900">
                 Consulta tus Sellos Acumulados en Tiempo Real
               </span>
@@ -195,7 +194,7 @@ Deseo consultar mis sellos acumulados en el *Programa de Fidelización* o agenda
             {/* Header of Card */}
             <div className="flex items-center justify-between border-b border-white/15 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-300" />
+                <Award className="w-4 h-4 text-amber-300" strokeWidth={1.5} />
                 <span className="font-serif text-xs sm:text-sm tracking-wider uppercase text-[#FDF2D6] font-bold">
                   TARJETA DE FIDELIZACIÓN VIP
                 </span>

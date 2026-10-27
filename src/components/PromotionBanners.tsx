@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Tag, Percent } from 'lucide-react';
+import { ArrowRight, Tag, Percent } from 'lucide-react';
 
 interface PromotionBannersProps {
   onNavigateToPromo: () => void;
@@ -18,7 +18,7 @@ export const PromotionBanners: React.FC<PromotionBannersProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold tracking-wider uppercase mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <Tag className="w-3.5 h-3.5 text-amber-600" strokeWidth={1.5} />
               <span>Combos Exclusivos del Estudio</span>
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl text-warm-900 font-bold">

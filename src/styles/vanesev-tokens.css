@@ -1,0 +1,15 @@
+[data-brand="vanesev"] {
+  --v-bg: #FBFAFC;
+  --v-surface: #FFFFFF;
+  --v-surface-2: #F4F2F7;
+  --v-line: #E4E2EA;
+  --v-ink: #24152B;
+  --v-muted: #6E6478;
+  --v-brand: #5B2A6E;
+  --v-brand-hover: #4A2159;
+  --v-brand-soft: #EEE7F2;
+  --v-platinum: #B9BCC6;
+  --v-ok: #1F7A5A;
+  --v-warn: #B26A00;
+  --v-danger: #B3261E;
+}

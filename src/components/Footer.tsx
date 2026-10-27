@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Calendar, Gift, Sparkles } from 'lucide-react';
+import { MessageCircle, Calendar, Gift, Award } from 'lucide-react';
 import { InstagramIcon } from './Icons';
 import { LegalModalType } from './LegalModals';
 
@@ -99,7 +99,7 @@ export const Footer: React.FC<FooterProps> = ({
                   }}
                   className="text-amber-300 hover:text-white transition-colors flex items-center gap-1.5 font-bold"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Award className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.5} />
                   <span>Club VIP: 5 Sellos &amp; Cortesía</span>
                 </a>
               </li>
