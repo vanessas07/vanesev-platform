@@ -277,6 +277,33 @@ async function main() {
   comprobar('B7', 'Nuevo login: contraseña → pide 2FA → código → Central 200, sin cerrar la otra sesión', pide2fa && centralLogin2.status === 200 && sigueViva.status === 200,
     `twoFactorRedirect ${pide2fa}, verify ${verif.status}, Central ${centralLogin2.status}, sesión previa ${sigueViva.status}`);
 
+  // ── B8. Primera entrada del superadmin desde la pantalla (CentralAuthGate): provisional → cambio → 2FA → Central ──
+  await limpiarRateLimitRunner();
+  const provisional = `Pv-${crypto.randomBytes(9).toString('base64url')}-1`;
+  const idNuevoSa = `ci_${RUN}_superadmin2`;
+  await sql.transaction([
+    sql`INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", "twoFactorEnabled", platform_role, must_reset)
+        VALUES (${idNuevoSa}, 'CI superadmin2', ${email('superadmin2')}, true, NOW(), NOW(), false, 'superadmin_decisivo', true)`,
+    sql`INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+        VALUES (${idNuevoSa + '_acc'}, ${idNuevoSa}, ${idNuevoSa}, 'credential', ${hashOficial(provisional)}, NOW(), NOW())`,
+  ]);
+  const pe = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: email('superadmin2'), password: provisional } });
+  const peSesion = pe.token ? await api('/api/auth/get-session', { token: pe.token }) : { json: null };
+  const peUsuario = peSesion.json?.user || {};
+  const definitiva = `Df-${crypto.randomBytes(9).toString('base64url')}-1`;
+  const peCambio = await api('/api/auth/change-password', { method: 'POST', token: pe.token, body: { currentPassword: provisional, newPassword: definitiva, revokeOtherSessions: false } });
+  const peToken = peCambio.token || pe.token;
+  const peAlta = await api('/api/auth/two-factor/enable', { method: 'POST', token: peToken, body: { password: definitiva } });
+  let peSecreto = null;
+  try { peSecreto = new URL(peAlta.json?.totpURI).searchParams.get('secret'); } catch { peSecreto = null; }
+  const peVerif = await api('/api/auth/two-factor/verify-totp', { method: 'POST', token: peToken, body: { code: peSecreto ? totp(peSecreto) : '000000' } });
+  const peCentral = peVerif.token ? await api('/api/central', { token: peVerif.token }) : { status: 0 };
+  const peVieja = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: email('superadmin2'), password: provisional } });
+  comprobar('B8', 'Primera entrada por pantalla: provisional → la sesión dice superadmin y must_reset → cambio → 2FA con la nueva → Central 200; la provisional ya no entra',
+    pe.status === 200 && peUsuario.platform_role === 'superadmin_decisivo' && peUsuario.must_reset === true && peCambio.status === 200
+      && peAlta.status === 200 && !!peSecreto && (peAlta.json?.backupCodes || []).length > 0 && peVerif.status === 200 && peCentral.status === 200 && peVieja.status === 401,
+    `login ${pe.status}, rol ${peUsuario.platform_role || 'NO'}, must_reset ${peUsuario.must_reset}, cambio ${peCambio.status}, alta ${peAlta.status}, verify ${peVerif.status}, Central ${peCentral.status}, provisional ${peVieja.status}`);
+
   // ── C. Alta de staff desde Central → MUST_RESET → cambio de contraseña REAL ──
   const alta = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'create-staff', payload: { email: email('staff'), organizationSlug: 'capra-studio', role: 'staff' } } });
   const temporal = alta.json?.temporaryPassword;
