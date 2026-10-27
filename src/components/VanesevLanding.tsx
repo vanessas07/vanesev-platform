@@ -30,7 +30,7 @@ import {
   Building2,
   Send,
 } from 'lucide-react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import {
   SALON_PALETTES,
   SALON_TYPOGRAPHIES,
@@ -252,11 +252,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
   // 3D Scroll Perspective Ref
   const showcaseRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: showcaseRef,
     offset: ['start end', 'end start'],
   });
-  const rotateX = useTransform(scrollYProgress, [0, 0.45, 1], [12, 0, -4]);
+  const rotateX = useTransform(scrollYProgress, [0, 0.45, 1], [10, 0, -4]);
   const scale3d = useTransform(scrollYProgress, [0, 0.45, 1], [0.95, 1, 0.98]);
 
   const phonePalette = getPaletteById(phonePaletteId);
@@ -535,7 +536,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
           <div className="relative mx-auto w-full max-w-[350px]" style={{ perspective: '1600px' }}>
             {/* Floating Badge 1 (Top-Left) */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.25 }}
               className="absolute z-20 -left-12 top-10 hidden sm:flex items-center gap-3 rounded-2xl border border-[#161214]/10 bg-white/95 px-3.5 py-2.5 text-[#161214] shadow-xl backdrop-blur-md"
@@ -553,7 +554,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
             {/* Floating Badge 2 (Top-Right) */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.35 }}
               className="absolute z-20 -right-10 top-28 hidden sm:flex items-center gap-3 rounded-2xl border border-[#161214]/10 bg-white/95 px-3.5 py-2.5 text-[#161214] shadow-xl backdrop-blur-md"
@@ -568,7 +569,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
             {/* Floating Badge 3 (Bottom-Left) */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.45 }}
               className="absolute z-20 -left-10 bottom-24 hidden sm:flex items-center gap-3 rounded-2xl border border-[#161214]/10 bg-white/95 px-3.5 py-2.5 text-[#161214] shadow-xl backdrop-blur-md"
