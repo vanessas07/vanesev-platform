@@ -10,12 +10,14 @@ import { PaymentMethods } from './components/PaymentMethods';
 import { Footer } from './components/Footer';
 import { BookingModal } from './components/BookingModal';
 import { AdminAuthGate } from './components/AdminAuthGate';
+import { authClient } from './lib/authClient';
 import { SharePage } from './components/SharePage';
 import { ClubInviteSection } from './components/ClubInviteSection';
 import { PWAInstallModal } from './components/PWAInstallModal';
 import { LegalModals, LegalModalType } from './components/LegalModals';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { CapraStudioExperience } from './components/CapraStudioExperience';
+import { TokensDesignSystem } from './components/TokensDesignSystem';
 import { AppStore } from './services/store';
 import { ServiceItem, PromoOffer, GallerySlide } from './types';
 
@@ -277,6 +279,12 @@ export const App: React.FC = () => {
     const hash = window.location.hash.toLowerCase();
     const search = new URLSearchParams(window.location.search);
 
+    const isTokens =
+      path.startsWith('/__tokens') ||
+      path.startsWith('/tokens') ||
+      hash === '#tokens' ||
+      search.has('tokens');
+
     const isCentral =
       path.startsWith('/central') ||
       hash === '#central' ||
@@ -321,10 +329,11 @@ export const App: React.FC = () => {
         search.get('zone') === 'saas' ||
         !hasExplicitSalon);
 
-    return { isCentral, isSaasLanding, isAdmin: isAdmin && hasExplicitSalon, tenant };
+    return { isTokens, isCentral, isSaasLanding: !isTokens && isSaasLanding, isAdmin: isAdmin && hasExplicitSalon, tenant };
   };
 
   const initialRoute = resolveInitialRoute();
+  const [isTokensRoute, setIsTokensRoute] = useState(initialRoute.isTokens);
   const [isCentralRoute, setIsCentralRoute] = useState(initialRoute.isCentral);
   const [isSaasRoute, setIsSaasRoute] = useState(initialRoute.isSaasLanding);
   const [activeTenant, setActiveTenant] = useState<string>(initialRoute.tenant);
@@ -344,7 +353,13 @@ export const App: React.FC = () => {
   const [isAdminRoute, setIsAdminRoute] = useState(initialRoute.isAdmin);
 
   // Super Admin session state with 2FA protection
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => AppStore.isAdminAuthenticated());
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+
+  useEffect(() => {
+    authClient.getSession().then((res) => {
+      if (res?.data?.user) setIsAdminAuthenticated(true);
+    }).catch(() => {});
+  }, []);
 
   // Routing state for Share / Referral Page
   const [isShareRoute, setIsShareRoute] = useState(() => {
@@ -613,6 +628,33 @@ export const App: React.FC = () => {
     </div>
   );
 
+  // ─── PÁGINA INTERACTIVA: /__tokens (SISTEMA DE TOKENS CIRUELA IMPERIAL) ───
+  // ─── PÁGINA INTERACTIVA: /__tokens (SISTEMA DE TOKENS CIRUELA IMPERIAL) ───
+  if (isTokensRoute) {
+    const isProductionHost =
+      window.location.hostname === 'vanesev.com' ||
+      window.location.hostname === 'www.vanesev.com';
+
+    if (isProductionHost) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#FBFAFC] text-[#24152B] p-6 font-sans">
+          <div className="max-w-md text-center">
+            <h1 className="text-6xl font-serif font-light mb-4 text-[#5B2A6E]">404</h1>
+            <p className="text-lg text-[#6E6478] mb-6">Página no encontrada.</p>
+            <a
+              href="/"
+              className="inline-block px-5 py-2.5 bg-[#5B2A6E] text-white rounded-lg text-sm font-medium hover:bg-[#4A2159] transition-colors"
+            >
+              Volver al inicio
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    return <TokensDesignSystem />;
+  }
+
   // ─── ZONA 2: VANESEV CENTRAL (SUPER-ADMIN COMMAND CENTER FOR KARC0) ───────
   if (isCentralRoute) {
     return (
@@ -650,7 +692,7 @@ export const App: React.FC = () => {
 
   // ─── ZONA 3: PROTECTED ADMIN PRO V2 DEL SALÓN ACTIVO ──────────────────────
   if (isAdminRoute) {
-    if (!isAdminAuthenticated && activeTenant === 'andrea-nails') {
+    if (!isAdminAuthenticated) {
       return (
         <AdminAuthGate
           onAuthenticated={() => {
@@ -675,9 +717,10 @@ export const App: React.FC = () => {
           onRefreshData={() => refreshData(activeTenant)}
           onExitToCatalog={handleExitToCatalog}
           onLogout={() => {
-            AppStore.clearAdminSession();
+            authClient.signOut().finally(() => {
             setIsAdminAuthenticated(false);
             handleExitToCatalog();
+          });
           }}
         />
       </Suspense>

@@ -186,17 +186,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         setRecognizedStamps(localAcc.stampsCount || 0);
         setIsCheckingClient(false);
       } else {
-        AppStore.checkClientProfileRemote(cleanPhone).then(remote => {
-          if (remote.found) {
-            if (!clientName && remote.clientName) setClientName(remote.clientName);
-            setIsExistingClient(true);
-            setIsFirstVisit(false);
-            setRecognizedStamps(remote.stampsCount || 0);
-          } else {
-            setIsExistingClient(false);
-          }
-          setIsCheckingClient(false);
-        });
+        // Sin consulta pública por teléfono (era la fuga C4): la clienta ve su ficha entrando con su correo.
+        setIsExistingClient(false);
+        setIsCheckingClient(false);
       }
     } else if (clientEmail && clientEmail.includes('@')) {
       const localAcc = AppStore.findClientAccount(clientEmail);

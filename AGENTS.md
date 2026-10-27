@@ -40,7 +40,7 @@ El sistema opera bajo 5 zonas con aislamiento absoluto:
   - Verificación sintáctica ligera vía Node / `ts.transpileModule` (en scripts unitarios de < 2 segundos).
 - **Despliegues a Producción:**
   - Todo build de producción se ejecuta **en los servidores cloud de Vercel**.
-  - Flujo Git-First: cambios probados sintácticamente -> `git add .` -> `git commit -m "..."` -> push a `staging` -> merge a `main` -> `npx vercel --prod --yes` (sin build local previo).
+  - Flujo Git-First (corregido por Claude el 27/10/2026): rama de trabajo (`feat/...`) -> commit -> push de ESA rama -> pruebas de `evidencias.yml` en verde -> PR a `staging` -> PR a `main` con el APROBADO de Claude citado (§5 bis). Vercel despliega solo desde `main`: **prohibido** `npx vercel --prod`, el push directo y el force-push a `main` o `staging`.
 
 ---
 
@@ -64,6 +64,20 @@ Por directriz del usuario karc0 (verificada en `RULE[user_global]`):
 
 ---
 
+## 5 bis. Gobernanza híbrida y cadena de mando (desde 26/10/2026, decisión de karc0)
+1. **karc0:** administrador absoluto, de nivel **decisivo**. Aprueba prioridades, gasto, datos de producción, legal y todo lo que cambie el negocio.
+2. **Claude Code:** administrador **agéntico** y director técnico de VANESEV. Le corresponden el desarrollo de alto nivel, el código, el funcionamiento, la seguridad, la ordenanza y la gobernanza. **Revisa primero, autoriza y aprueba.** Es el único que da el «APROBADO» para pasar a `main`.
+3. **Antigravity y demás agentes:** subordinados de Claude Code. Ejecutan el diseño de alto nivel, las pruebas y el funcionamiento según sus órdenes. Lo que no tenga APROBADO de Claude no existe.
+4. **`main` está protegido en GitHub** (aplicado el 26/10/2026):
+   - solo se llega por **Pull Request**, con el check «Typecheck & Production Build (Cloud VM)» en verde y la rama al día;
+   - sin push directo, force-push ni borrado, **tampoco para administradores**;
+   - `staging` no admite force-push ni borrado.
+   - **El merge del PR a `main` solo se hace con la respuesta APROBADO de Claude Code en `RESPUESTAS_CLAUDE`**, citada en la descripción del PR.
+5. **Seguridad del repo:** secret scanning y push protection activados; alertas y parches de Dependabot activados.
+6. **Estándar obligatorio:** `RESPUESTAS_CLAUDE/2026-10-26_2330_CLAUDE_ORDEN_ESTANDAR_SAAS_GRABADO_A_FUEGO.md` y `docs/ESTANDAR_SAAS_VANESEV.md`. Ninguna tarea se da por terminada sin su tabla de cumplimiento.
+
+---
+
 ## 6. Inspiración y Dedicatoria de Autor a Vanessa
 - El nombre **VANESEV** es un homenaje y regalo de cumpleaños #7 de su padre (karc0) a su hija Vanessa.
 - La web comercial mantiene guiños sutiles, permanentes y de alta elegancia:
@@ -72,3 +86,9 @@ Por directriz del usuario karc0 (verificada en `RULE[user_global]`):
   - Badge VIP en simulador 3D: `Pasaporte VIP #001 · Vanessa V. — Cliente Fundadora 🩷`
   - Footer de autor: `Creado con amor e inspirado en Vanessa`
 - Estos elementos deben mantenerse con la máxima sofisticación y sobriedad comercial.
+
+---
+
+## 7. Estándar SaaS Obligatorio («Grabado a Fuego»)
+Ninguna tarea o fase del proyecto se da por terminada sin cumplir con [docs/ESTANDAR_SAAS_VANESEV.md](file:///C:/Users/karc0/projects/andrea-labrador-nails-app/docs/ESTANDAR_SAAS_VANESEV.md).
+Cada reporte en `00_COMUNICACION_SUPERVISION/BUZON_AGENTES/` debe concluir con la **tabla de cumplimiento del estándar**, indicando para cada requisito si cumple, no cumple o no aplica, respaldado por el comando y su salida de verificación correspondiente.

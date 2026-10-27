@@ -361,7 +361,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             <button
               type="button"
               onClick={() => openCheckoutWithPlan('Suite Couture Pro')}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02] cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.02] cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #9E3B52 0%, #D95F43 100%)' }}
             >
               <Sparkles className="w-3.5 h-3.5" />

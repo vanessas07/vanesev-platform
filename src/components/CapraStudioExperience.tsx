@@ -266,7 +266,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
                 .slice(0, 2)
                 .toUpperCase()}
             </div>
-            <div className="truncate">
+            <div className="truncate min-w-0 max-w-[130px] sm:max-w-none">
               <div className="flex items-center gap-2">
                 <span
                   className={`${typography.headingClass} text-base sm:text-lg font-semibold tracking-tight truncate`}
@@ -295,7 +295,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
 
             <button
               onClick={() => setShowQrModal(true)}
-              className="px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border hover:scale-[1.02]"
+              className="hidden sm:flex px-3 py-2 rounded-full text-xs font-semibold items-center gap-1.5 transition-all cursor-pointer border hover:scale-[1.02]"
               style={{
                 backgroundColor: '#FFFFFF',
                 color: palette.textPrimary,
@@ -323,7 +323,7 @@ export const CapraStudioExperience: React.FC<CapraStudioExperienceProps> = ({
 
             <button
               onClick={() => onOpenBooking()}
-              className="px-4 sm:px-5 py-2 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all cursor-pointer"
+              className="px-3 sm:px-5 py-2 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all cursor-pointer shrink-0"
               style={{ backgroundColor: palette.accentPrimary }}
             >
               <Calendar className="w-3.5 h-3.5" />

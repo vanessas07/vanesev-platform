@@ -13,8 +13,7 @@ import {
   Smartphone,
   Globe,
   TrendingUp,
-  Sparkles,
-  Layers,
+    Layers,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
@@ -64,6 +63,7 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
   const [editLabelInput, setEditLabelInput] = useState<string>('');
   const [isSavingTarget, setIsSavingTarget] = useState<boolean>(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string>('');
+  const [editError, setEditError] = useState<string>('');
 
   // Create new QR state
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
@@ -185,7 +185,7 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
   };
 
   // Create new QR Code
-  const handleCreateQr = async (e: React.FormEvent) => {
+    const handleCreateQr = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCode.trim() || !newTarget.trim()) {
       setCreateError('Por favor complete el código y la URL de destino');
@@ -193,7 +193,12 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
     }
 
     const cleanCode = newCode.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    const tenant = tenantSlug === 'all' ? 'capra-studio' : tenantSlug;
+    const cleanTenant = tenantSlug === 'all' ? 'capra-studio' : tenantSlug;
+    const target = newTarget.trim();
+    if (!target.startsWith(`/${cleanTenant}`) && !target.startsWith(`/m/${cleanTenant}`)) {
+      setCreateError(`El destino debe ser una página del salón (/${cleanTenant} o /m/${cleanTenant})`);
+      return;
+    }
 
     try {
       const res = await fetch('/api/qr', {
@@ -202,9 +207,9 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
         body: JSON.stringify({
           action: 'create',
           code: cleanCode,
-          tenantId: tenant,
+          tenantId: cleanTenant,
           label: newLabel.trim() || cleanCode,
-          targetUrl: newTarget.trim(),
+          targetUrl: target,
         }),
       });
 
@@ -219,9 +224,8 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
         const data = await res.json();
         setCreateError(data.error || 'Error al crear código');
       }
-    } catch (err) {
-      console.error(err);
-      setCreateError('Error al conectar con la base de datos');
+    } catch (err: any) {
+      setCreateError(err?.message || 'Error al conectar con la base de datos');
     }
   };
 
@@ -273,7 +277,7 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <QrCode className="w-3.5 h-3.5 text-amber-600" />
             Tecnología QR Dinámico VANESEV
           </div>
           <h2 className="text-2xl lg:text-3xl font-bold text-[#0F172A] tracking-tight">
@@ -614,7 +618,7 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
             <div className="space-y-4 text-xs">
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
                 <p className="font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <CheckCircle2 className="w-4 h-4 text-amber-600" />
                   Cero Re-impresión Física
                 </p>
                 <p className="text-[11px] text-slate-700">
@@ -642,14 +646,21 @@ export const DynamicQrManager: React.FC<DynamicQrManagerProps> = ({
                   type="text"
                   value={editTargetInput}
                   onChange={(e) => setEditTargetInput(e.target.value)}
-                  placeholder="Ej: /capra-studio, /capra-studio#promociones, o link externo"
+                  placeholder={`Ej: /${tenantSlug === "all" ? "capra-studio" : tenantSlug} o /m/${tenantSlug === "all" ? "capra-studio" : tenantSlug}`}
                   className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3 py-2 text-[#0F172A] font-mono placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Puedes ingresar rutas relativas (ej: <code className="text-slate-800 font-bold">/capra-studio#servicios</code>) o enlaces completos (ej: WhatsApp, Instagram).
+                  Destinos permitidos exclusivamente dentro del salón: <code className="text-slate-800 font-bold">/{tenantSlug === 'all' ? 'salón' : tenantSlug}...</code> o <code className="text-slate-800 font-bold">/m/{tenantSlug === 'all' ? 'salón' : tenantSlug}...</code>.
                 </p>
               </div>
 
+              
+              {editError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{editError}</span>
+                </div>
+              )}
               {saveSuccessMsg && (
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />

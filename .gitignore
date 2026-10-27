@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env*
 
 # Editor directories and files
 .vscode/*
@@ -28,5 +29,7 @@ dist-ssr
 
 # Internal Operational Docs & Sensitive PDFs
 *.pdf
+artifacts/
+
 Doc operativos/
 *.docx
