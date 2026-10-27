@@ -1321,15 +1321,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const progressPercent = Math.min(100, Math.max(28, Math.round(((bookings.length * 25 + services.length * 10) / 300) * 100)));
 
   return (
-    <div className="min-h-screen bg-v-bg text-v-ink font-texto p-2 sm:p-4 lg:p-6">
+    <div className="v-panel min-h-screen text-v-ink font-texto p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-v-surface-2 rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-v-line min-h-[calc(100vh-48px)] flex flex-col">
 
         {/* Franja discreta: Periodo de puesta a punto (Orden B1-c §5) */}
         {enPrueba && (
-          <div className="mb-4 px-4 py-2.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-950 text-xs font-medium flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+          <div className="mb-4 px-4 py-2.5 rounded-2xl bg-[#F7F1E6] border border-[#C9A45C]/45 text-[#5C4520] text-xs font-medium flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#C9A45C] animate-pulse" />
               <span><strong>Periodo de puesta a punto</strong> &bull; Tu salón está en fase de prueba y configuración.</span>
             </div>
             {currentUser?.cuenta_prueba && (
@@ -1341,7 +1341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   setActivarPaso(1);
                   setShowActivarModal(true);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-[#1F1226] text-white font-semibold text-xs cursor-pointer flex items-center gap-1.5"
               >
                 <KeyRound className="w-3.5 h-3.5" />
                 <span>Activar mi cuenta</span>
