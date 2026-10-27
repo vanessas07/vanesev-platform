@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
-import { organization, twoFactor, phoneNumber, bearer } from "better-auth/plugins";
+import { organization, twoFactor, phoneNumber, bearer, emailOTP } from "better-auth/plugins";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import pg from "pg";
+import { enviarCorreo } from "./_correo.js";
 
 const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
 
@@ -110,6 +111,18 @@ export const auth = betterAuth({
         max: 5,
       },
       "/two-factor/verify-otp": {
+        window: 300,
+        max: 5,
+      },
+      "/email-otp/send-verification-otp": {
+        window: 300,
+        max: 5,
+      },
+      "/sign-in/email-otp": {
+        window: 300,
+        max: 5,
+      },
+      "/email-otp/verify-email": {
         window: 300,
         max: 5,
       },
@@ -237,6 +250,52 @@ export const auth = betterAuth({
           } catch (err: any) {
             if (err instanceof APIError) throw err;
             console.error("[AUTH] Error en rate limit de teléfono:", err?.message || "Error desconocido");
+          }
+        }
+      }
+
+      // Hook 4 bis: Tope adicional de send-otp por correo electrónico (máximo 3 envíos / hora en base de datos)
+      if (ctx.path.startsWith("/email-otp/send-verification-otp")) {
+        const body = ctx.body as Record<string, any> | undefined;
+        const rawEmail = body?.email;
+        if (rawEmail) {
+          const cleanEmail = String(rawEmail).trim().toLowerCase();
+          const key = `email_otp:${cleanEmail}`;
+          const oneHourAgo = Date.now() - 3600 * 1000;
+          try {
+            const res = await pool.query(
+              `SELECT id, count, "lastRequest" FROM "rateLimit" WHERE key = $1`,
+              [key]
+            );
+            if (res.rows.length > 0) {
+              const row = res.rows[0];
+              const lastReq = Number(row.lastRequest);
+              if (lastReq > oneHourAgo) {
+                if (row.count >= 3) {
+                  throw new APIError("TOO_MANY_REQUESTS", {
+                    message: "Límite de 3 envíos de OTP por hora excedido para este correo.",
+                  });
+                }
+                await pool.query(
+                  `UPDATE "rateLimit" SET count = count + 1, "lastRequest" = $1 WHERE id = $2`,
+                  [Date.now(), row.id]
+                );
+              } else {
+                await pool.query(
+                  `UPDATE "rateLimit" SET count = 1, "lastRequest" = $1 WHERE id = $2`,
+                  [Date.now(), row.id]
+                );
+              }
+            } else {
+              const id = `rl_otp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              await pool.query(
+                `INSERT INTO "rateLimit" (id, key, count, "lastRequest") VALUES ($1, $2, 1, $3)`,
+                [id, key, Date.now()]
+              );
+            }
+          } catch (err: any) {
+            if (err instanceof APIError) throw err;
+            console.error("[AUTH] Error en rate limit de correo:", err?.message || "Error desconocido");
           }
         }
       }
@@ -384,6 +443,20 @@ export const auth = betterAuth({
       },
       signUpOnVerification: {
         getTempEmail: (phone) => `${phone.replace(/[^0-9]/g, '')}@client.vanesev.internal`,
+      },
+    }),
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 600,
+      allowedAttempts: 3,
+      disableSignUp: false,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        await enviarCorreo({
+          para: email,
+          asunto: "Tu código de acceso a VANESEV",
+          texto: `Tu código de acceso a VANESEV es: ${otp}\n\nEste código caduca en 10 minutos.`,
+          html: `<p>Tu código de acceso a VANESEV es: <strong>${otp}</strong></p><p>Este código caduca en 10 minutos.</p>`,
+        });
       },
     }),
     bearer(),
