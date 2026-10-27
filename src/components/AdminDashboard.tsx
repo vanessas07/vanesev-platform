@@ -1,3 +1,9 @@
+import { SalonPerfilTab } from './SalonPerfilTab';
+import { SalonLandingTab } from './SalonLandingTab';
+import { SalonOfertasTab } from './SalonOfertasTab';
+import { SalonCuponesTab } from './SalonCuponesTab';
+import { SalonTarjetasTab } from './SalonTarjetasTab';
+import { Tag, Percent, Gift } from 'lucide-react';
 import React, { useState, useRef, useMemo } from 'react';
 import { 
   ServiceItem, 
@@ -3337,6 +3343,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 tenantSlug={tenantSlug as any}
                 tenantName={salonTheme.salonName || tenantName}
               />
+            )}
+
+            {/* ── IDENTIDAD Y NEGOCIO (D3 §2.1) ── */}
+            {activeTab === 'perfil' && (
+              <SalonPerfilTab tenantSlug={tenantSlug} />
+            )}
+
+            {/* ── LANDING DEL SALÓN (D3 §2.2) ── */}
+            {activeTab === 'landing' && (
+              <SalonLandingTab tenantSlug={tenantSlug} />
+            )}
+
+            {/* ── OFERTAS Y PROMOCIONES (D3 §2.3) ── */}
+            {activeTab === 'promos' && (
+              <SalonOfertasTab tenantSlug={tenantSlug} services={services} />
+            )}
+
+            {/* ── CUPONES DE DESCUENTO (D3 §2.4) ── */}
+            {activeTab === 'cupones' && (
+              <SalonCuponesTab tenantSlug={tenantSlug} services={services} />
+            )}
+
+            {/* ── TARJETAS REGALO (D3 §2.5) ── */}
+            {activeTab === 'tarjetas' && (
+              <SalonTarjetasTab tenantSlug={tenantSlug} />
             )}
 
             {/* ── PUESTA A PUNTO Y ACTIVACIÓN DE CUENTA (Orden B1-c §3 y §4) ── */}
