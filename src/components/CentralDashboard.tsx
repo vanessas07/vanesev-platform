@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield, Layers, CheckCircle2, AlertTriangle, MessageSquare, FileText,
-  Globe, Plus, RefreshCw, ExternalLink, Sparkles, Send, Check, XCircle,
+  Globe, Plus, RefreshCw, ExternalLink, Send, Check, XCircle,
   Clock, Server, Database, HardDrive, GitBranch, ArrowUpRight, Users,
   MapPin, DollarSign, Crown, Eye, Terminal, Activity, Lock, QrCode, Crosshair,
   Palette, Sliders, X, LogOut, Copy, UserPlus
@@ -695,7 +695,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   onClick={() => onNavigateToTenant('capra-studio', false)}
                   className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FFF0EC] text-[#E35633] border border-[#F5CFC4] text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Eye className="w-3.5 h-3.5" />
                   <span>Carta Capra</span>
                 </button>
                 <button
@@ -864,7 +864,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     <div className="rounded-[18px] p-4 bg-[#FFF8F6] border border-[#F5CFC4] flex flex-col justify-between min-h-[155px]">
                       <div>
                         <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#E35633] mb-3">
-                          <Sparkles className="w-4 h-4" />
+                          <Crown className="w-4 h-4" />
                         </div>
                         <p className="text-xs font-bold text-[#18181B]">Capra Studio (Sede #1)</p>
                         <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
