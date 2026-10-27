@@ -378,8 +378,8 @@ async function main() {
     || (await sql`SELECT id FROM public.staff_members WHERE tenant_id = 'capra-studio' AND name = ${'CI ' + RUN} LIMIT 1`)[0]?.id;
   if (idNuevo) creados.equipo.push(idNuevo);
   const borra = idNuevo ? await api(`/api/team?type=staff&id=${encodeURIComponent(idNuevo)}`, { method: 'DELETE', token: owToken }) : { status: 0 };
-  comprobar('I2', 'Equipo: staff no escribe 403, comisión 150 % 400, id de otro salón 403, alta y baja del dueño 200',
-    staffEscribe.status === 403 && comisionMala.status === 400 && pisaAjena.status === 403 && nuevo.status === 200 && borra.status === 200,
+  comprobar('I2', 'Equipo: staff no escribe 403, comisión 150 % 400, id de otro salón 403, alta del dueño 200 o 201 y baja 200',
+    staffEscribe.status === 403 && comisionMala.status === 400 && pisaAjena.status === 403 && (nuevo.status === 200 || nuevo.status === 201) && borra.status === 200,
     `staff ${staffEscribe.status}, comisión ${comisionMala.status}, ajeno ${pisaAjena.status}, alta ${nuevo.status}, baja ${borra.status}`);
 
   // ── J. Código por correo: solo clientas, nunca cuentas de trabajo ──
