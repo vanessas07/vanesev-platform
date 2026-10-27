@@ -16,9 +16,9 @@ interface CentralAuthGateProps {
 type Paso = 'login' | 'totp' | 'cambio' | 'alta' | 'respaldo';
 
 const inputClase =
-  'w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-[#52525B] focus:outline-none focus:border-[#F26A3D] transition-colors';
+  'w-full px-4 py-3 rounded-2xl bg-v-surface-2 border border-v-line text-v-ink text-xs placeholder:text-v-muted focus:outline-none focus:border-v-brand transition-colors';
 const botonClase =
-  'w-full py-3.5 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold transition-all shadow-lg shadow-[#F26A3D]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50';
+  'w-full py-3.5 rounded-2xl bg-v-brand hover:bg-v-brand-hover text-white text-xs font-bold transition-all shadow-md shadow-v-brand/15 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50';
 
 export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
   onAuthenticated,
@@ -167,7 +167,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
   const campoCodigo = (
     <div>
-      <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
+      <label className="block text-xs font-semibold text-v-ink mb-1.5">
         Código de 6 dígitos de Google Authenticator
       </label>
       <input
@@ -180,21 +180,21 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
         value={code}
         onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
         placeholder="123456"
-        className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-mono tracking-widest text-center focus:outline-none focus:border-[#F26A3D] transition-colors"
+        className="w-full px-4 py-3 rounded-2xl bg-v-surface-2 border border-v-line text-v-ink text-sm font-mono tracking-widest text-center focus:outline-none focus:border-v-brand transition-colors tabular-nums"
       />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0C0C0E] text-white flex flex-col justify-between p-4 sm:p-6 font-sans antialiased">
+    <div className="min-h-screen bg-v-bg text-v-ink flex flex-col justify-between p-4 sm:p-6 font-sans antialiased">
       {/* Cabecera Superior */}
       <div className="flex items-center justify-between max-w-5xl w-full mx-auto">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#F26A3D] flex items-center justify-center font-black text-white text-xs tracking-wider">
+          <div className="w-8 h-8 rounded-lg bg-v-brand flex items-center justify-center font-black text-white text-xs tracking-wider">
             V7
           </div>
-          <span className="font-bold text-sm tracking-tight text-white">VANESEV Central</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-[#A1A1AA]">
+          <span className="font-bold text-sm tracking-tight text-v-ink">VANESEV Central</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-v-surface-2 border border-v-line text-v-muted">
             Gobernanza
           </span>
         </div>
@@ -202,7 +202,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
           <button
             type="button"
             onClick={onNavigateToSaaS}
-            className="text-xs text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
+            className="text-xs text-v-muted hover:text-v-ink transition-colors cursor-pointer"
           >
             ← Volver a vanesev.com
           </button>
@@ -214,18 +214,18 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#18181B] rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden"
+          className="bg-v-surface rounded-3xl p-6 sm:p-8 border border-v-line shadow-card relative overflow-hidden"
         >
           {/* Resplandor sutil de fondo */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-[#F26A3D]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-v-brand/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#F26A3D]/15 border border-[#F26A3D]/30 flex items-center justify-center text-[#F26A3D]">
+            <div className="w-12 h-12 rounded-2xl bg-v-brand-soft border border-v-brand/20 flex items-center justify-center text-v-brand">
               {paso === 'alta' ? <Smartphone className="w-6 h-6" /> : paso === 'respaldo' ? <ShieldCheck className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">{titulos[paso][0]}</h1>
-              <p className="text-xs text-[#A1A1AA]">{titulos[paso][1]}</p>
+              <h1 className="text-lg font-bold text-v-ink tracking-tight">{titulos[paso][0]}</h1>
+              <p className="text-xs text-v-muted">{titulos[paso][1]}</p>
             </div>
           </div>
 
@@ -244,7 +244,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
             {paso === 'login' && (
               <>
                 <div>
-                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
+                  <label className="block text-xs font-semibold text-v-ink mb-1.5">
                     Correo del Super-Admin
                   </label>
                   <input
@@ -259,7 +259,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
+                  <label className="block text-xs font-semibold text-v-ink mb-1.5">
                     Contraseña Maestra
                   </label>
                   <input
@@ -293,11 +293,11 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
             {paso === 'cambio' && (
               <>
-                <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+                <p className="text-[11px] text-v-muted leading-relaxed">
                   Has entrado con una contraseña provisional. Elige ahora la tuya (mínimo 12 caracteres); la provisional dejará de servir.
                 </p>
                 <div>
-                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">Nueva contraseña</label>
+                  <label className="block text-xs font-semibold text-v-ink mb-1.5">Nueva contraseña</label>
                   <input
                     type="password"
                     required
@@ -310,7 +310,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">Repite la contraseña</label>
+                  <label className="block text-xs font-semibold text-v-ink mb-1.5">Repite la contraseña</label>
                   <input
                     type="password"
                     required
@@ -330,8 +330,8 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
             {paso === 'alta' && (
               <>
-                <ol className="text-[11px] text-[#A1A1AA] leading-relaxed space-y-1.5 list-decimal pl-4">
-                  <li>Instala <strong className="text-white">Google Authenticator</strong> en tu móvil si no lo tienes.</li>
+                <ol className="text-[11px] text-v-muted leading-relaxed space-y-1.5 list-decimal pl-4">
+                  <li>Instala <strong className="text-v-ink">Google Authenticator</strong> en tu móvil si no lo tienes.</li>
                   <li>
                     Si estás en el móvil, pulsa el botón de abajo. Si no, en la app: «+» → «Introducir clave de configuración»,
                     nombre «VANESEV Central», pega la clave y elige «Basada en el tiempo».
@@ -341,20 +341,20 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
                 <a
                   href={totpURI}
-                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-v-surface-2 hover:bg-v-line/50 border border-v-line text-v-ink text-xs font-bold flex items-center justify-center gap-2"
                 >
                   <Smartphone className="w-4 h-4" />
                   <span>Abrir en Google Authenticator</span>
                 </a>
 
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-[10px] text-[#A1A1AA] mb-1">Clave de configuración</div>
+                <div className="p-3.5 rounded-2xl bg-v-surface-2 border border-v-line">
+                  <div className="text-[10px] text-v-muted mb-1">Clave de configuración</div>
                   <div className="flex items-center justify-between gap-2">
-                    <code className="text-xs font-mono text-white break-all">{clave.replace(/(.{4})/g, '$1 ').trim()}</code>
+                    <code className="text-xs font-mono text-v-ink break-all">{clave.replace(/(.{4})/g, '$1 ').trim()}</code>
                     <button
                       type="button"
                       onClick={() => copiar(clave, 'clave')}
-                      className="shrink-0 p-2 rounded-xl bg-white/10 hover:bg-white/15 cursor-pointer"
+                      className="shrink-0 p-2 rounded-xl bg-v-surface hover:bg-v-line/40 border border-v-line text-v-ink cursor-pointer"
                       aria-label="Copiar clave"
                     >
                       {copiado === 'clave' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -374,19 +374,19 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
             {paso === 'respaldo' && (
               <>
-                <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
-                  Google Authenticator está activo. Si pierdes el móvil, cada uno de estos códigos sirve <strong className="text-white">una sola vez</strong> en lugar
+                <p className="text-[11px] text-v-muted leading-relaxed">
+                  Google Authenticator está activo. Si pierdes el móvil, cada uno de estos códigos sirve <strong className="text-v-ink">una sola vez</strong> en lugar
                   del código de 6 dígitos. Guárdalos en un lugar seguro: no se volverán a mostrar.
                 </p>
-                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/10">
+                <div className="grid grid-cols-2 gap-2 p-3.5 rounded-2xl bg-v-surface-2 border border-v-line">
                   {respaldo.map((c) => (
-                    <code key={c} className="text-xs font-mono text-white text-center">{c}</code>
+                    <code key={c} className="text-xs font-mono text-v-ink text-center tabular-nums">{c}</code>
                   ))}
                 </div>
                 <button
                   type="button"
                   onClick={() => copiar(respaldo.join('\n'), 'respaldo')}
-                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 rounded-2xl bg-v-surface-2 hover:bg-v-line/50 border border-v-line text-v-ink text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {copiado === 'respaldo' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                   <span>{copiado === 'respaldo' ? 'Copiados' : 'Copiar los códigos'}</span>
@@ -402,12 +402,12 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
 
             {paso === 'totp' && (
               <>
-                <div className="p-3.5 rounded-2xl bg-[#F26A3D]/10 border border-[#F26A3D]/20 mb-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#F26A3D] mb-1">
+                <div className="p-3.5 rounded-2xl bg-v-brand-soft border border-v-brand/20 mb-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-v-brand mb-1">
                     <KeyRound className="w-4 h-4" />
                     <span>Verificación en Dos Pasos (TOTP)</span>
                   </div>
-                  <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
+                  <p className="text-[11px] text-v-muted leading-relaxed">
                     Introduce el código de 6 dígitos generado por tu aplicación autenticadora (Google Authenticator).
                   </p>
                 </div>
@@ -436,7 +436,7 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
                       setCode('');
                       setError('');
                     }}
-                    className="w-full py-2 text-center text-xs text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
+                    className="w-full py-2 text-center text-xs text-v-muted hover:text-v-ink transition-colors cursor-pointer"
                   >
                     ← Volver a usuario y contraseña
                   </button>
@@ -446,14 +446,14 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
           </form>
 
           {/* Nota de pie */}
-          <div className="mt-6 pt-4 border-t border-white/5 text-center text-[10px] text-[#71717A] leading-relaxed">
+          <div className="mt-6 pt-4 border-t border-v-line text-center text-[10px] text-v-muted leading-relaxed">
             Sesión protegida por Better Auth con 2FA obligatorio y verificación estricta de superadmin_decisivo.
           </div>
         </motion.div>
       </div>
 
       {/* Pie */}
-      <div className="text-center text-[11px] text-[#52525B]">
+      <div className="text-center text-[11px] text-v-muted">
         VANESEV Cloud Platform &bull; Gobernanza Central &bull; 2026
       </div>
     </div>

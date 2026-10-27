@@ -523,7 +523,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const tenantsCount = Math.max(2, (data?.tenants || []).length);
 
   return (
-    <div className="min-h-screen bg-[#E6E6EB] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-[#FBFAFC] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
       <div className="max-w-[1440px] mx-auto bg-[#F5F5F8] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
 
@@ -533,7 +533,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #F26A3D 0%, #D94824 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5B2A6E 0%, #4A2159 100%)' }}
             >
               V
             </div>
@@ -579,7 +579,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setActiveTab('tenants');
                   setShowTenantModal(true);
                 }}
-                className="text-[#F26A3D] hover:text-[#D94824] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                className="text-[#5B2A6E] hover:text-[#4A2159] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                 title="Crear Nuevo Salón Cliente"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -592,7 +592,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 className="text-[#52525B] hover:text-[#18181B] transition-colors cursor-pointer"
                 title="Sincronizar Neon DB"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-[#F26A3D]' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-[#5B2A6E]' : ''}`} />
               </button>
               <button
                 type="button"
@@ -671,7 +671,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setActiveTab('tenants');
                   setShowTenantModal(true);
                 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#F26A3D] hover:bg-[#FFF0EC] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#5B2A6E] hover:bg-[#EEE7F2] transition-all cursor-pointer"
                 title="Alta de Nuevo Salón"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -760,7 +760,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigateToTenant('capra-studio', false)}
-                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FFF0EC] text-[#E35633] border border-[#F5CFC4] text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#EEE7F2] text-[#E35633] border border-[#F5CFC4] text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Carta Capra</span>
@@ -898,7 +898,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           ]
                       ).map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2.5 text-xs text-[#27272A]">
-                          <span className="w-4 h-4 rounded-full bg-[#FFF0EC] text-[#E35633] flex items-center justify-center shrink-0">
+                          <span className="w-4 h-4 rounded-full bg-[#EEE7F2] text-[#E35633] flex items-center justify-center shrink-0">
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </span>
                           <span>{item}</span>
@@ -921,7 +921,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         Inspecciona o personaliza cualquier sede y herramienta desde un solo lugar.
                       </p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0EC] text-[#E35633] text-[10px] font-bold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#EEE7F2] text-[#E35633] text-[10px] font-bold">
                       Operativo
                     </span>
                   </div>
@@ -949,7 +949,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => onNavigateToTenant('capra-studio', true)}
-                          className="px-3 py-1 rounded-full bg-[#F26A3D] text-white text-[10px] font-bold cursor-pointer shadow-2xs"
+                          className="px-3 py-1 rounded-full bg-[#5B2A6E] text-white text-[10px] font-bold cursor-pointer shadow-2xs"
                         >
                           Abrir Admin
                         </button>
@@ -2238,7 +2238,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
             <div className="flex items-center justify-between pb-3 border-b border-black/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#F26A3D]/10 text-[#F26A3D] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] flex items-center justify-center">
                   <UserPlus className="w-4 h-4" />
                 </div>
                 <h3 className="font-bold text-base text-[#18181B]">Alta de Personal de Salón</h3>
@@ -2278,7 +2278,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     setCopiedTempPassword(true);
                     setTimeout(() => setCopiedTempPassword(false), 2000);
                   }}
-                  className="w-full py-3 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all"
+                  className="w-full py-3 rounded-2xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all"
                 >
                   {copiedTempPassword ? (
                     <>
@@ -2327,7 +2327,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     value={staffFormEmail}
                     onChange={(e) => setStaffFormEmail(e.target.value)}
                     placeholder="especialista@salon.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
                   />
                 </div>
 
@@ -2340,7 +2340,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     value={staffFormName}
                     onChange={(e) => setStaffFormName(e.target.value)}
                     placeholder="Nombre y Apellidos"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
                   />
                 </div>
 
@@ -2352,7 +2352,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     required
                     value={staffFormOrg}
                     onChange={(e) => setStaffFormOrg(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D] bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E] bg-white"
                   >
                     <option value="">Selecciona un salón...</option>
                     {(data?.tenants || []).map((t: any) => (
@@ -2370,7 +2370,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   <select
                     value={staffFormRole}
                     onChange={(e) => setStaffFormRole(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D] bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E] bg-white"
                   >
                     <option value="staff">Especialista / Personal (Staff)</option>
                     <option value="admin">Administrador del Salón (Admin)</option>
@@ -2389,7 +2389,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   <button
                     type="submit"
                     disabled={staffLoading}
-                    className="px-5 py-2.5 rounded-xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
                   >
                     {staffLoading ? (
                       <>
@@ -2413,7 +2413,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
             <div className="flex items-center justify-between pb-3 border-b border-black/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#F26A3D]/10 text-[#F26A3D] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] flex items-center justify-center">
                   <QrCode className="w-4 h-4" />
                 </div>
                 <h3 className="font-bold text-base text-[#18181B]">Nueva Campaña QR</h3>
@@ -2445,7 +2445,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campCode}
                   onChange={(e) => setCampCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   placeholder="ej: promo-otono"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#F26A3D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#5B2A6E]"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">3-32 caracteres a-z, 0-9 o guiones.</span>
               </div>
@@ -2460,7 +2460,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campName}
                   onChange={(e) => setCampName(e.target.value)}
                   placeholder="ej: Campaña Otoño 2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
                 />
               </div>
 
@@ -2474,7 +2474,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campTarget}
                   onChange={(e) => setCampTarget(e.target.value)}
                   placeholder="ej: /capra-studio o /"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#F26A3D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#5B2A6E]"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">Debe ser una ruta interna que comience por una sola «/».</span>
               </div>
@@ -2490,7 +2490,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <button
                   type="submit"
                   disabled={savingCamp}
-                  className="px-5 py-2.5 rounded-xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   {savingCamp ? (
                     <>

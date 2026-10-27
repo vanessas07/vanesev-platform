@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Share, PlusSquare, Sparkles, Smartphone, CheckCircle2, Calendar, Award } from 'lucide-react';
+import { Download, X, Share, PlusSquare, Smartphone, CheckCircle2, Calendar, Award } from 'lucide-react';
 
 interface PWAInstallModalProps {
   onOpenClientAccount?: () => void;
@@ -148,7 +148,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ onOpenClientAc
             {/* Why install explanation */}
             <div className="p-3.5 bg-warm-50 rounded-2xl border border-sage-200/80 space-y-2 text-xs">
               <p className="font-bold text-warm-900 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-600" />
+                <CheckCircle2 className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
                 <span>¿Por qué descargar la App en tu inicio?</span>
               </p>
               <ul className="space-y-1.5 text-warm-700 text-[11px]">
@@ -250,7 +250,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ onOpenClientAc
                   }}
                   className="text-xs font-bold text-sage-800 hover:text-sage-950 underline flex items-center gap-1 cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <Award className="w-3.5 h-3.5 text-amber-600" strokeWidth={1.5} />
                   <span>Ver Mi Ficha VIP</span>
                 </button>
               </div>

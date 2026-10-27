@@ -1,6 +1,6 @@
 import React from 'react';
 import { ReferralClub } from './ReferralClub';
-import { ArrowLeft, Calendar, Sparkles } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 
 interface SharePageProps {
   onOpenBooking: () => void;

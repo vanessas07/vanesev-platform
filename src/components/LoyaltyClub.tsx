@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppStore } from '../services/store';
 import { LoyaltyCard } from '../types';
-import { Heart, Sparkles, Award, Search, Gift, CheckCircle2 } from 'lucide-react';
+import { Heart, Award, Search, Gift, CheckCircle2 } from 'lucide-react';
 
 interface LoyaltyClubProps {
   tenantSlug?: string;
@@ -78,7 +78,7 @@ export const LoyaltyClub: React.FC<LoyaltyClubProps> = ({
             {/* Reward badges */}
             <div className="flex items-center gap-2">
               <div className="px-3 py-1.5 bg-white rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 flex items-center gap-1.5 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-gold-500" />
+                <Award className="w-3.5 h-3.5 text-gold-500" strokeWidth={1.5} />
                 <span>5 Visitas Acumuladas</span>
               </div>
               <div className="px-3 py-1.5 bg-white rounded-xl border border-sage-200 text-xs font-semibold text-sage-800 flex items-center gap-1.5 shadow-sm">

@@ -7,6 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        // VANESEV Ciruela Imperial Official Design Tokens (docs/DISENO_AUTOR_VANESEV.md)
+        'v-bg': 'var(--v-bg)',
+        'v-surface': 'var(--v-surface)',
+        'v-surface-2': 'var(--v-surface-2)',
+        'v-line': 'var(--v-line)',
+        'v-ink': 'var(--v-ink)',
+        'v-muted': 'var(--v-muted)',
+        'v-brand': 'var(--v-brand)',
+        'v-brand-hover': 'var(--v-brand-hover)',
+        'v-brand-soft': 'var(--v-brand-soft)',
+        'v-platinum': 'var(--v-platinum)',
+        'v-ok': 'var(--v-ok)',
+        'v-warn': 'var(--v-warn)',
+        'v-danger': 'var(--v-danger)',
+
         // VANESEV Luminous Luxury Beauty System (Silk Alabaster, Cashmere, Rose Quartz, Champagne, Espresso)
         seda: '#FAF7F2',
         perla: '#F4EFEA',
@@ -68,6 +83,8 @@ export default {
         }
       },
       fontFamily: {
+        cormorant: ['Cormorant Garamond', 'Georgia', 'serif'],
+        manrope: ['Manrope', 'sans-serif'],
         display: ['Fraunces', 'Georgia', 'serif'],
         sans: ['Plus Jakarta Sans', 'sans-serif'],
         serif: ['Fraunces', 'Georgia', 'serif'],
