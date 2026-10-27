@@ -1807,7 +1807,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     <p className="text-xs text-[#9A8C90] py-6 text-center">No hay peticiones de puesta a punto registradas todavía.</p>
                   ) : (
                     <div className="divide-y divide-zinc-100">
-                      {(data?.peticionesPuestaAPunto || []).map((p) => (
+                      {(data?.peticionesPuestaAPunto || []).map((p: any) => (
                         <div key={p.id} className="py-3.5 flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-1.5 min-w-0 max-w-2xl">
                             <div className="flex flex-wrap items-center gap-2">
