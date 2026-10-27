@@ -467,7 +467,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <button
                 type="button"
                 onClick={() => openCheckoutWithPlan('Suite Couture Pro')}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm sm:text-[15px] font-bold text-white shadow-[0_14px_38px_rgba(74,31,92,0.30)] transition-transform hover:scale-[1.02] cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 py-4 text-sm sm:text-[15px] font-bold text-white shadow-[0_14px_38px_rgba(74,31,92,0.30)] transition-transform hover:scale-[1.02] cursor-pointer"
                 style={{ background: '#1F1226' }}
               >
                 <span>Quiero mi propio sistema</span>
@@ -477,10 +477,10 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <button
                 type="button"
                 onClick={() => window.open('/m/capra-studio', '_blank', 'noopener,noreferrer')}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#1A1020]/15 bg-white hover:bg-[#F4F2F7] px-7 py-4 text-sm sm:text-[15px] font-bold text-[#1A1020] shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#1A1020]/15 bg-white/90 backdrop-blur hover:bg-[#F4F2F7] px-7 py-4 text-sm sm:text-[15px] font-bold text-[#1A1020] shadow-xs transition-colors cursor-pointer"
               >
                 <ArrowUpRight className="w-4 h-4 text-[#4A1F5C]" strokeWidth={1.5} />
-                <span>Ver Demo en Vivo (/m/capra-studio)</span>
+                <span>Ver un salón real</span>
               </button>
             </div>
 
@@ -1967,7 +1967,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Hablar con ventas por WhatsApp"
-        className="fixed bottom-5 left-5 z-40 w-12 h-12 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
