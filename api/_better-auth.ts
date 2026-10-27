@@ -249,7 +249,7 @@ export const auth = betterAuth({
         ctx.path.startsWith("/two-factor");
 
       // Sin cookie ni Bearer no hay sesión que comprobar (inicios de sesión, OTP…): no se consulta nada.
-      const traeSesion = /^Bearer\s+\S+/i.test(ctx.headers?.get("authorization") || "") || /session_token=/.test(ctx.headers?.get("cookie") || "");
+      const traeSesion = /^Bearer\s+\S+/i.test(ctx.headers?.get("authorization") || "") || /session_token=[^;\s]+/.test(ctx.headers?.get("cookie") || "");
       if (!isExemptResetPath && traeSesion && ctx.headers) {
         try {
           // auth.api.getSession pasa por el plugin bearer (este hook corre ANTES que los de los plugins,
@@ -350,7 +350,7 @@ export const auth = betterAuth({
       if (ctx.path.startsWith("/two-factor/verify-totp")) {
         const auth = ctx.headers?.get("authorization") || "";
         const cookie = ctx.headers?.get("cookie") || "";
-        const traiaSesion = /^Bearer\s+\S+/i.test(auth) || /session_token=/.test(cookie);
+        const traiaSesion = /^Bearer\s+\S+/i.test(auth) || /session_token=[^;\s]+/.test(cookie); // cookie con valor, no la vacía que se manda borrar
         const nueva = ctx.context?.newSession as any;
         if (traiaSesion && nueva?.session?.token && nueva?.user?.id) {
           await pool

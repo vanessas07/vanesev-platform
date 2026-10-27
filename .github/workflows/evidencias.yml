@@ -6,6 +6,11 @@ on:
       - '**'
   workflow_dispatch:
 
+# Una sola ejecución a la vez por rama: dos suites en paralelo se pisan en la base de staging.
+concurrency:
+  group: evidencias-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   generar-evidencias:
     name: Generar Artefactos de Evidencia CI

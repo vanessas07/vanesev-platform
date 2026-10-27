@@ -40,7 +40,7 @@ El sistema opera bajo 5 zonas con aislamiento absoluto:
   - Verificación sintáctica ligera vía Node / `ts.transpileModule` (en scripts unitarios de < 2 segundos).
 - **Despliegues a Producción:**
   - Todo build de producción se ejecuta **en los servidores cloud de Vercel**.
-  - Flujo Git-First: cambios probados sintácticamente -> `git add .` -> `git commit -m "..."` -> push a `staging` -> merge a `main` -> `npx vercel --prod --yes` (sin build local previo).
+  - Flujo Git-First (corregido por Claude el 27/10/2026): rama de trabajo (`feat/...`) -> commit -> push de ESA rama -> pruebas de `evidencias.yml` en verde -> PR a `staging` -> PR a `main` con el APROBADO de Claude citado (§5 bis). Vercel despliega solo desde `main`: **prohibido** `npx vercel --prod`, el push directo y el force-push a `main` o `staging`.
 
 ---
 

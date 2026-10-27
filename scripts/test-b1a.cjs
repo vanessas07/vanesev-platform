@@ -74,7 +74,8 @@ async function api(ruta, { method = 'GET', body, token, cookies } = {}) {
     texto,
     token: res.headers.get('set-auth-token'),
     location: res.headers.get('location'),
-    cookies: setCookies.map((c) => c.split(';')[0]).join('; '),
+    // Como un navegador: las cookies que el servidor manda borrar (valor vacío) no se reenvían.
+    cookies: setCookies.map((c) => c.split(';')[0]).filter((c) => /=.+/.test(c)).join('; '),
   };
 }
 
