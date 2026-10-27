@@ -89,6 +89,31 @@ export const AuroraFondo: React.FC = () => {
   );
 };
 
+/** Foto a sangre de la portada: entra con un zoom lento y lleva un velo de porcelana para que el texto se lea. */
+export const FotoPortada: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+  const reducir = useReducedMotion();
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <motion.img
+        src={src}
+        alt={alt}
+        loading="eager"
+        className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
+        initial={reducir ? { opacity: 0 } : { opacity: 0, scale: 1.14 }}
+        animate={reducir ? { opacity: 1 } : { opacity: 1, scale: 1.03 }}
+        transition={{ duration: reducir ? 0.4 : 2.6, ease: CURVA }}
+      />
+      {/* Velo: en móvil de arriba abajo; en escritorio de izquierda (texto) a derecha (foto viva). */}
+      <div className="absolute inset-0 lg:hidden" style={{ background: 'linear-gradient(180deg, rgba(251,250,252,0.50) 0%, rgba(251,250,252,0.86) 34%, #FBFAFC 70%)' }} />
+      <div className="absolute inset-0 hidden lg:block" style={{ background: 'linear-gradient(90deg, #FBFAFC 0%, rgba(251,250,252,0.93) 32%, rgba(251,250,252,0.50) 60%, rgba(251,250,252,0.12) 100%)' }} />
+      <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: 'linear-gradient(0deg, #FBFAFC, rgba(251,250,252,0))' }} />
+    </div>
+  );
+};
+
+/** Reflejo de luz que recorre la pantalla de un móvil cada pocos segundos. */
+export const ReflejoPantalla: React.FC = () => <div aria-hidden="true" className="v-reflejo pointer-events-none absolute inset-0 z-30" />;
+
 /** Inclinación 3D que sigue al ratón (solo con puntero fino; en móvil no hace nada). */
 export function useInclinacion3D(maximo = 10) {
   const reducir = useReducedMotion();
@@ -230,23 +255,23 @@ export const UnDiaEnTuSalon: React.FC = () => {
   const pantallas = [<PantallaQr />, <PantallaReserva />, <PantallaWhatsapp />, <PantallaSellos progreso={scrollYProgress} />];
 
   return (
-    <section ref={ref} id="un-dia" aria-label="Un día en tu salón con VANESEV" className="relative h-[340vh] bg-[#140B19] text-white">
+    <section ref={ref} id="un-dia" aria-label="Un día en tu salón con VANESEV" className="relative h-[340vh] text-[#1A1020]" style={{ background: '#FBFAFC' }}>
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-4 sm:px-6">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(70% 60% at 70% 40%, rgba(74,31,92,0.55) 0%, rgba(20,11,25,0) 70%)' }}
+          style={{ background: 'radial-gradient(60% 55% at 72% 45%, rgba(217,196,155,0.45) 0%, rgba(217,196,155,0) 70%), radial-gradient(50% 45% at 12% 85%, rgba(74,31,92,0.10) 0%, rgba(74,31,92,0) 70%)' }}
         />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_1fr] lg:gap-16">
           {/* Texto de la escena activa */}
           <div className="order-2 lg:order-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#D9C49B]">Un día en tu salón</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Un día en tu salón</p>
             <div className="relative mt-4 min-h-[190px] sm:min-h-[210px]">
               {ESCENAS.map((e, i) => (
                 <motion.div key={e.etiqueta} style={{ opacity: ops[i] }} className="absolute inset-0" aria-hidden={i !== activa}>
-                  <p className="text-xs font-semibold text-white/50">{e.etiqueta}</p>
+                  <p className="text-xs font-semibold text-[#6E6478]">{e.etiqueta}</p>
                   <h2 className="mt-2 font-cormorant text-[34px] sm:text-5xl font-semibold leading-[1.02] tracking-tight">{e.titulo}</h2>
-                  <p className="mt-4 max-w-md text-sm sm:text-base leading-relaxed text-white/70">{e.texto}</p>
+                  <p className="mt-4 max-w-md text-sm sm:text-base leading-relaxed text-[#4A4150]">{e.texto}</p>
                 </motion.div>
               ))}
             </div>
@@ -257,7 +282,7 @@ export const UnDiaEnTuSalon: React.FC = () => {
                 return (
                   <span
                     key={e.etiqueta}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${i === activa ? 'bg-[#B89B6A] text-[#1F1226] scale-110' : 'bg-white/5 text-white/40 ring-1 ring-white/10'}`}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${i === activa ? 'bg-[#1F1226] text-[#D9C49B] ring-1 ring-[#B89B6A] scale-110 shadow-[0_10px_24px_-10px_rgba(20,11,25,0.6)]' : 'bg-white text-[#6E6478] ring-1 ring-[#E4E2EA]'}`}
                   >
                     <Icono className="h-4 w-4" strokeWidth={1.5} />
                   </span>
@@ -270,7 +295,7 @@ export const UnDiaEnTuSalon: React.FC = () => {
           <div className="order-1 lg:order-2 flex justify-center" style={{ perspective: '1400px' }}>
             <motion.div
               style={{ rotateY: rotY, rotateX: rotX, scale: escala, transformStyle: 'preserve-3d' }}
-              className="relative h-[46svh] max-h-[560px] min-h-[340px] aspect-[9/19] rounded-[42px] bg-gradient-to-b from-[#3A2A40] via-[#241829] to-[#140B19] p-2.5 shadow-[0_50px_100px_-30px_rgba(0,0,0,0.85),0_0_0_1px_rgba(217,196,155,0.25)]"
+              className="relative h-[46svh] max-h-[560px] min-h-[340px] aspect-[9/19] rounded-[42px] bg-gradient-to-b from-[#3A2A40] via-[#241829] to-[#140B19] p-2.5 shadow-[0_60px_120px_-30px_rgba(20,11,25,0.55),0_0_0_1px_rgba(217,196,155,0.45)]"
             >
               <div className="relative h-full w-full overflow-hidden rounded-[34px] bg-[#FBFAFC]">
                 {pantallas.map((pantalla, i) => (

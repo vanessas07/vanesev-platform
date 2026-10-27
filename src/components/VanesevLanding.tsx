@@ -1,5 +1,5 @@
 import { VanesevLogo } from './VanesevLogo';
-import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon } from './landing/EfectosPremium';
+import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
 import {
 
@@ -210,13 +210,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
   // Interactive Phone Simulator State in Hero
   const [phoneStep, setPhoneStep] = useState<'catalog' | 'passport' | 'whatsapp'>('catalog');
-  const [phonePaletteId, setPhonePaletteId] = useState<SalonPaletteId>('rose-cashmere');
+  const [phonePaletteId, setPhonePaletteId] = useState<SalonPaletteId>('champagne-atelier');
   const [selectedDemoService, setSelectedDemoService] = useState(0);
   const [selectedDemoTime, setSelectedDemoTime] = useState('10:30 AM');
   const [simulatedStamps, setSimulatedStamps] = useState(4);
 
   // Interactive Live Theme Studio on Landing Page
-  const [studioPaletteId, setStudioPaletteId] = useState<SalonPaletteId>('rose-cashmere');
+  const [studioPaletteId, setStudioPaletteId] = useState<SalonPaletteId>('champagne-atelier');
   const [studioTypographyId, setStudioTypographyId] = useState<SalonTypographyId>('haute-couture');
   const [studioLayoutId, setStudioLayoutId] = useState<SalonCardLayoutId>('editorial-magazine');
 
@@ -437,13 +437,11 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       <section
         id="inicio"
         className="relative overflow-hidden pt-28 sm:pt-36 pb-20 sm:pb-28 px-4 sm:px-6"
-        style={{
-          background:
-            'radial-gradient(circle at 85% 15%, rgba(74, 31, 92, 0.09) 0%, transparent 45%), radial-gradient(circle at 12% 80%, rgba(184, 155, 106, 0.12) 0%, transparent 50%), #FBFAFC',
-        }}
+        style={{ background: '#FBFAFC' }}
       >
+        <FotoPortada src="/vanesev/hero-atelier.jpg" alt="Atelier de belleza luminoso con recepción y código QR de reservas" />
         <AuroraFondo />
-        <div className="mx-auto max-w-6xl grid items-center gap-12 lg:gap-16 lg:grid-cols-[1.15fr_1fr]">
+        <div className="relative z-10 mx-auto max-w-6xl grid items-center gap-12 lg:gap-16 lg:grid-cols-[1.15fr_1fr]">
           {/* Left Commercial SaaS Pitch */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -469,7 +467,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <button
                 type="button"
                 onClick={() => openCheckoutWithPlan('Suite Couture Pro')}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm sm:text-[15px] font-bold text-white shadow-[0_14px_38px_rgba(74,31,92,0.30)] transition-transform hover:scale-[1.02] cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 py-4 text-sm sm:text-[15px] font-bold text-white shadow-[0_14px_38px_rgba(74,31,92,0.30)] transition-transform hover:scale-[1.02] cursor-pointer"
                 style={{ background: '#1F1226' }}
               >
                 <span>Quiero mi propio sistema</span>
@@ -479,10 +477,10 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <button
                 type="button"
                 onClick={() => window.open('/m/capra-studio', '_blank', 'noopener,noreferrer')}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#1A1020]/15 bg-white hover:bg-[#F4F2F7] px-7 py-4 text-sm sm:text-[15px] font-bold text-[#1A1020] shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#1A1020]/15 bg-white/90 backdrop-blur hover:bg-[#F4F2F7] px-7 py-4 text-sm sm:text-[15px] font-bold text-[#1A1020] shadow-xs transition-colors cursor-pointer"
               >
                 <ArrowUpRight className="w-4 h-4 text-[#4A1F5C]" strokeWidth={1.5} />
-                <span>Ver Demo en Vivo (/m/capra-studio)</span>
+                <span>Ver un salón real</span>
               </button>
             </div>
 
@@ -600,11 +598,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
 
             {/* Phone Bezel */}
-            <motion.div style={inclinacion.estilo} className="rounded-[46px] p-3 bg-gradient-to-b from-[#3A2A40] via-[#241829] to-[#140B19] shadow-[0_40px_90px_-20px_rgba(20,11,25,0.32)] border border-white">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-[-14%] rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(217,196,155,0.55), rgba(74,31,92,0.18) 60%, transparent)' }} />
+            <motion.div style={inclinacion.estilo} className="relative rounded-[46px] p-[3px] shadow-[0_60px_120px_-30px_rgba(20,11,25,0.55)] [background:linear-gradient(145deg,#E9DFCF,#8C7A5E_30%,#2A1A30_62%,#140B19)]">
               <div
-                className="rounded-[36px] overflow-hidden border border-black/5 flex flex-col min-h-[560px] transition-colors duration-500"
+                className="relative rounded-[43px] overflow-hidden flex flex-col min-h-[560px] transition-colors duration-500 ring-[6px] ring-[#140B19]"
                 style={{ backgroundColor: phonePalette.bgPrimary, color: phonePalette.textPrimary }}
               >
+                <ReflejoPantalla />
                 {/* Phone Top Bar */}
                 <div className="px-4 pt-4 pb-3 bg-white/90 backdrop-blur-md border-b border-black/5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -837,8 +837,8 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       ═══════════════════════════════════════════════════════════════════════════ */}
       <motion.section {...revelarSeccion} className="relative h-[64svh] min-h-[400px] overflow-hidden">
         <img
-          src="/vanesev/hero-atelier.jpg"
-          alt="Interior arquitectónico de salón de belleza de lujo"
+          src="/vanesev/sector-medspa.jpg"
+          alt="Cabina de estética luminosa preparada para un tratamiento"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#140B19]/90 via-[#140B19]/35 to-transparent" />
@@ -1597,38 +1597,38 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════════════
           11. CASOS DE ÉXITO REALES & DEMO EN VIVO (CAPRA STUDIO)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <motion.section {...revelarSeccion} id="casos" className="scroll-mt-20 bg-[#140B19] text-white py-20 sm:py-28 px-4 sm:px-6">
+      <motion.section {...revelarSeccion} id="casos" className="scroll-mt-20 text-[#1A1020] py-20 sm:py-28 px-4 sm:px-6" style={{ background: 'radial-gradient(90% 70% at 15% 10%, rgba(217,196,155,0.30) 0%, transparent 60%), radial-gradient(80% 70% at 90% 90%, rgba(74,31,92,0.10) 0%, transparent 60%), #F7F3EE' }}>
         <div className="mx-auto max-w-6xl space-y-16">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D9C49B]">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7D6438]">
                 Salón de referencia en producción
               </p>
               <h2 className="font-cormorant mt-3 text-3xl sm:text-5xl font-semibold leading-[1.04]">
                 Capra Studio agenda y fideliza con su propia marca, no con la de otros.
               </h2>
-              <p className="mt-4 text-base text-white/80 leading-relaxed">
+              <p className="mt-4 text-base text-[#4A4150] leading-relaxed">
                 Catálogo editorial interactivo de 12 servicios (Cejas, Pestañas, Alisados, Maquillaje, Uñas y Capra Academy), Pasaporte VIP de fidelidad y recepción QR activa en San Cristóbal.
               </p>
-              <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-white/15 pt-6">
+              <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-[#1A1020]/10 pt-6">
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#D9C49B]">0%</dt>
-                  <dd className="mt-1 text-xs text-white/70">comisión por cita</dd>
+                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#7D6438]">0%</dt>
+                  <dd className="mt-1 text-xs text-[#4A4150]">comisión por cita</dd>
                 </div>
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-white">100%</dt>
-                  <dd className="mt-1 text-xs text-white/70">clientas del salón</dd>
+                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#1A1020]">100%</dt>
+                  <dd className="mt-1 text-xs text-[#4A4150]">clientas del salón</dd>
                 </div>
                 <div>
-                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#D9C49B]">12</dt>
-                  <dd className="mt-1 text-xs text-white/70">servicios activos</dd>
+                  <dt className="font-cormorant text-3xl sm:text-4xl font-bold text-[#7D6438]">12</dt>
+                  <dd className="mt-1 text-xs text-[#4A4150]">servicios activos</dd>
                 </div>
               </dl>
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => window.open('/m/capra-studio', '_blank', 'noopener,noreferrer')}
-                  className="px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-white shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-[1.02]"
+                  className="px-7 py-3.5 rounded-full text-xs sm:text-sm font-bold text-[#1A1020] shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-[1.02]"
                   style={{ background: '#1F1226' }}
                 >
                   <span>Abrir Demo Capra Studio (/m/capra-studio)</span>
@@ -1637,7 +1637,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                 <button
                   type="button"
                   onClick={() => openCheckoutWithPlan('Suite Couture Pro')}
-                  className="px-6 py-3.5 rounded-full border border-white/25 hover:border-white/60 text-xs sm:text-sm font-bold text-white cursor-pointer"
+                  className="px-6 py-3.5 rounded-full border border-[#1A1020]/15 hover:border-[#1A1020]/25 text-xs sm:text-sm font-bold text-[#1A1020] cursor-pointer"
                 >
                   Solicitar Propuesta Similar
                 </button>
@@ -1645,26 +1645,26 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-[24px] overflow-hidden ring-1 ring-white/15 shadow-2xl">
+              <div className="rounded-[24px] overflow-hidden ring-1 ring-[#1A1020]/10 shadow-2xl">
                 <img
                   src="/capra/brow-lamination.jpg"
                   alt="Capra Studio Cejas y Pestañas"
                   className="w-full h-72 object-cover"
                 />
-                <div className="p-4 bg-white/10 backdrop-blur-md">
+                <div className="p-4 bg-[#1A1020]/5 backdrop-blur-md">
                   <p className="font-cormorant font-bold text-sm">Capra Studio</p>
-                  <p className="text-[11px] text-white/70">Paleta Rose Cashmere &amp; Silk</p>
+                  <p className="text-[11px] text-[#4A4150]">Paleta Rose Cashmere &amp; Silk</p>
                 </div>
               </div>
-              <div className="rounded-[24px] overflow-hidden ring-1 ring-white/15 shadow-2xl mt-8">
+              <div className="rounded-[24px] overflow-hidden ring-1 ring-[#1A1020]/10 shadow-2xl mt-8">
                 <img
                   src="/capra/nails-french.jpg"
                   alt="Nail Studio Boutique"
                   className="w-full h-72 object-cover"
                 />
-                <div className="p-4 bg-white/10 backdrop-blur-md">
+                <div className="p-4 bg-[#1A1020]/5 backdrop-blur-md">
                   <p className="font-cormorant font-bold text-sm">Nail Bar &amp; Spa</p>
-                  <p className="text-[11px] text-white/70">Catálogo Estructural</p>
+                  <p className="text-[11px] text-[#4A4150]">Catálogo Estructural</p>
                 </div>
               </div>
             </div>
@@ -1967,7 +1967,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Hablar con ventas por WhatsApp"
-        className="fixed bottom-5 left-5 z-40 w-12 h-12 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
