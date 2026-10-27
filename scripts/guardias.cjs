@@ -67,6 +67,42 @@ const guards = [
     cmd: "git grep -nE \"(Sparkles|Wand|Stars)\" src/",
     threshold: 0,
     scope: 'Diseño de Autor (D1)'
+  },
+  {
+    id: 'G8',
+    name: "Secretos sin enmascarar en reportes/ (tokens, TOTP, passwords)",
+    scope: 'Enmascaramiento Evidencias',
+    threshold: 0,
+    blocking: true,
+    check: () => {
+      const fs = require('fs');
+      const path = require('path');
+      const dir = path.join(__dirname, '..', 'reportes');
+      if (!fs.existsSync(dir)) return { count: 0, lines: [] };
+      const files = fs.readdirSync(dir);
+      const lines = [];
+      const patterns = [
+        /secret=[^*"'\s&]{4,}/i,
+        /session_token=[^*"'\s&;]{7,}/i,
+        /backupCodes["']?\s*:\s*\[\s*["'][^*"'\]]+["']/i,
+        /password["']?\s*:\s*["'][^*"']{3,}["']/i,
+      ];
+      for (const file of files) {
+        const full = path.join(dir, file);
+        if (!fs.statSync(full).isFile()) continue;
+        const content = fs.readFileSync(full, 'utf8');
+        const fileLines = content.split('\n');
+        fileLines.forEach((l, idx) => {
+          for (const p of patterns) {
+            if (p.test(l)) {
+              lines.push(`${file}:${idx + 1}: ${l.trim()}`);
+              break;
+            }
+          }
+        });
+      }
+      return { count: lines.length, lines };
+    }
   }
 ];
 
@@ -80,9 +116,12 @@ let totalDebt = 0;
 const results = [];
 
 guards.forEach(g => {
-  const { count, lines } = runGrep(g.cmd);
+  const { count, lines } = g.check ? g.check() : runGrep(g.cmd);
   totalDebt += count;
   const status = count === 0 ? '✅ LIMPIO (0)' : `⚠️ DEUDA (${count})`;
+  if (g.blocking && count > 0) {
+    process.exitCode = 1;
+  }
   console.log(
     g.id.padEnd(4) +
     g.name.padEnd(52) +

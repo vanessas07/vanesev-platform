@@ -3,7 +3,7 @@ FECHA: 2026-10-27 01:10 UTC+1
 DEPLOYMENT: https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app
 
 6.1. CREACIÓN DE ORGANIZACIÓN A (CAPRA STUDIO) POR USUARIO A (POST /api/auth/organization/create):
-$ npx vercel curl /api/auth/organization/create --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=26c6Y1O7A1ykKA4d3TPqxLIrZecjozTZ.oX9pGKx9aFx2Dlks%2BSYXLZJwQBeOI219U8U4sJLkPX8%3D" -H "Authorization: Bearer 26c6Y1O7A1ykKA4d3TPqxLIrZecjozTZ" -d '@payload_create_org_a.json'
+$ npx vercel curl /api/auth/organization/create --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***" -d '@payload_create_org_a.json'
 
 SALIDA REAL:
 HTTP/1.1 200 OK
@@ -46,7 +46,7 @@ Transfer-Encoding: chunked
 {"name":"Andrea Nails","slug":"andrea-nails","logo":null,"createdAt":"2026-10-27T00:10:30.801Z","id":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","members":[{"organizationId":"9wv1jDbt5cltV0XxG5XXf118o3YZLWAA","userId":"kQeAmivSNdCvwUacvuMNo6JRlxc9Tiuo","role":"owner","createdAt":"2026-10-27T00:10:30.805Z","id":"1tHuOMvRV64HiEJeLV2F48oNI9WTAyWo"}]}
 
 6.3. USUARIO B PIDE DATOS DEL SALÓN A (ORGANIZATIONID: eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu) -> 403 FORBIDDEN:
-$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=WDNCrgfy2yJd60d3ogkQ1GepiKRy7DoJ.Wul%2Bs%2FR0Zm1PPrhDbfUfOLtKZ0%2BFZByBlY5%2FwegwOhU%3D" -H "Authorization: Bearer WDNCrgfy2yJd60d3ogkQ1GepiKRy7DoJ"
+$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=eYxu2kCzJQyNbAmAHxhNhEUpqpNqKbsu" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***"
 
 SALIDA REAL:
 HTTP/1.1 403 Forbidden
@@ -67,7 +67,7 @@ Transfer-Encoding: chunked
 {"message":"User is not a member of the organization","code":"USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION"}
 
 6.4. USUARIO B PIDE DATOS DE SU PROPIO SALÓN B -> 200 OK:
-$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=9wv1jDbt5cltV0XxG5XXf118o3YZLWAA" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=WDNCrgfy2yJd60d3ogkQ1GepiKRy7DoJ.Wul%2Bs%2FR0Zm1PPrhDbfUfOLtKZ0%2BFZByBlY5%2FwegwOhU%3D" -H "Authorization: Bearer WDNCrgfy2yJd60d3ogkQ1GepiKRy7DoJ"
+$ npx vercel curl "/api/auth/organization/get-full-organization?organizationId=9wv1jDbt5cltV0XxG5XXf118o3YZLWAA" --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X GET -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=***" -H "Authorization: Bearer ***"
 
 SALIDA REAL:
 HTTP/1.1 200 OK

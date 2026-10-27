@@ -28,7 +28,7 @@ $ npx vercel logs dpl_5Wqp7mQCxtCrbAVXbnK5yu3xc4QA --no-follow --limit 5 --expan
 
 SALIDA REAL:
 01:06:30.67  vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app  info   λ POST /api/auth/phone-number/send-otp                 
-[SMS-OTP-GATEWAY] Para: +584121234567 | Codigo: 016593
+[SMS-OTP-GATEWAY] Para: +584121234567 | Codigo: ***
 
 4.3. ASIGNACIÓN / RESET DE PIN DE 6 DÍGITOS (POST /api/auth/phone-number/request-password-reset):
 $ npx vercel curl /api/auth/phone-number/request-password-reset --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -d '@payload_req_reset.json'
@@ -53,9 +53,9 @@ Transfer-Encoding: chunked
 
 LOGS VERCEL (CÓDIGO DE RECUPERACIÓN):
 01:07:13.95  vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app  info   λ POST /api/auth/phone-number/request-password-reset   
-[SMS-RESET-GATEWAY] Para: +584121234567 | Codigo: 801073
+[SMS-RESET-GATEWAY] Para: +584121234567 | Codigo: ***
 
-4.4. APLICACIÓN DE PIN DE 6 DÍGITOS ("123456") (POST /api/auth/phone-number/reset-password):
+4.4. APLICACIÓN DE PIN DE 6 DÍGITOS (POST /api/auth/phone-number/reset-password):
 $ npx vercel curl /api/auth/phone-number/reset-password --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -d '@payload_reset_pin.json'
 
 SALIDA REAL:
@@ -86,7 +86,7 @@ Content-Type: application/json
 Date: Tue, 27 Oct 2026 00:08:00 GMT
 Referrer-Policy: strict-origin-when-cross-origin
 Server: Vercel
-Set-Cookie: __Secure-better-auth.session_token=8kI5a6RK8sB4RBOWGGFm58wZeggZkxiv.azbggU6GyIo1g2c5BrpaUQHj0jS3f%2FlGd38%2BBP%2FQ8ns%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: __Secure-better-auth.session_token=***; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
@@ -96,6 +96,6 @@ X-Vercel-Id: cdg1::iad1::kfzhl-1793059679866-de19be34d80f
 X-Xss-Protection: 1; mode=block
 Transfer-Encoding: chunked
 
-{"token":"8kI5a6RK8sB4RBOWGGFm58wZeggZkxiv","user":{"name":"+584121234567","email":"584121234567@client.vanesev.internal","emailVerified":false,"image":null,"createdAt":"2026-10-27T00:01:39.510Z","updatedAt":"2026-10-27T00:01:39.510Z","twoFactorEnabled":false,"phoneNumber":"+584121234567","phoneNumberVerified":true,"id":"rKah72pbidrL9qCXnu8QtwRtrDAWPBld"}}
+{"token":"***","user":{"name":"+584121234567","email":"584121234567@client.vanesev.internal","emailVerified":false,"image":null,"createdAt":"2026-10-27T00:01:39.510Z","updatedAt":"2026-10-27T00:01:39.510Z","twoFactorEnabled":false,"phoneNumber":"+584121234567","phoneNumberVerified":true,"id":"rKah72pbidrL9qCXnu8QtwRtrDAWPBld"}}
 
 VEREDICTO: ✅ CUMPLE (Clienta inicia sesión con teléfono + PIN de 6 dígitos; recibe cookie HttpOnly; Secure; SameSite=Lax y sesión activa).

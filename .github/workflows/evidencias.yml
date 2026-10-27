@@ -1,0 +1,49 @@
+name: VANESEV Evidencias Verificables por Máquina
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  generar-evidencias:
+    name: Generar Artefactos de Evidencia CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Crear Directorio de Artefactos
+        run: mkdir -p evidencias_out
+
+      - name: Ejecutar Guardias de Integridad (G1-G8)
+        run: |
+          node scripts/guardias.cjs > evidencias_out/guardias.txt 2>&1 || true
+          cat evidencias_out/guardias.txt
+
+      - name: Ejecutar Auditoría Multi-Tenant
+        run: |
+          node scripts/tenant-audit.cjs > evidencias_out/tenant-audit.txt 2>&1 || true
+          cat evidencias_out/tenant-audit.txt
+
+      - name: Ejecutar Comprobación Oficial de Contraste WCAG
+        run: |
+          node scripts/wcag-contrast.cjs > evidencias_out/wcag-contrast.txt 2>&1 || true
+          cat evidencias_out/wcag-contrast.txt
+
+      - name: Subir Artefacto de Evidencias
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-${{ github.sha }}
+          path: evidencias_out/
+          retention-days: 14
