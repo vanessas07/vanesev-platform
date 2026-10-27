@@ -397,8 +397,10 @@ async function main() {
   const filaOtp = (await sql`SELECT value FROM "verification" WHERE identifier LIKE ${'%' + correoClienta + '%'} ORDER BY "createdAt" DESC LIMIT 1`)[0];
   const codigoOtp = filaOtp ? String(filaOtp.value).split(":")[0] : null;
   const clienta = codigoOtp ? await api("/api/auth/sign-in/email-otp", { method: "POST", body: { email: correoClienta, otp: codigoOtp } }) : { status: 0 };
-  comprobar('J2', 'Clienta: correo real enviado por SMTP (sin SMTP_PASS en Preview → FALLA) y acceso con el código', envio.status === 200 && clienta.status === 200 && !!clienta.token,
-    `envío ${envio.status}${envio.status === 500 ? ' (¿falta SMTP_PASS en Preview feat/b1-auth?)' : ''}, código ${codigoOtp ? "generado" : "NO"}, sign-in ${clienta.status}`);
+  // Ojo: better-auth responde 200 aunque el SMTP falle (runInBackgroundOrAwait solo lo registra en el log).
+  // La ENTREGA del correo no se puede medir desde la API: se comprueba aparte con un envío real a soporte@vanesev.com.
+  comprobar('J2', 'Clienta: código generado y acceso con el código (la entrega del correo NO se mide aquí)', envio.status === 200 && clienta.status === 200 && !!clienta.token,
+    `envío ${envio.status}, código ${codigoOtp ? "generado" : "NO"}, sign-in ${clienta.status}`);
   const mias = clienta.token ? await api('/api/bookings?mine=1', { token: clienta.token }) : { status: 0, json: null };
   const veLaSuya = (mias.json?.bookings || []).some((b) => b.id === idReservaClienta);
   const ajenasVisibles = (mias.json?.bookings || []).some((b) => b.id !== idReservaClienta);
