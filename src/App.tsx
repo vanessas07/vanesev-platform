@@ -452,7 +452,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     // 1. ZONA 1: Web Comercial VANESEV (vanesev.com /) — CERO contacto con salones clientes ni PWA
     if (isSaasRoute) {
-      document.title = '🎂 ¡Feliz Cumpleaños #7, Vanessa! 🩷🌹 — Te amo con todo mi corazón, mi princesa hermosa';
+      document.title = 'VANESEV · Suite de autor para salones de belleza';
       const existingManifest = document.querySelector("link[rel='manifest']");
       if (existingManifest) existingManifest.remove();
       return;

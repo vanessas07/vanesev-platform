@@ -9,7 +9,7 @@ interface VanesevLogoProps {
   tono?: 'claro' | 'oscuro';
   /** Tamaño del monograma en px (la palabra escala con él). */
   tamano?: number;
-  /** Muestra la dedicatoria «Dedicado a Vanessa · Suite Digital» (AGENTS.md §6). */
+  /** Muestra la línea «Suite digital de autor» bajo la palabra (G-037: la dedicatoria es un guiño, no una declaración). */
   dedicatoria?: boolean;
   className?: string;
 }
@@ -52,7 +52,7 @@ export const VanesevLogo: React.FC<VanesevLogoProps> = ({ tono = 'claro', tamano
               color: oscuro ? '#D9C49B' : '#7D6438',
             }}
           >
-            Dedicado a Vanessa · Suite Digital
+            Suite digital de autor
           </span>
         )}
       </span>

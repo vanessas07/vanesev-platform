@@ -450,7 +450,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
           >
             <p className="inline-flex items-center gap-2 rounded-full border border-[#4A1F5C]/25 bg-white px-4 py-1.5 text-xs font-bold text-[#4A1F5C] shadow-2xs">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[#B89B6A]" />
-              Inspirado en Vanessa · Suite Tecnológica de Autor para Salones &bull; 0% comisiones
+              Suite tecnológica de autor para salones &bull; 0% comisiones
             </p>
 
             <TituloRevelado
@@ -572,7 +572,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               <span className="h-2.5 w-2.5 rounded-full bg-[#1F1226]" />
               <div>
                 <span className="block whitespace-nowrap text-xs font-bold">Pasaporte VIP #001</span>
-                <span className="block whitespace-nowrap text-[10px] text-[#6E6478]">Vanessa V. &bull; Cliente Fundadora 🩷</span>
+                <span className="block whitespace-nowrap text-[10px] text-[#6E6478]">Cliente fundadora &bull; 5 de 5 sellos</span>
               </div>
             </motion.div>
 
@@ -1938,7 +1938,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
           </div>
 
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/45">
-            <p>© 2026 VANESEV Beauty &amp; Wellness Cloud &bull; Creado con amor e inspirado en Vanessa &bull; Todos los derechos reservados &bull; Cero comisiones por reserva.</p>
+            <p>© 2026 VANESEV Beauty &amp; Wellness Cloud &bull; Hecho con amor, para V. &bull; Todos los derechos reservados &bull; Cero comisiones por reserva.</p>
             <div className="flex items-center gap-4">
               <a
                 href="https://wa.me/584223794800"
