@@ -57,6 +57,7 @@ export interface PromoOffer {
   validUntil: string;
   isActive: boolean;
   imageUrl: string;
+  serviceId?: string; // oferta con precio especial de un servicio (G-033)
 }
 
 export type PaymentMethodType = 'pago_movil' | 'efectivo' | 'binance' | string;

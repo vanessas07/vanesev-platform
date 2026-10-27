@@ -431,6 +431,7 @@ export const App: React.FC = () => {
     }
 
     setPromos(AppStore.getPromos());
+    AppStore.fetchRemotePromos().then(setPromos).catch(() => {});
     setBookings(AppStore.getBookings());
     setBlockedSlots(AppStore.getBlockedSlots());
     setExchangeRate(AppStore.getExchangeRate());
