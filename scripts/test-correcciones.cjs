@@ -366,6 +366,7 @@ async function runTests() {
     if (runnerIp) {
       await sql`DELETE FROM "rateLimit" WHERE key LIKE ${runnerIp + '|%'} OR key LIKE ${runnerIp + ':%'}`;
     }
+    await sql`DELETE FROM "verification" WHERE identifier LIKE '%58424%' OR identifier LIKE '%vanesev%' OR identifier LIKE '%test%'`;
     const tablesToCheck = ["user", "session", "account", "verification", "member", "invitation", "twoFactor"];
     let purgeClean = true;
     for (const t of tablesToCheck) {
