@@ -1,16 +1,27 @@
 import { getDb } from './_db.js';
+import { applyCors } from './_cors.js';
 
 /**
  * Endpoint de Automatización Nivel 2 (Cron / Webhook):
+ * - Protegido estrictamente con Bearer Token (CRON_SECRET).
  * - Consulta citas confirmadas para las próximas 24 horas en Neon Postgres.
- * - Prepara y despacha recordatorios transaccionales vía Resend (Email) y Meta WhatsApp Cloud API (si las credenciales están activas).
+ * - Despacha recordatorios transaccionales vía Resend (Email) y Meta WhatsApp Cloud API.
  */
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // Closed CORS filter
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // 1. Verificación obligatoria de autorización por CRON_SECRET (Orden B1-a §4.8)
+  const authHeader = req.headers?.authorization;
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || !authHeader || authHeader !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized: Token de autorización cron ausente o inválido.' });
+  }
 
   const sql = getDb();
   if (!sql) {
@@ -45,9 +56,9 @@ export default async function handler(req: any, res: any) {
       ORDER BY b.time_slot ASC;
     `;
 
-    const resendApiKey = process.env.RESEND_API_KEY || '';
-    const metaWaToken = process.env.META_WHATSAPP_TOKEN || '';
-    const metaPhoneId = process.env.META_WHATSAPP_PHONE_ID || '';
+    const resendApiKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
+    const metaWaToken = process.env.META_WHATSAPP_TOKEN ? process.env.META_WHATSAPP_TOKEN.trim() : null;
+    const metaPhoneId = process.env.META_WHATSAPP_PHONE_ID ? process.env.META_WHATSAPP_PHONE_ID.trim() : null;
 
     const dispatches = upcomingBookings.map((b: any) => ({
       bookingId: b.id,

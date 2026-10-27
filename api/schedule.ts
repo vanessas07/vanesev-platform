@@ -1,16 +1,17 @@
 // Vercel Serverless Function: /api/schedule
 // Handles calendar slot blocking and availability in Neon Postgres
 import { neon } from '@neondatabase/serverless';
+import { applyCors } from './_cors.js';
 
 function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
   if (!connectionString) return null;
   return neon(connectionString);
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',

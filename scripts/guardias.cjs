@@ -103,6 +103,50 @@ const guards = [
       }
       return { count: lines.length, lines };
     }
+  },
+  {
+    id: 'G9',
+    name: "Respaldo inseguro de credenciales (process.env.X || 'literal')",
+    scope: 'Anti-Fallback Credenciales',
+    threshold: 0,
+    blocking: true,
+    check: () => {
+      const fs = require('fs');
+      const path = require('path');
+      const apiDir = path.join(__dirname, '..', 'api');
+      if (!fs.existsSync(apiDir)) return { count: 0, lines: [] };
+
+      function getFiles(dir) {
+        let results = [];
+        const list = fs.readdirSync(dir);
+        list.forEach(file => {
+          const fullPath = path.join(dir, file);
+          const stat = fs.statSync(fullPath);
+          if (stat && stat.isDirectory()) {
+            results = results.concat(getFiles(fullPath));
+          } else if (file.endsWith('.ts') || file.endsWith('.js')) {
+            results.push(fullPath);
+          }
+        });
+        return results;
+      }
+
+      const files = getFiles(apiDir);
+      const lines = [];
+      const regex = /process\.env\.([A-Za-z0-9_]*(SECRET|KEY|EMAIL|PASSWORD|URL)[A-Za-z0-9_]*)\s*\|\|\s*['"][^'"]*['"]/i;
+
+      for (const file of files) {
+        const content = fs.readFileSync(file, 'utf8');
+        const fileLines = content.split('\n');
+        fileLines.forEach((l, idx) => {
+          if (regex.test(l)) {
+            const relPath = path.relative(path.join(__dirname, '..'), file).replace(/\\/g, '/');
+            lines.push(`${relPath}:${idx + 1}: ${l.trim()}`);
+          }
+        });
+      }
+      return { count: lines.length, lines };
+    }
   }
 ];
 

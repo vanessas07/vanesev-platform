@@ -10,19 +10,42 @@ const pool = new pg.Pool({
   ssl: connectionString && !connectionString.includes("localhost") ? { rejectUnauthorized: true } : false,
 });
 
-const authSecret = process.env.BETTER_AUTH_SECRET || process.env.CENTRAL_AUTH_SECRET;
+// Orden B1-a §4.2: Sin respaldo CENTRAL_AUTH_SECRET: sin BETTER_AUTH_SECRET, throw.
+const authSecret = process.env.BETTER_AUTH_SECRET;
 if (!authSecret) {
-  throw new Error("BETTER_AUTH_SECRET o CENTRAL_AUTH_SECRET es obligatoria para inicializar Better Auth.");
+  throw new Error("FATAL: Variable BETTER_AUTH_SECRET no está configurada.");
+}
+
+function resolveBaseUrl(): string {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "https://vanesev.com";
 }
 
 export const auth = betterAuth({
   database: pool,
   secret: authSecret,
-  baseURL: process.env.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://vanesev.com"),
+  baseURL: resolveBaseUrl(),
   appName: "VANESEV",
+  user: {
+    additionalFields: {
+      platform_role: {
+        type: "string",
+        required: false,
+        defaultValue: null,
+        input: false, // Endpoints públicos no pueden escribir esta columna
+      },
+      must_reset: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false, // Endpoints públicos no pueden escribir esta columna
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true, // Registro público cerrado: staff entra únicamente por invitación
+    disableSignUp: true, // Registro público cerrado: staff entra únicamente por invitación/alta central
     minPasswordLength: 6, // Base mínima del motor; staff exige 10 al fijar/cambiar mediante hook
   },
   trustedOrigins: [
@@ -34,7 +57,7 @@ export const auth = betterAuth({
   rateLimit: {
     storage: "database",
     window: 60,
-    max: 100, // Ajuste 1: rate limit global permisivo (100 peticiones / 60 s) para no estrangular get-session
+    max: 100, // Rate limit global permisivo (100 peticiones / 60 s) para no estrangular get-session
     customRules: {
       "/sign-in/email": {
         window: 300,
@@ -44,11 +67,35 @@ export const auth = betterAuth({
         window: 300,
         max: 5,
       },
+      "/sign-up/email": {
+        window: 300,
+        max: 5,
+      },
       "/phone-number/send-otp": {
         window: 300,
         max: 5,
       },
       "/phone-number/reset-password": {
+        window: 300,
+        max: 5,
+      },
+      "/phone-number/verify": {
+        window: 300,
+        max: 5,
+      },
+      "/phone-number/request-password-reset": {
+        window: 300,
+        max: 5,
+      },
+      "/request-password-reset": {
+        window: 300,
+        max: 5,
+      },
+      "/forget-password": {
+        window: 300,
+        max: 5,
+      },
+      "/two-factor/send-otp": {
         window: 300,
         max: 5,
       },
@@ -101,7 +148,7 @@ export const auth = betterAuth({
         }
       }
 
-      // Hook 2: Validación de contraseña para Staff y Admin (Ajuste 3: mínimo 10 caracteres en endpoints de fijar/cambiar)
+      // Hook 2: Validación de contraseña para Staff y Admin (mínimo 10 caracteres en endpoints de fijar/cambiar)
       const isPasswordCreationOrChange =
         !ctx.path.startsWith("/phone-number/") &&
         (ctx.path.startsWith("/reset-password") ||
@@ -120,6 +167,7 @@ export const auth = betterAuth({
       }
 
       // Hook 3: Comprobación de bloqueo de cuenta tras intentos fallidos reiterados
+      // Si la cuenta no existe, NO se lanza 403, permitiendo que Better Auth devuelva 401 genérico
       if (ctx.path.startsWith("/sign-in/email") || ctx.path.startsWith("/sign-in/phone-number")) {
         const body = ctx.body as Record<string, any> | undefined;
         const identifier = body?.email || body?.phoneNumber;
@@ -144,9 +192,76 @@ export const auth = betterAuth({
           }
         }
       }
+
+      // Hook 4: Tope adicional de send-otp por número de teléfono (máximo 3 envíos / hora en base de datos)
+      if (ctx.path.startsWith("/phone-number/send-otp") || ctx.path.startsWith("/two-factor/send-otp")) {
+        const body = ctx.body as Record<string, any> | undefined;
+        const rawPhone = body?.phoneNumber || body?.phone;
+        if (rawPhone) {
+          const cleanPhone = String(rawPhone).replace(/\D/g, "");
+          const key = `phone_otp:${cleanPhone}`;
+          const oneHourAgo = Date.now() - 3600 * 1000;
+          try {
+            const res = await pool.query(
+              `SELECT id, count, "lastRequest" FROM "rateLimit" WHERE key = $1`,
+              [key]
+            );
+            if (res.rows.length > 0) {
+              const row = res.rows[0];
+              const lastReq = Number(row.lastRequest);
+              if (lastReq > oneHourAgo) {
+                if (row.count >= 3) {
+                  throw new APIError("TOO_MANY_REQUESTS", {
+                    message: "Límite de 3 envíos de OTP por hora excedido para este número.",
+                  });
+                }
+                await pool.query(
+                  `UPDATE "rateLimit" SET count = count + 1, "lastRequest" = $1 WHERE id = $2`,
+                  [Date.now(), row.id]
+                );
+              } else {
+                await pool.query(
+                  `UPDATE "rateLimit" SET count = 1, "lastRequest" = $1 WHERE id = $2`,
+                  [Date.now(), row.id]
+                );
+              }
+            } else {
+              const id = `rl_otp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              await pool.query(
+                `INSERT INTO "rateLimit" (id, key, count, "lastRequest") VALUES ($1, $2, 1, $3)`,
+                [id, key, Date.now()]
+              );
+            }
+          } catch (err: any) {
+            if (err instanceof APIError) throw err;
+            console.error("[AUTH] Error en rate limit de teléfono:", err?.message || "Error desconocido");
+          }
+        }
+      }
+
+      // Hook 5: Control de MUST_RESET (mientras must_reset = true, toda ruta salvo change-password y sign-out retorna 403)
+      const isExemptResetPath =
+        ctx.path.startsWith("/change-password") ||
+        ctx.path.startsWith("/reset-password") ||
+        ctx.path.startsWith("/sign-out") ||
+        ctx.path.startsWith("/sign-in") ||
+        ctx.path.startsWith("/two-factor");
+
+      if (!isExemptResetPath) {
+        try {
+          const session = await auth.api.getSession({ headers: ctx.headers });
+          if (session?.user && (session.user as any).must_reset) {
+            throw new APIError("FORBIDDEN", {
+              message: "Debe restablecer su contraseña antes de continuar (MUST_RESET).",
+            });
+          }
+        } catch (err: any) {
+          if (err instanceof APIError) throw err;
+        }
+      }
     }),
     after: createAuthMiddleware(async (ctx) => {
-      // Ajuste 2: Gestión de bloqueo por cuenta tras fallos seguidos (lectura de returned APIError)
+      // Ajuste de bloqueo por cuenta tras fallos seguidos
       if (ctx.path.startsWith("/sign-in/email") || ctx.path.startsWith("/sign-in/phone-number")) {
         const body = ctx.body as Record<string, any> | undefined;
         const identifier = body?.email || body?.phoneNumber;
@@ -186,6 +301,7 @@ export const auth = betterAuth({
           }
         }
       }
+
       // Al verificar OTP (desbloqueo), limpiar contador de fallos
       if (ctx.path.startsWith("/phone-number/verify")) {
         const ret = ctx.context?.returned as any;
@@ -203,11 +319,28 @@ export const auth = betterAuth({
           }
         }
       }
+
+      // Al cambiar la contraseña exitosamente, retirar la bandera must_reset
+      if (ctx.path.startsWith("/change-password")) {
+        const ret = ctx.context?.returned as any;
+        const status = ctx.context?.response?.status;
+        const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 400 && ret?.status !== 401 && ret?.status !== 403) || status === 200;
+        if (isSuccess) {
+          try {
+            const session = await auth.api.getSession({ headers: ctx.headers });
+            if (session?.user?.id) {
+              await pool.query(`UPDATE "user" SET must_reset = false WHERE id = $1`, [session.user.id]);
+            }
+          } catch (e: any) {
+            console.error("[AUTH] Error al limpiar must_reset tras change-password:", e?.message || "Error desconocido");
+          }
+        }
+      }
     }),
   },
   plugins: [
     organization({
-      allowUserToCreateOrganization: false, // Creación de salones restringida a Central / Fase 6
+      allowUserToCreateOrganization: false, // Creación de salones restringida a Central
     }),
     twoFactor({
       issuer: "VANESEV Central",

@@ -1,20 +1,46 @@
 // Vercel Serverless Function: /api/central
 // 100% Database-Driven Super-Admin & Multi-Tenant Orchestrator for VANESEV (vanesev.com)
-// Hardened with strict tenant_context whitelist and Superadmin Session Authentication
+// Hardened with strict tenant_context whitelist and Superadmin Better Auth Session
+import crypto from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
-import { validateSuperadminSession, applyCors } from './_auth.js';
+import { auth } from './_better-auth.js';
+import { applyCors } from './_cors.js';
 
 function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
   if (!connectionString) return null;
   return neon(connectionString);
+}
+
+async function validateCentralSession(req: any) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session || !session.user) {
+      return { status: 401, error: 'Unauthorized: Sesión de VANESEV Central requerida.' };
+    }
+
+    const user = session.user as any;
+    if (user.platform_role !== 'superadmin_decisivo') {
+      return { status: 403, error: 'Forbidden: Requiere rol superadmin_decisivo.' };
+    }
+
+    const sessionObj = session.session as any;
+    const is2FA = Boolean(sessionObj?.twoFactorVerified || (user.twoFactorEnabled && sessionObj?.twoFactorVerified));
+    if (!is2FA) {
+      return { status: 403, error: 'Forbidden: Se requiere autenticación de dos factores (2FA) verificada.' };
+    }
+
+    return { status: 200, user, session: sessionObj };
+  } catch (err: any) {
+    return { status: 401, error: 'Error validando sesión de superadmin.' };
+  }
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
-  // Strict CORS filter: exact *.vanesev.com or localhost outside production
+  // Strict CORS filter: exact *.vanesev.com or Vercel Preview
   applyCors(req, res);
 
   if (req.method === 'OPTIONS') {
@@ -93,10 +119,10 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ tenant, services, staff, zones });
       }
 
-      // 2. Seguridad Central: Requiere sesión válida de Superadmin
-      const auth = await validateSuperadminSession(req, sql);
-      if (!auth.valid) {
-        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
+      // 2. Seguridad Central: Requiere sesión válida de Superadmin con 2FA
+      const authCheck = await validateCentralSession(req);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       // Snapshot completo de Central para superadmin autenticado
@@ -156,14 +182,85 @@ export default async function handler(req: any, res: any) {
 
     // ─── POST: Mutaciones protegidas en Central ──────────────────────────────
     if (req.method === 'POST') {
-      const auth = await validateSuperadminSession(req, sql);
-      if (!auth.valid) {
-        return res.status(401).json({ error: auth.error || 'Unauthorized: Sesión de VANESEV Central requerida' });
+      const authCheck = await validateCentralSession(req);
+      if (authCheck.status !== 200) {
+        return res.status(authCheck.status).json({ error: authCheck.error });
       }
 
       const bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const action = bodyObj.action;
       const payload = bodyObj.payload || bodyObj;
+
+      // Acción de Alta de Staff / Admin de Salón desde Central (Orden B1-a §4.6)
+      if (action === 'create-staff' || action === 'create_staff') {
+        const { email, name, organizationSlug, role } = payload || {};
+        if (!email || !organizationSlug || !role) {
+          return res.status(400).json({ error: 'Campos requeridos faltantes (email, organizationSlug, role).' });
+        }
+
+        const cleanEmail = String(email).trim().toLowerCase();
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanRole = String(role).trim().toLowerCase();
+        const cleanName = String(name || cleanEmail.split('@')[0]).trim();
+
+        if (!['owner', 'admin', 'staff'].includes(cleanRole)) {
+          return res.status(400).json({ error: 'Rol inválido. Debe ser owner, admin o staff.' });
+        }
+
+        // Verificar que la organización exista
+        const orgRows = await sql`
+          SELECT id, slug FROM "organization" WHERE slug = ${cleanOrgSlug} OR id = ${cleanOrgSlug} LIMIT 1;
+        `;
+        if (orgRows.length === 0) {
+          return res.status(404).json({ error: `Organización "${cleanOrgSlug}" no encontrada.` });
+        }
+        const org = orgRows[0];
+
+        // Generar contraseña aleatoria temporal de ≥ 16 caracteres
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const salt = crypto.randomBytes(16).toString('hex');
+        const key = crypto.scryptSync(tempPassword.normalize('NFKC'), salt, 64, {
+          N: 16384,
+          r: 16,
+          p: 1,
+          maxmem: 128 * 16384 * 16 * 2,
+        }).toString('hex');
+        const hashedPassword = `${key}:${salt}`;
+
+        const newUserId = `usr_${crypto.randomBytes(8).toString('hex')}`;
+        const newAccountId = `acc_${crypto.randomBytes(8).toString('hex')}`;
+        const newMemberId = `mem_${crypto.randomBytes(8).toString('hex')}`;
+
+        // Insertar user con must_reset = true
+        await sql`
+          INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset)
+          VALUES (${newUserId}, ${cleanName}, ${cleanEmail}, false, NOW(), NOW(), true)
+          ON CONFLICT (email) DO UPDATE SET must_reset = true, "updatedAt" = NOW();
+        `;
+
+        // Insertar account
+        await sql`
+          INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+          VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW())
+          ON CONFLICT (id) DO NOTHING;
+        `;
+
+        // Insertar member vinculado a la organización
+        await sql`
+          INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
+          VALUES (${newMemberId}, ${org.id}, ${newUserId}, ${cleanRole}, NOW())
+          ON CONFLICT (id) DO NOTHING;
+        `;
+
+        return res.status(200).json({
+          success: true,
+          userId: newUserId,
+          email: cleanEmail,
+          role: cleanRole,
+          organizationSlug: org.slug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
 
       if (action === 'review_session') {
         const { id, reviewStatus, karc0Feedback } = payload || {};

@@ -1,21 +1,21 @@
 // Vercel Serverless Function: /api/loyalty
 // Handles loyalty stamp queries and admin adjustments in Neon Postgres
 import { neon } from '@neondatabase/serverless';
+import { auth } from './_better-auth.js';
+import { applyCors } from './_cors.js';
 
 function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
   if (!connectionString) return null;
   return neon(connectionString);
 }
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // Strict CORS filter (closed, no wildcard)
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -24,72 +24,45 @@ export default async function handler(req: any, res: any) {
 
   const sql = getDb();
 
-  // ─── GET: Consultar tarjeta por teléfono O listar todas para CRM ───────────
+  // ─── GET: Listar tarjetas de fidelización del salón para CRM ───────────────
   if (req.method === 'GET') {
     if (!sql) {
       return res.status(200).json({ cards: [], stampsCount: 0, databaseConnected: false });
     }
 
     try {
-      const { phone, tenant } = req.query || {};
-      const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
-      const cleanTenant = tenant ? String(tenant).trim().toLowerCase() : '';
-
+      const cleanTenant = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
       if (!cleanTenant) {
-        return res.status(200).json({ cards: [], found: false, stampsCount: 0, databaseConnected: true });
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
       }
 
-      // Si se consulta un teléfono específico dentro de este salón
-      if (cleanPhone) {
-        const rows = await sql`
-          SELECT 
-            phone,
-            tenant_id as "tenantId",
-            client_name as "clientName",
-            stamps_count as "stampsCount",
-            TO_CHAR(last_visit, 'YYYY-MM-DD') as "lastVisit",
-            rewards_earned as "rewardsEarned"
-          FROM public.loyalty_cards
-          WHERE phone = ${cleanPhone} AND tenant_id = ${cleanTenant}
+      // 1. Verificación de sesión con Better Auth (Orden B1-a §4.8)
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (!session || !session.user) {
+        return res.status(401).json({ error: 'Unauthorized: Sesión requerida para consultar fidelización.' });
+      }
+
+      const user = session.user as any;
+      let isAllowed = false;
+      if (user.platform_role === 'superadmin_decisivo') {
+        isAllowed = true;
+      } else {
+        const memberRows = await sql`
+          SELECT m.role FROM "member" m
+          JOIN "organization" o ON m."organizationId" = o.id
+          WHERE m."userId" = ${user.id} AND o.slug = ${cleanTenant}
           LIMIT 1;
         `;
-
-        function maskName(name: string): string {
-          if (!name) return 'Clienta VIP';
-          const parts = name.trim().split(/\s+/);
-          return parts.map(p => p.length > 2 ? p[0] + '*'.repeat(Math.min(p.length - 2, 4)) + p[p.length - 1] : p[0] + '*').join(' ');
+        if (memberRows.length > 0) {
+          isAllowed = true;
         }
-
-        if (rows.length > 0) {
-          const card = rows[0];
-          return res.status(200).json({
-            found: true,
-            phone: card.phone,
-            tenantId: card.tenantId,
-            clientName: maskName(card.clientName),
-            maskedName: maskName(card.clientName),
-            stampsCount: card.stampsCount,
-            maxStamps: 6,
-            lastVisit: card.lastVisit,
-            rewardsEarned: card.rewardsEarned || [],
-            rewardEligible: card.stampsCount >= 6,
-            databaseConnected: true,
-          });
-        }
-
-        return res.status(200).json({
-          found: false,
-          phone: cleanPhone,
-          tenantId: cleanTenant,
-          stampsCount: 0,
-          maxStamps: 6,
-          rewardsEarned: [],
-          rewardEligible: false,
-          databaseConnected: true,
-        });
       }
 
-      // Si no se pasa teléfono, listar únicamente las tarjetas de este salón (tenant_id)
+      if (!isAllowed) {
+        return res.status(403).json({ error: 'Forbidden: No tiene permisos sobre la organización solicitada.' });
+      }
+
+      // Listar tarjetas exclusivamente de este salón
       const allRows = await sql`
         SELECT 
           phone,
@@ -129,6 +102,32 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: 'Teléfono y salón (tenantId) requeridos para ajustar fidelización.' });
       }
 
+      // 1. Verificación de sesión con Better Auth
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (!session || !session.user) {
+        return res.status(401).json({ error: 'Unauthorized: Sesión requerida para ajustar fidelización.' });
+      }
+
+      const user = session.user as any;
+      let isAllowed = false;
+      if (user.platform_role === 'superadmin_decisivo') {
+        isAllowed = true;
+      } else {
+        const memberRows = await sql`
+          SELECT m.role FROM "member" m
+          JOIN "organization" o ON m."organizationId" = o.id
+          WHERE m."userId" = ${user.id} AND o.slug = ${cleanTenant}
+          LIMIT 1;
+        `;
+        if (memberRows.length > 0) {
+          isAllowed = true;
+        }
+      }
+
+      if (!isAllowed) {
+        return res.status(403).json({ error: 'Forbidden: No tiene permisos sobre la organización solicitada.' });
+      }
+
       const name = clientName ? String(clientName).trim().slice(0, 80) : 'Clienta';
       const targetStamps = Math.max(0, Math.min(6, Number(stampsCount) || 0));
 
@@ -150,16 +149,17 @@ export default async function handler(req: any, res: any) {
         rewards = rewards.filter(r => r !== '¡7º Servicio 100% GRATIS!');
       }
 
+      // C8 Fix: ON CONFLICT actualiza datos solo si tenant_id coincide, previniendo secuestro entre salones
       await sql`
         INSERT INTO public.loyalty_cards (phone, tenant_id, client_name, stamps_count, last_visit, rewards_earned, updated_at)
         VALUES (${cleanPhone}, ${cleanTenant}, ${name}, ${targetStamps}, CURRENT_DATE, ${rewards}, NOW())
         ON CONFLICT (phone) DO UPDATE SET
-          tenant_id = EXCLUDED.tenant_id,
           client_name = EXCLUDED.client_name,
           stamps_count = ${targetStamps},
           last_visit = CURRENT_DATE,
           rewards_earned = ${rewards},
-          updated_at = NOW();
+          updated_at = NOW()
+        WHERE loyalty_cards.tenant_id = ${cleanTenant};
       `;
 
       return res.status(200).json({

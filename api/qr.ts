@@ -3,6 +3,7 @@
 // Reference architecture: https://www.javiggil.com/56fc9cb32b97
 // 100% Editable target destination with zero re-printing of physical QR codes
 import { getDb } from './_db.js';
+import { applyCors } from './_cors.js';
 
 function detectDevice(userAgent: string): string {
   const ua = (userAgent || '').toLowerCase();
@@ -129,7 +130,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PATCH,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -280,6 +281,6 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err: any) {
     console.error('[API QR Error]:', err);
-    return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }

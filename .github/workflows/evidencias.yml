@@ -26,10 +26,13 @@ jobs:
       - name: Crear Directorio de Artefactos
         run: mkdir -p evidencias_out
 
-      - name: Ejecutar Guardias de Integridad (G1-G8)
+      - name: Obtener IP Pública del Runner
+        id: ip
+        run: echo "runner_ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
+      - name: Ejecutar Guardias de Integridad (G1-G9, G9 Bloqueante)
         run: |
-          node scripts/guardias.cjs > evidencias_out/guardias.txt 2>&1 || true
-          cat evidencias_out/guardias.txt
+          node scripts/guardias.cjs | tee evidencias_out/guardias.txt
 
       - name: Ejecutar Auditoría Multi-Tenant
         run: |
@@ -45,8 +48,18 @@ jobs:
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+          RUNNER_IP: ${{ steps.ip.outputs.runner_ip }}
         run: |
           node scripts/test-correcciones.cjs 2>&1 | tee evidencias_out/correcciones-auth.txt
+
+      - name: Ejecutar Suite Automatizada B1-a (Backend de Autenticación)
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RUNNER_IP: ${{ steps.ip.outputs.runner_ip }}
+        run: |
+          node scripts/test-b1a.cjs 2>&1 | tee evidencias_out/b1a-auth.txt
 
       - name: Subir Artefacto de Evidencias
         uses: actions/upload-artifact@v4

@@ -1,9 +1,11 @@
 // Vercel Serverless Function: /api/bookings
 // High-performance Neon Serverless Postgres integration with Anti-Tampering & Anti-Hacking Security
 import { neon } from '@neondatabase/serverless';
+import { auth } from './_better-auth.js';
+import { applyCors } from './_cors.js';
 
 function getDb() {
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_STAGING;
   if (!connectionString) {
     return null;
   }
@@ -14,9 +16,9 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PATCH,DELETE');
+
+  applyCors(req, res);
+
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
@@ -203,76 +205,65 @@ export default async function handler(req: any, res: any) {
     }
 
     try {
-      const clientPhoneFilter = req.query?.clientPhone ? String(req.query.clientPhone).replace(/\D/g, '') : '';
       const tenantFilter = req.query?.tenant ? String(req.query.tenant).trim().toLowerCase() : '';
-
-      let rows: any[] = [];
-      if (clientPhoneFilter && clientPhoneFilter.length >= 7) {
-        const suffix = clientPhoneFilter.slice(-9);
-        rows = tenantFilter
-          ? await sql`
-              SELECT 
-                id,
-                tenant_id as "tenantId",
-                client_name as "clientName",
-                client_phone as "clientPhone",
-                client_instagram as "clientInstagram",
-                service_id as "serviceId",
-                service_name as "serviceName",
-                service_price_usd as "servicePriceUSD",
-                total_price_usd as "totalPriceUSD",
-                staff_id as "staffId",
-                staff_name as "staffName",
-                zone_id as "zoneId",
-                zone_name as "zoneName",
-                TO_CHAR(date, 'YYYY-MM-DD') as "date",
-                time_slot as "timeSlot",
-                payment_method as "paymentMethod",
-                notes,
-                status,
-                is_first_visit as "isFirstVisit",
-                discount_usd as "discountUSD",
-                created_at as "createdAt"
-              FROM public.bookings
-              WHERE tenant_id = ${tenantFilter}
-                AND RIGHT(REGEXP_REPLACE(client_phone, '\D', '', 'g'), 9) = ${suffix}
-              ORDER BY date DESC, created_at DESC
-              LIMIT 50;
-            `
-          : [];
-      } else if (tenantFilter) {
-        rows = await sql`
-          SELECT 
-            id,
-            tenant_id as "tenantId",
-            client_name as "clientName",
-            client_phone as "clientPhone",
-            client_instagram as "clientInstagram",
-            service_id as "serviceId",
-            service_name as "serviceName",
-            service_price_usd as "servicePriceUSD",
-            total_price_usd as "totalPriceUSD",
-            staff_id as "staffId",
-            staff_name as "staffName",
-            zone_id as "zoneId",
-            zone_name as "zoneName",
-            TO_CHAR(date, 'YYYY-MM-DD') as "date",
-            time_slot as "timeSlot",
-            payment_method as "paymentMethod",
-            notes,
-            status,
-            is_first_visit as "isFirstVisit",
-            discount_usd as "discountUSD",
-            created_at as "createdAt"
-          FROM public.bookings
-          WHERE tenant_id = ${tenantFilter}
-          ORDER BY created_at DESC
-          LIMIT 200;
-        `;
-      } else {
-        // NUNCA devolver citas sin filtro de salón (prohibido mezclar clientes)
-        rows = [];
+      if (!tenantFilter) {
+        return res.status(400).json({ error: 'Parámetro tenant requerido.' });
       }
+
+      // 1. Verificación de sesión con Better Auth (Orden B1-a §4.8)
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (!session || !session.user) {
+        return res.status(401).json({ error: 'Unauthorized: Sesión requerida para consultar citas.' });
+      }
+
+      const user = session.user as any;
+      let isAllowed = false;
+      if (user.platform_role === 'superadmin_decisivo') {
+        isAllowed = true;
+      } else {
+        const memberRows = await sql`
+          SELECT m.role FROM "member" m
+          JOIN "organization" o ON m."organizationId" = o.id
+          WHERE m."userId" = ${user.id} AND o.slug = ${tenantFilter}
+          LIMIT 1;
+        `;
+        if (memberRows.length > 0) {
+          isAllowed = true;
+        }
+      }
+
+      if (!isAllowed) {
+        return res.status(403).json({ error: 'Forbidden: No tiene permisos sobre la organización solicitada.' });
+      }
+
+      const rows = await sql`
+        SELECT 
+          id,
+          tenant_id as "tenantId",
+          client_name as "clientName",
+          client_phone as "clientPhone",
+          client_instagram as "clientInstagram",
+          service_id as "serviceId",
+          service_name as "serviceName",
+          service_price_usd as "servicePriceUSD",
+          total_price_usd as "totalPriceUSD",
+          staff_id as "staffId",
+          staff_name as "staffName",
+          zone_id as "zoneId",
+          zone_name as "zoneName",
+          TO_CHAR(date, 'YYYY-MM-DD') as "date",
+          time_slot as "timeSlot",
+          payment_method as "paymentMethod",
+          notes,
+          status,
+          is_first_visit as "isFirstVisit",
+          discount_usd as "discountUSD",
+          created_at as "createdAt"
+        FROM public.bookings
+        WHERE tenant_id = ${tenantFilter}
+        ORDER BY created_at DESC
+        LIMIT 200;
+      `;
 
       return res.status(200).json({
         bookings: rows.map((r: any) => ({
@@ -289,8 +280,7 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── PATCH: Actualizar estado y validar fidelización oficial ────────────────
-  if (req.method === 'PATCH') {
+  // ─── if (req.method === 'PATCH') {
     if (!sql) {
       return res.status(500).json({ error: 'Base de datos no disponible.' });
     }

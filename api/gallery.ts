@@ -1,10 +1,11 @@
 // Vercel Serverless Function: /api/gallery
 // Manages carousel gallery images in Neon Serverless Postgres with strict tenant isolation
 import { getDb } from './_db.js';
+import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',

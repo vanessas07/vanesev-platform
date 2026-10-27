@@ -111,7 +111,7 @@ export function verifyJwt(token, secret) {
     }
     return { valid: true, payload };
   } catch (err) {
-    return { valid: false, error: err.message };
+    return { valid: false, error: 'Token verification failed' };
   }
 }
 
@@ -235,6 +235,6 @@ export async function validateSuperadminSession(req, sqlInstance) {
 
     return { valid: true, user: { id: user.id, email: user.email } };
   } catch (err) {
-    return { valid: false, error: err.message || 'Error validando sesión de superadmin' };
+    return { valid: false, error: 'Error validando sesión de superadmin' };
   }
 }

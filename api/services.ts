@@ -2,10 +2,11 @@
 // Manages catalog services in Neon Serverless Postgres with PostgreSQL 18 RLS enforcement
 // Strict multi-tenant isolation: tenant parameter is required; zero cross-tenant default fallback.
 import { getDb, executeWithTenantRls } from './_db.js';
+import { applyCors } from './_cors.js';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
