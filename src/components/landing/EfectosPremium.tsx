@@ -626,8 +626,8 @@ export const PanelDeDuena: React.FC = () => {
               <span className="h-2.5 w-2.5 rounded-full bg-[#E4E2EA]" />
               <span className="ml-3 flex-1 truncate rounded-full bg-white px-3 py-1 text-[10px] text-[#6E6478]">vanesev.com/tu-salon/admin</span>
             </div>
-            <div className="grid grid-cols-[84px_1fr] sm:grid-cols-[120px_1fr]">
-              <div className="space-y-1 border-r border-[#1A1020]/8 bg-[#FBFAFC] p-2.5 sm:p-3 text-[10px] font-semibold text-[#6E6478]">
+            <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr]">
+              <div className="hidden sm:block space-y-1 border-r border-[#1A1020]/8 bg-[#FBFAFC] p-3 text-[10px] font-semibold text-[#6E6478]">
                 {['Inicio', 'Agenda', 'Servicios', 'Ofertas', 'Cupones', 'Clientas', 'Caja'].map((m, i) => (
                   <div key={m} className={`rounded-lg px-2 py-1.5 ${i === 1 ? 'bg-[#1F1226] text-[#EBDDB8] ring-1 ring-[#C9A45C]/50' : ''}`}>{m}</div>
                 ))}
