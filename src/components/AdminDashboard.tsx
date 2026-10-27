@@ -1265,7 +1265,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const sectionHead = (title: string, sub: string, action?: React.ReactNode) => (
     <div className="border-b border-[#1E181A]/10 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h3 className="text-lg font-bold font-display text-[#1E181A]">{title}</h3>
+        <h3 className="text-lg font-bold font-cormorant text-[#1E181A]">{title}</h3>
         <p className="text-xs text-[#6E6266] mt-0.5">{sub}</p>
       </div>
       {action && <div>{action}</div>}
@@ -1276,9 +1276,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const progressPercent = Math.min(100, Math.max(28, Math.round(((bookings.length * 25 + services.length * 10) / 300) * 100)));
 
   return (
-    <div className="min-h-screen bg-[#E6E6EB] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-v-bg text-v-ink font-sans p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
-      <div className="max-w-[1440px] mx-auto bg-[#F5F5F8] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
+      <div className="max-w-[1440px] mx-auto bg-v-surface-2 rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-v-line min-h-[calc(100vh-48px)] flex flex-col">
 
         {/* Franja discreta: Periodo de puesta a punto (Orden B1-c §5) */}
         {enPrueba && (
@@ -1311,7 +1311,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #F26A3D 0%, #D94824 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5B2A6E 0%, #4A2159 100%)' }}
             >
               {tenantInitials}
             </div>
@@ -1371,7 +1371,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="button"
                 onClick={onExitToCatalog}
-                className="text-[#F26A3D] hover:text-[#D94824] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                className="text-[#5B2A6E] hover:text-[#4A2159] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                 title="Ver Carta Pública del Salón"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1488,7 +1488,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   >
                     <Icon className="w-4 h-4" />
                     {key === 'bookings' && enWhatsAppCount > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-[#F26A3D] absolute top-0.5 right-0.5" />
+                      <span className="w-2 h-2 rounded-full bg-[#5B2A6E] absolute top-0.5 right-0.5" />
                     )}
                   </button>
                 );
@@ -1734,7 +1734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => navigate('theme')}
-                          className="px-3 py-1 rounded-full bg-[#F26A3D] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                          className="px-3 py-1 rounded-full bg-[#5B2A6E] text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                           <span>Editar</span>
