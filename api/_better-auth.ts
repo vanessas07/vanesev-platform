@@ -245,12 +245,14 @@ export const auth = betterAuth({
         ctx.path.startsWith("/reset-password") ||
         ctx.path.startsWith("/sign-out") ||
         ctx.path.startsWith("/sign-in") ||
-        ctx.path.startsWith("/two-factor");
+        ctx.path.startsWith("/two-factor") ||
+        ctx.path.startsWith("/get-session") ||
+        ctx.path.startsWith("/ok");
 
       if (!isExemptResetPath) {
         try {
-          const session = await auth.api.getSession({ headers: ctx.headers });
-          if (session?.user && (session.user as any).must_reset) {
+          const session = ctx.context?.session as any;
+          if (session?.user && session.user.must_reset) {
             throw new APIError("FORBIDDEN", {
               message: "Debe restablecer su contraseña antes de continuar (MUST_RESET).",
             });
@@ -327,9 +329,9 @@ export const auth = betterAuth({
         const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 400 && ret?.status !== 401 && ret?.status !== 403) || status === 200;
         if (isSuccess) {
           try {
-            const session = await auth.api.getSession({ headers: ctx.headers });
-            if (session?.user?.id) {
-              await pool.query(`UPDATE "user" SET must_reset = false WHERE id = $1`, [session.user.id]);
+            const userId = ret?.user?.id || ret?.session?.userId || (ctx.context?.session as any)?.user?.id;
+            if (userId) {
+              await pool.query(`UPDATE "user" SET must_reset = false WHERE id = $1`, [userId]);
             }
           } catch (e: any) {
             console.error("[AUTH] Error al limpiar must_reset tras change-password:", e?.message || "Error desconocido");

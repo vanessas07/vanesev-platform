@@ -280,7 +280,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ─── if (req.method === 'PATCH') {
+  // ─── PATCH: Actualizar estado y validar fidelización oficial ────────────────
+  if (req.method === 'PATCH') {
     if (!sql) {
       return res.status(500).json({ error: 'Base de datos no disponible.' });
     }

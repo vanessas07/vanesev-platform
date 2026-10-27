@@ -73,6 +73,7 @@ const headersBase = {
 };
 if (bypassSecret) {
   headersBase["x-vercel-protection-bypass"] = bypassSecret;
+  headersBase["x-vercel-set-bypass-cookie"] = "sso-bypass";
 }
 
 async function requestApi(endpointPath, options = {}) {
@@ -82,6 +83,7 @@ async function requestApi(endpointPath, options = {}) {
     method: options.method || "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
+    redirect: "manual",
   });
   let bodyText = "";
   try {
