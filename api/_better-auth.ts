@@ -23,7 +23,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     disableSignUp: true, // Registro público cerrado: staff entra únicamente por invitación
-    minPasswordLength: 6, // Base mínima del motor; staff exige 10 mediante hook
+    minPasswordLength: 6, // Base mínima del motor; staff exige 10 al fijar/cambiar mediante hook
   },
   trustedOrigins: [
     "https://vanesev.com",
@@ -33,14 +33,34 @@ export const auth = betterAuth({
   ],
   rateLimit: {
     storage: "database",
-    window: 300,
-    max: 10,
+    window: 60,
+    max: 100, // Ajuste 1: rate limit global permisivo (100 peticiones / 60 s) para no estrangular get-session
     customRules: {
       "/sign-in/email": {
         window: 300,
         max: 5,
       },
       "/sign-in/phone-number": {
+        window: 300,
+        max: 5,
+      },
+      "/phone-number/send-otp": {
+        window: 300,
+        max: 5,
+      },
+      "/phone-number/reset-password": {
+        window: 300,
+        max: 5,
+      },
+      "/two-factor/verify-totp": {
+        window: 300,
+        max: 5,
+      },
+      "/two-factor/verify-backup-code": {
+        window: 300,
+        max: 5,
+      },
+      "/two-factor/verify-otp": {
         window: 300,
         max: 5,
       },
@@ -81,10 +101,18 @@ export const auth = betterAuth({
         }
       }
 
-      // Hook 2: Validación de contraseña para Staff y Admin (mínimo 10 caracteres)
-      if (ctx.path.startsWith("/sign-in/email") || ctx.path.startsWith("/change-password")) {
+      // Hook 2: Validación de contraseña para Staff y Admin (Ajuste 3: mínimo 10 caracteres en endpoints de fijar/cambiar)
+      const isPasswordCreationOrChange =
+        !ctx.path.startsWith("/phone-number/") &&
+        (ctx.path.startsWith("/reset-password") ||
+         ctx.path.startsWith("/change-password") ||
+         ctx.path.includes("invitation") ||
+         ctx.path.includes("invite-member"));
+
+      if (isPasswordCreationOrChange) {
         const body = ctx.body as Record<string, any> | undefined;
-        if (body?.password && String(body.password).length < 10) {
+        const pwd = body?.newPassword || body?.password;
+        if (pwd !== undefined && String(pwd).length < 10) {
           throw new APIError("BAD_REQUEST", {
             message: "La contraseña de personal y administración debe tener al menos 10 caracteres.",
           });
@@ -112,42 +140,67 @@ export const auth = betterAuth({
             }
           } catch (err: any) {
             if (err instanceof APIError) throw err;
-            // Si la tabla o consulta falla, continúa
+            console.error("[AUTH] Error al verificar bloqueo de cuenta en base de datos:", err?.message || "Error desconocido");
           }
         }
       }
     }),
     after: createAuthMiddleware(async (ctx) => {
-      // Gestión de bloqueo por cuenta tras fallos seguidos
+      // Ajuste 2: Gestión de bloqueo por cuenta tras fallos seguidos (lectura de returned APIError)
       if (ctx.path.startsWith("/sign-in/email") || ctx.path.startsWith("/sign-in/phone-number")) {
         const body = ctx.body as Record<string, any> | undefined;
         const identifier = body?.email || body?.phoneNumber;
         if (identifier) {
+          const ret = ctx.context?.returned as any;
           const status = ctx.context?.response?.status;
-          if (status === 200) {
+
+          const isError =
+            ret instanceof Error ||
+            ret?.name === "APIError" ||
+            ret?.status === 401 ||
+            ret?.statusCode === 401 ||
+            status === 401 ||
+            ret?.body?.code === "INVALID_EMAIL_OR_PASSWORD";
+
+          const isSuccess =
+            !isError &&
+            (ret?.user !== undefined || ret?.session !== undefined || status === 200);
+
+          if (isSuccess) {
             await pool.query(
               `UPDATE "user" SET failed_attempts = 0, locked_until = NULL WHERE email = $1 OR "phoneNumber" = $1`,
               [identifier]
-            ).catch(() => {});
-          } else if (status === 401) {
+            ).catch((err) => {
+              console.error("[AUTH] Error al resetear failed_attempts tras login exitoso:", err?.message || "Error desconocido");
+            });
+          } else if (isError) {
             await pool.query(
               `UPDATE "user" SET 
                 failed_attempts = COALESCE(failed_attempts, 0) + 1,
                 locked_until = CASE WHEN COALESCE(failed_attempts, 0) + 1 >= 10 THEN NOW() + INTERVAL '15 minutes' ELSE locked_until END
                WHERE email = $1 OR "phoneNumber" = $1`,
               [identifier]
-            ).catch(() => {});
+            ).catch((err) => {
+              console.error("[AUTH] Error al incrementar failed_attempts tras fallo:", err?.message || "Error desconocido");
+            });
           }
         }
       }
       // Al verificar OTP (desbloqueo), limpiar contador de fallos
-      if (ctx.path.startsWith("/phone-number/verify") && ctx.context?.response?.status === 200) {
-        const body = ctx.body as Record<string, any> | undefined;
-        if (body?.phoneNumber) {
-          await pool.query(
-            `UPDATE "user" SET failed_attempts = 0, locked_until = NULL WHERE "phoneNumber" = $1`,
-            [body.phoneNumber]
-          ).catch(() => {});
+      if (ctx.path.startsWith("/phone-number/verify")) {
+        const ret = ctx.context?.returned as any;
+        const status = ctx.context?.response?.status;
+        const isSuccess = (ret && !(ret instanceof Error) && ret?.status !== 401) || status === 200;
+        if (isSuccess) {
+          const body = ctx.body as Record<string, any> | undefined;
+          if (body?.phoneNumber) {
+            await pool.query(
+              `UPDATE "user" SET failed_attempts = 0, locked_until = NULL WHERE "phoneNumber" = $1`,
+              [body.phoneNumber]
+            ).catch((err) => {
+              console.error("[AUTH] Error al resetear failed_attempts tras OTP:", err?.message || "Error desconocido");
+            });
+          }
         }
       }
     }),
