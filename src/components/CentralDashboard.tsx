@@ -4,9 +4,10 @@ import {
   Globe, Plus, RefreshCw, ExternalLink, Sparkles, Send, Check, XCircle,
   Clock, Server, Database, HardDrive, GitBranch, ArrowUpRight, Users,
   MapPin, DollarSign, Crown, Eye, Terminal, Activity, Lock, QrCode, Crosshair,
-  Palette, Sliders, X, LogOut
+  Palette, Sliders, X, LogOut, Copy, UserPlus
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { authClient } from '../lib/authClient';
 import { CentralAuthGate } from './CentralAuthGate';
 import { DynamicQrManager } from './DynamicQrManager';
 import { CentralCompetitors } from './CentralCompetitors';
@@ -89,12 +90,148 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
   // Selected Document Viewer
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  // ─── ALTA DE PERSONAL (create-staff) ─────────────────────────────
+  const [showStaffModal, setShowStaffModal] = useState(false);
+  const [staffFormEmail, setStaffFormEmail] = useState('');
+  const [staffFormOrg, setStaffFormOrg] = useState('');
+  const [staffFormRole, setStaffFormRole] = useState<'owner' | 'admin' | 'staff'>('staff');
+  const [staffFormName, setStaffFormName] = useState('');
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
+  const [createdStaffResult, setCreatedStaffResult] = useState<{
+    email: string;
+    organizationSlug: string;
+    role: string;
+    temporaryPassword: string;
+  } | null>(null);
+  const [copiedTempPassword, setCopiedTempPassword] = useState(false);
+
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStaffError(null);
+    setStaffLoading(true);
+    try {
+      const res = await fetch('/api/central', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create-staff',
+          payload: {
+            email: staffFormEmail.trim().toLowerCase(),
+            name: staffFormName.trim() || undefined,
+            organizationSlug: staffFormOrg.trim().toLowerCase(),
+            role: staffFormRole,
+          },
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        setStaffError(resData.error || 'Error al dar de alta el personal.');
+        return;
+      }
+      setCreatedStaffResult({
+        email: resData.email,
+        organizationSlug: resData.organizationSlug,
+        role: resData.role,
+        temporaryPassword: resData.temporaryPassword,
+      });
+      setStaffFormEmail('');
+      setStaffFormName('');
+      setStaffFormOrg('');
+    } catch (err: any) {
+      setStaffError(err?.message || 'Error de conexión con el servidor.');
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  // ─── QR DE CAMPAÑA (scope=campaigns) ─────────────────────────────
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [campaignError, setCampaignError] = useState<string | null>(null);
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [campCode, setCampCode] = useState('');
+  const [campName, setCampName] = useState('');
+  const [campTarget, setCampTarget] = useState('');
+  const [savingCamp, setSavingCamp] = useState(false);
+  const [copiedCampCode, setCopiedCampCode] = useState<string | null>(null);
+
+  const fetchCampaigns = async () => {
+    setLoadingCampaigns(true);
+    setCampaignError(null);
+    try {
+      const res = await fetch('/api/qr?scope=campaigns');
+      if (res.ok) {
+        const json = await res.json();
+        setCampaigns(json.campaigns || []);
+      } else {
+        const err = await res.json();
+        setCampaignError(err.error || 'Error al cargar campañas.');
+      }
+    } catch (e: any) {
+      setCampaignError(e?.message || 'Error de conexión al cargar campañas.');
+    } finally {
+      setLoadingCampaigns(false);
+    }
+  };
+
+  const handleSaveCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCamp(true);
+    setCampaignError(null);
+    try {
+      const res = await fetch('/api/qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'campaign_upsert',
+          code: campCode.trim().toLowerCase(),
+          name: campName.trim(),
+          targetUrl: campTarget.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setCampaignError(json.error || 'Error al guardar campaña.');
+        return;
+      }
+      setShowCampaignModal(false);
+      setCampCode('');
+      setCampName('');
+      setCampTarget('');
+      await fetchCampaigns();
+    } catch (e: any) {
+      setCampaignError(e?.message || 'Error al guardar campaña.');
+    } finally {
+      setSavingCamp(false);
+    }
+  };
+
+  const handleToggleCampaign = async (code: string, currentActive: boolean) => {
+    try {
+      const res = await fetch('/api/qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'campaign_toggle',
+          code,
+          isActive: !currentActive,
+        }),
+      });
+      if (res.ok) {
+        await fetchCampaigns();
+      }
+    } catch (e) {
+      console.error('Error conmutando campaña:', e);
+    }
+  };
+
 
   const fetchCentralState = async () => {
     setSyncing(true);
     try {
       const res = await fetch('/api/central');
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 403) {
         setAuthRequired(true);
         setData(null);
         return;
@@ -132,11 +269,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth?scope=central', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'logout' }),
-      });
+      await authClient.signOut();
       setAuthRequired(true);
       setData(null);
     } catch (e) {
@@ -1388,6 +1521,17 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     <Plus className="w-4 h-4" />
                     Crear Nuevo Salón / Cliente
                   </button>
+                  <button
+                    onClick={() => {
+                      setCreatedStaffResult(null);
+                      setStaffError(null);
+                      setShowStaffModal(true);
+                    }}
+                    className="px-5 py-3 rounded-full bg-[#18181B] hover:bg-black text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Alta de Personal
+                  </button>
                 </div>
 
                 {/* EMBEDDED SALON THEME STUDIO WHEN EDITING A CLIENT'S DESIGN */}
@@ -1802,6 +1946,282 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             )}
           </main>
         </div>
+
+      {/* ─── MODAL ALTA DE PERSONAL ─── */}
+      {showStaffModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#F26A3D]/10 text-[#F26A3D] flex items-center justify-center">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-base text-[#18181B]">Alta de Personal de Salón</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowStaffModal(false);
+                  setCreatedStaffResult(null);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {createdStaffResult ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Contraseña Temporal Generada</span>
+                  </div>
+                  <p className="text-xs text-amber-900 leading-relaxed">
+                    <strong>AVISO CRÍTICO:</strong> Esta contraseña solo se muestra <strong>UNA SOLA VEZ</strong>. Cópiala y envíala al usuario por un canal seguro. La cuenta tiene activa la política obligatoria de cambio de contraseña en su primer inicio de sesión.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900 text-white font-mono text-center text-sm tracking-wider select-all">
+                  {createdStaffResult.temporaryPassword}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdStaffResult.temporaryPassword);
+                    setCopiedTempPassword(true);
+                    setTimeout(() => setCopiedTempPassword(false), 2000);
+                  }}
+                  className="w-full py-3 rounded-2xl bg-[#F26A3D] hover:bg-[#D94824] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all"
+                >
+                  {copiedTempPassword ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>¡Contraseña copiada al portapapeles!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copiar Contraseña Temporal</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="pt-2 text-xs text-slate-500 text-center">
+                  Usuario: <strong>{createdStaffResult.email}</strong> &bull; Salón: <strong>{createdStaffResult.organizationSlug}</strong> &bull; Rol: <strong>{createdStaffResult.role}</strong>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowStaffModal(false);
+                    setCreatedStaffResult(null);
+                  }}
+                  className="w-full py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateStaff} className="space-y-4">
+                {staffError && (
+                  <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{staffError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Correo Electrónico *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={staffFormEmail}
+                    onChange={(e) => setStaffFormEmail(e.target.value)}
+                    placeholder="especialista@salon.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nombre Completo (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={staffFormName}
+                    onChange={(e) => setStaffFormName(e.target.value)}
+                    placeholder="Nombre y Apellidos"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Salón (Organización) *
+                  </label>
+                  <select
+                    required
+                    value={staffFormOrg}
+                    onChange={(e) => setStaffFormOrg(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D] bg-white"
+                  >
+                    <option value="">Selecciona un salón...</option>
+                    {(data?.tenants || []).map((t: any) => (
+                      <option key={t.id} value={t.id}>
+                        {t.business_name || t.businessName || t.id} ({t.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Rol en el Salón *
+                  </label>
+                  <select
+                    value={staffFormRole}
+                    onChange={(e) => setStaffFormRole(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D] bg-white"
+                  >
+                    <option value="staff">Especialista / Personal (Staff)</option>
+                    <option value="admin">Administrador del Salón (Admin)</option>
+                    <option value="owner">Propietario / Dueño (Owner)</option>
+                  </select>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowStaffModal(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={staffLoading}
+                    className="px-5 py-2.5 rounded-xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {staffLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Generando alta...</span>
+                      </>
+                    ) : (
+                      <span>Crear Personal</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL NUEVA CAMPAÑA QR ─── */}
+      {showCampaignModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#F26A3D]/10 text-[#F26A3D] flex items-center justify-center">
+                  <QrCode className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-base text-[#18181B]">Nueva Campaña QR</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCampaignModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCampaign} className="space-y-4">
+              {campaignError && (
+                <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{campaignError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Código de Campaña (/q/&lt;código&gt;) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={campCode}
+                  onChange={(e) => setCampCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="ej: promo-otono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#F26A3D]"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">3-32 caracteres a-z, 0-9 o guiones.</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Nombre de la Campaña *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={campName}
+                  onChange={(e) => setCampName(e.target.value)}
+                  placeholder="ej: Campaña Otoño 2026"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#F26A3D]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Destino Interno *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={campTarget}
+                  onChange={(e) => setCampTarget(e.target.value)}
+                  placeholder="ej: /capra-studio o /"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#F26A3D]"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">Debe ser una ruta interna que comience por una sola «/».</span>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCampaignModal(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCamp}
+                  className="px-5 py-2.5 rounded-xl bg-[#F26A3D] hover:bg-[#D94824] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {savingCamp ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Campaña</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );
