@@ -16,6 +16,7 @@ export const auth = betterAuth({
   appName: "VANESEV",
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: 6,
   },
   trustedOrigins: [
     "https://vanesev.com",
@@ -54,6 +55,9 @@ export const auth = betterAuth({
       sendOTP: async ({ phoneNumber, code }) => {
         // En preview / staging registramos el código OTP para verificar el flujo
         console.log(`[SMS-OTP-GATEWAY] Para: ${phoneNumber} | Codigo: ${code}`);
+      },
+      sendPasswordResetOTP: async ({ phoneNumber, code }) => {
+        console.log(`[SMS-RESET-GATEWAY] Para: ${phoneNumber} | Codigo: ${code}`);
       },
       signUpOnVerification: {
         getTempEmail: (phone) => `${phone.replace(/[^0-9]/g, '')}@client.vanesev.internal`,
