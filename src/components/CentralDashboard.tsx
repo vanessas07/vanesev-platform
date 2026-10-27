@@ -4,7 +4,7 @@ import {
   Globe, Plus, RefreshCw, ExternalLink, Send, Check, XCircle,
   Clock, Server, Database, HardDrive, GitBranch, ArrowUpRight, Users,
   MapPin, DollarSign, Crown, Eye, Terminal, Activity, Lock, QrCode, Crosshair,
-  Palette, Sliders, X, LogOut, Copy, UserPlus
+  Palette, Sliders, X, LogOut, Copy, UserPlus, KeyRound
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authClient } from '../lib/authClient';
@@ -142,6 +142,73 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
       setStaffError(err?.message || 'Error de conexión con el servidor.');
     } finally {
       setStaffLoading(false);
+    }
+  };
+
+  // ─── PUESTA A PUNTO: ACCESOS DE PRUEBA (create-trial-owner / reset-trial-password) ─
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [trialModalType, setTrialModalType] = useState<'create' | 'reset'>('create');
+  const [trialModalOrg, setTrialModalOrg] = useState('');
+  const [trialLoading, setTrialLoading] = useState(false);
+  const [trialError, setTrialError] = useState<string | null>(null);
+  const [trialResult, setTrialResult] = useState<{
+    email: string;
+    organizationSlug: string;
+    temporaryPassword: string;
+  } | null>(null);
+  const [copiedTrialPassword, setCopiedTrialPassword] = useState(false);
+
+  const handleTrialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTrialError(null);
+    setTrialLoading(true);
+    try {
+      const res = await fetch('/api/central', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: trialModalType === 'create' ? 'create-trial-owner' : 'reset-trial-password',
+          payload: {
+            organizationSlug: trialModalOrg.trim().toLowerCase(),
+          },
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        setTrialError(resData.error || 'Error al gestionar acceso de prueba.');
+        return;
+      }
+      setTrialResult({
+        email: resData.email,
+        organizationSlug: resData.organizationSlug,
+        temporaryPassword: resData.temporaryPassword,
+      });
+      fetchCentralState();
+    } catch (err: any) {
+      setTrialError(err?.message || 'Error de conexión.');
+    } finally {
+      setTrialLoading(false);
+    }
+  };
+
+  const handleUpdatePeticionEstado = async (id: string, nuevoEstado: string) => {
+    try {
+      const res = await fetch('/api/central', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'puesta_a_punto_estado',
+          payload: {
+            id,
+            estado: nuevoEstado,
+          },
+        }),
+      });
+      if (res.ok) {
+        fetchCentralState();
+      }
+    } catch (err) {
+      console.error('Error al actualizar estado de petición:', err);
     }
   };
 
@@ -1614,6 +1681,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                       Paleta: {livePalette.name}
                                     </span>
                                   )}
+                                  {ten.en_prueba && (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-300">
+                                      En puesta a punto
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-[#6E6266] mt-0.5">
                                   {ten.owner_name} &bull; {liveTheme.instagramHandle || ten.instagram_handle} &bull; +{liveTheme.whatsappPhone || ten.whatsapp_phone}
@@ -1685,9 +1757,96 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             <span>Carta Pública</span>
                           </button>
                         </div>
+                        <div className="p-3 bg-[#FAF7F2] border-t border-[#1E181A]/8 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTrialModalType('create');
+                              setTrialModalOrg(ten.id);
+                              setTrialResult(null);
+                              setTrialError(null);
+                              setShowTrialModal(true);
+                            }}
+                            className="flex-1 py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                          >
+                            <KeyRound className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Crear acceso de prueba</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTrialModalType('reset');
+                              setTrialModalOrg(ten.id);
+                              setTrialResult(null);
+                              setTrialError(null);
+                              setShowTrialModal(true);
+                            }}
+                            className="py-2 px-3 rounded-xl bg-white hover:bg-zinc-100 border border-zinc-300 text-zinc-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 text-zinc-600" />
+                            <span>Regenerar contraseña</span>
+                          </button>
+                        </div>
                       </motion.div>
                     );
                   })}
+                </div>
+
+                {/* Sección de Peticiones de Puesta a Punto (Orden B1-c §2.3) */}
+                <div className="bg-white rounded-[28px] border border-[#1E181A]/8 shadow-xs p-6 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1E181A]/8">
+                    <div>
+                      <h3 className="font-display text-lg font-bold text-[#1E181A]">Peticiones de Puesta a Punto</h3>
+                      <p className="text-xs text-[#6E6266] mt-0.5">Historial y seguimiento de solicitudes enviadas por los salones en puesta a punto.</p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                      {(data?.peticionesPuestaAPunto || []).length} Registradas
+                    </span>
+                  </div>
+                  {(data?.peticionesPuestaAPunto || []).length === 0 ? (
+                    <p className="text-xs text-[#9A8C90] py-6 text-center">No hay peticiones de puesta a punto registradas todavía.</p>
+                  ) : (
+                    <div className="divide-y divide-zinc-100">
+                      {(data?.peticionesPuestaAPunto || []).map((p) => (
+                        <div key={p.id} className="py-3.5 flex flex-wrap items-start justify-between gap-3">
+                          <div className="space-y-1.5 min-w-0 max-w-2xl">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-[#18181B] bg-zinc-100 px-2.5 py-0.5 rounded-md border border-zinc-200">
+                                {p.sender}
+                              </span>
+                              {p.priority === 'high' && (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300">
+                                  Requiere llamada
+                                </span>
+                              )}
+                              <span className="text-[11px] text-zinc-400">
+                                {p.created_at ? new Date(p.created_at).toLocaleString('es-ES') : ''}
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-800 whitespace-pre-wrap leading-relaxed">{p.body}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${
+                              p.estado === 'hecha' ? 'bg-emerald-100 text-emerald-800' :
+                              p.estado === 'en_curso' ? 'bg-blue-100 text-blue-800' :
+                              'bg-amber-100 text-amber-800'
+                            }`}>
+                              {p.estado || 'recibida'}
+                            </span>
+                            <select
+                              value={p.estado || 'recibida'}
+                              onChange={(e) => handleUpdatePeticionEstado(p.id, e.target.value)}
+                              className="px-2.5 py-1 rounded-lg border border-zinc-300 text-xs bg-white text-zinc-800 cursor-pointer"
+                            >
+                              <option value="recibida">Recibida</option>
+                              <option value="en_curso">En curso</option>
+                              <option value="hecha">Hecha</option>
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {showTenantModal && (
@@ -1948,6 +2107,132 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
         </div>
 
       {/* ─── MODAL ALTA DE PERSONAL ─── */}
+      {showTrialModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-base text-[#18181B]">
+                  {trialModalType === 'create' ? 'Crear Acceso de Prueba' : 'Regenerar Contraseña de Prueba'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTrialModal(false);
+                  setTrialResult(null);
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {trialResult ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Contraseña Temporal Generada</span>
+                  </div>
+                  <p className="text-xs text-amber-900 leading-relaxed">
+                    Copia y entrega estas credenciales a la dueña. Esta contraseña <strong>solo se muestra una vez</strong>.
+                  </p>
+                  <div className="space-y-1.5 text-xs font-mono pt-1">
+                    <div><strong>Correo:</strong> {trialResult.email}</div>
+                    <div><strong>Salón:</strong> {trialResult.organizationSlug}</div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        readOnly
+                        value={trialResult.temporaryPassword}
+                        className="flex-1 px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-mono select-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(trialResult.temporaryPassword);
+                          setCopiedTrialPassword(true);
+                          setTimeout(() => setCopiedTrialPassword(false), 2000);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold hover:bg-amber-700 cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        {copiedTrialPassword ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedTrialPassword ? 'Copiada' : 'Copiar'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTrialModal(false);
+                    setTrialResult(null);
+                  }}
+                  className="w-full py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleTrialSubmit} className="space-y-4">
+                {trialError && (
+                  <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{trialError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Slug del Salón / Organización *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={trialModalOrg}
+                    onChange={(e) => setTrialModalOrg(e.target.value)}
+                    placeholder="slug-del-salon"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    El usuario será <code>{trialModalOrg.trim().toLowerCase() || 'slug'}@prueba.vanesev.internal</code> con rol <code>owner</code>.
+                  </span>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowTrialModal(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={trialLoading}
+                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {trialLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Procesando...</span>
+                      </>
+                    ) : (
+                      <span>{trialModalType === 'create' ? 'Crear Acceso' : 'Regenerar Contraseña'}</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {showStaffModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">

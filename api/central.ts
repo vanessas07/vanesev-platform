@@ -107,7 +107,8 @@ export default async function handler(req: any, res: any) {
         docs,
         staff,
         zones,
-        bookingStats
+        bookingStats,
+        peticionesPuestaAPunto
       ] = await Promise.all([
         sql`SELECT * FROM public.tenants ORDER BY is_lifetime_free DESC, created_at ASC`,
         sql`SELECT * FROM public.central_sessions ORDER BY session_date DESC`,
@@ -126,7 +127,8 @@ export default async function handler(req: any, res: any) {
             COALESCE(SUM(total_price_usd) FILTER (WHERE status != 'cancelada'), 0)::numeric AS total_revenue_usd
           FROM public.bookings
           GROUP BY tenant_id
-        `
+        `,
+        sql`SELECT * FROM public.central_mailbox WHERE category = 'puesta_a_punto' ORDER BY created_at DESC`
       ]);
 
       return res.status(200).json({
@@ -140,6 +142,7 @@ export default async function handler(req: any, res: any) {
         staff,
         zones,
         bookingStats,
+        peticionesPuestaAPunto,
         infrastructure: {
           githubAccount: 'vanessas07',
           vercelAccount: 'vanesevapp-4342',
@@ -226,6 +229,135 @@ export default async function handler(req: any, res: any) {
           organizationSlug: org.slug,
           temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
         });
+      }
+
+      // Acción de Alta de Dueña en Puesta a Punto desde Central (Orden B1-c §2.1)
+      if (action === 'create-trial-owner' || action === 'create_trial_owner') {
+        const { organizationSlug } = payload || bodyObj || {};
+        if (!organizationSlug) {
+          return res.status(400).json({ error: 'Parámetro organizationSlug requerido.' });
+        }
+
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanEmail = `${cleanOrgSlug}@prueba.vanesev.internal`;
+
+        // 1. Si el usuario existe en "user" → 409 Conflict
+        const existingUsers = await sql`
+          SELECT id FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (existingUsers.length > 0) {
+          return res.status(409).json({ error: `Conflict: El usuario de prueba '${cleanEmail}' ya existe.` });
+        }
+
+        // 2. Verificar que la organización exista
+        const orgRows = await sql`
+          SELECT id, slug, name FROM "organization" WHERE slug = ${cleanOrgSlug} OR id = ${cleanOrgSlug} LIMIT 1;
+        `;
+        if (orgRows.length === 0) {
+          return res.status(404).json({ error: `Organización "${cleanOrgSlug}" no encontrada.` });
+        }
+        const org = orgRows[0];
+
+        // 3. Generar contraseña aleatoria temporal de ≥ 16 caracteres y hashear con better-auth/crypto
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const hashedPassword = await hashPassword(tempPassword);
+
+        const newUserId = `usr_${crypto.randomBytes(8).toString('hex')}`;
+        const newAccountId = `acc_${crypto.randomBytes(8).toString('hex')}`;
+        const newMemberId = `mem_${crypto.randomBytes(8).toString('hex')}`;
+
+        // 4. Crear user, account, member y actualizar tenant en una sola transacción atómica
+        await sql.transaction([
+          sql`
+            INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt", must_reset, cuenta_prueba)
+            VALUES (${newUserId}, ${`Dueña ${org.name || cleanOrgSlug}`}, ${cleanEmail}, true, NOW(), NOW(), false, true);
+          `,
+          sql`
+            INSERT INTO "account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+            VALUES (${newAccountId}, ${newUserId}, ${newUserId}, 'credential', ${hashedPassword}, NOW(), NOW());
+          `,
+          sql`
+            INSERT INTO "member" (id, "organizationId", "userId", role, "createdAt")
+            VALUES (${newMemberId}, ${org.id}, ${newUserId}, 'owner', NOW());
+          `,
+          sql`
+            UPDATE public.tenants
+            SET en_prueba = true, updated_at = NOW()
+            WHERE id = ${org.slug} OR id = ${cleanOrgSlug};
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          userId: newUserId,
+          email: cleanEmail,
+          role: 'owner',
+          organizationSlug: org.slug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
+
+      // Acción de Regenerar Contraseña Temporal para Dueña en Puesta a Punto (Orden B1-c §2.2)
+      if (action === 'reset-trial-password' || action === 'reset_trial_password') {
+        const { organizationSlug } = payload || bodyObj || {};
+        if (!organizationSlug) {
+          return res.status(400).json({ error: 'Parámetro organizationSlug requerido.' });
+        }
+
+        const cleanOrgSlug = String(organizationSlug).trim().toLowerCase();
+        const cleanEmail = `${cleanOrgSlug}@prueba.vanesev.internal`;
+
+        const users = await sql`
+          SELECT id, email, cuenta_prueba FROM "user" WHERE LOWER(email) = ${cleanEmail} LIMIT 1;
+        `;
+        if (users.length === 0) {
+          return res.status(404).json({ error: `Usuario de prueba para "${cleanOrgSlug}" no encontrado.` });
+        }
+
+        const u = users[0];
+        if (!u.cuenta_prueba) {
+          return res.status(400).json({ error: 'La cuenta no es una cuenta de puesta a punto (cuenta_prueba).' });
+        }
+
+        const tempPassword = crypto.randomBytes(12).toString('base64url') + 'A1!x';
+        const hashedPassword = await hashPassword(tempPassword);
+
+        await sql.transaction([
+          sql`
+            UPDATE "account"
+            SET password = ${hashedPassword}, "updatedAt" = NOW()
+            WHERE "userId" = ${u.id} AND "providerId" = 'credential';
+          `,
+          sql`
+            DELETE FROM "session"
+            WHERE "userId" = ${u.id};
+          `
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          email: cleanEmail,
+          organizationSlug: cleanOrgSlug,
+          temporaryPassword: tempPassword, // Devuelta UNA SOLA VEZ
+        });
+      }
+
+      // Acción de Cambio de Estado en Peticiones de Puesta a Punto (Orden B1-c §2.3)
+      if (action === 'puesta_a_punto_estado') {
+        const { id, estado } = payload || bodyObj || {};
+        if (!id || !estado) {
+          return res.status(400).json({ error: 'Parámetros id y estado requeridos.' });
+        }
+        const cleanEstado = String(estado).trim().toLowerCase();
+        if (!['recibida', 'en_curso', 'hecha'].includes(cleanEstado)) {
+          return res.status(400).json({ error: 'Estado inválido. Debe ser recibida, en_curso o hecha.' });
+        }
+        await sql`
+          UPDATE public.central_mailbox
+          SET estado = ${cleanEstado}
+          WHERE id = ${String(id)};
+        `;
+        return res.status(200).json({ ok: true, id, estado: cleanEstado });
       }
 
       if (action === 'review_session') {
