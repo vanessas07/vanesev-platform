@@ -176,7 +176,8 @@ export function escriturasDeDevolucion(sql: any, tenant: string, bookingId: stri
       INSERT INTO public.tarjeta_movimientos (id, tarjeta_id, tenant_id, booking_id, importe_usd, motivo)
       SELECT ${`tm_${randomUUID()}`}, b.tarjeta_regalo_id, b.tenant_id, b.id, b.pago_tarjeta_usd, 'devolucion'
       FROM public.bookings b
-      WHERE b.id = ${bookingId} AND b.tenant_id = ${tenant} AND b.tarjeta_regalo_id IS NOT NULL AND b.pago_tarjeta_usd > 0;
+      JOIN public.tarjetas_regalo t ON t.id = b.tarjeta_regalo_id AND t.tenant_id = b.tenant_id
+      WHERE b.id = ${bookingId} AND b.tenant_id = ${tenant} AND b.pago_tarjeta_usd > 0;
     `,
     sql`UPDATE public.bookings SET pago_tarjeta_usd = 0 WHERE id = ${bookingId} AND tenant_id = ${tenant};`,
   ];

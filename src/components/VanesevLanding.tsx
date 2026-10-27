@@ -1956,7 +1956,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Hablar con ventas por WhatsApp"
-        className="fixed bottom-5 left-5 z-40 w-13 h-13 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-5 left-5 z-40 w-12 h-12 rounded-full bg-[#1F1226] ring-1 ring-[#B89B6A]/50 text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform"
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
