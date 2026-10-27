@@ -134,6 +134,7 @@ const PASS = {
 };
 const creados = { bookings: [], services: [], qr: [], campanas: [], equipo: [] };
 const inicio = new Date();
+let originalCapra = null;
 
 async function crearUsuario(rol, { platformRole = null, org = null, memberRole = null } = {}) {
   const id = `ci_${RUN}_${rol}`;
@@ -181,9 +182,16 @@ async function limpiar() {
     ]);
   }
   await sql`UPDATE public.tenants SET en_prueba = false WHERE id = 'andrea-nails'`;
+  await sql`DELETE FROM public.ofertas WHERE tenant_id = 'capra-studio' AND titulo LIKE 'CI %'`;
+  await sql`DELETE FROM public.cupones WHERE tenant_id = 'capra-studio' AND descripcion LIKE 'CI %'`;
+  await sql`DELETE FROM public.tarjetas_regalo WHERE tenant_id = 'capra-studio' AND nota LIKE 'CI %'`;
+  if (originalCapra) {
+    await sql`UPDATE public.tenants SET landing = ${JSON.stringify(originalCapra.landing || {})}::jsonb, tema = ${JSON.stringify(originalCapra.tema || {})}::jsonb,
+              slogan = ${originalCapra.slogan} WHERE id = 'capra-studio'`;
+  }
   await sql`DELETE FROM public.central_mailbox WHERE sender = 'salon:andrea-nails' AND body LIKE ${'CI ' + RUN + '%'}`;
   await sql`DELETE FROM public.limite_frecuencia WHERE actualizado_en >= ${inicio.toISOString()}
-            AND (clave LIKE 'puesta_a_punto:%' OR clave LIKE 'activar_codigo:%' OR clave LIKE 'activar_intento:%')`;
+            AND (clave LIKE 'puesta_a_punto:%' OR clave LIKE 'activar_codigo:%' OR clave LIKE 'activar_intento:%' OR clave LIKE 'presupuesto-ip:%')`;
   await limpiarRateLimitRunner();
 }
 
@@ -231,6 +239,9 @@ async function main() {
     ['POST', '/api/central', { action: 'create-trial-owner', payload: { organizationSlug: 'andrea-nails' } }],
     ['POST', '/api/team', { action: 'activar_cuenta_codigo', correo: 'x@example.com' }],
     ['POST', '/api/team', { action: 'solicitud_cambios', tenantId: 'andrea-nails', texto: 'texto de prueba' }],
+    ['GET', '/api/salon?tenant=capra-studio'],
+    ['POST', '/api/salon', { action: 'cupon_guardar', tenantId: 'capra-studio', cupon: { codigo: 'XXX', tipo: 'importe', valor: 1 } }],
+    ['POST', '/api/salon', { action: 'tarjeta_crear', tenantId: 'capra-studio', saldoUSD: 5 }],
   ];
   const fallos = [];
   for (const [method, ruta, body] of anonimas) {
@@ -546,6 +557,90 @@ async function main() {
       && panelReal.status === 200 && panelReal.json?.enPrueba === false && conserva,
     `corta ${claveCorta.status}, activa ${activa.status}, sesión temporal ${sesionTemporal.status}, acceso temporal ${accesoTemporal.status}, su correo ${real.status}, enPrueba ${panelReal.json?.enPrueba}, petición ${conserva ? 'conservada' : 'NO'}`);
 
+  // ── L. Negocio del salón (G-033): perfil, landing, tema, ofertas con precio especial, cupones y tarjetas regalo ──
+  originalCapra = (await sql`SELECT landing, tema, slogan FROM public.tenants WHERE id = 'capra-studio'`)[0];
+  // Preparación: el freno de reservas por IP ya se agotó a propósito en D5.
+  await sql`DELETE FROM public.limite_frecuencia WHERE actualizado_en >= ${inicio.toISOString()} AND (clave LIKE 'reserva-ip:%' OR clave LIKE 'reserva-tel:%')`;
+  const base = Number(servicio.price_usd);
+  const sinSesion = await api('/api/salon?tenant=capra-studio');
+  const staffLee = await api('/api/salon?tenant=capra-studio', { token: stToken });
+  const ajenoLee = await api('/api/salon?tenant=andrea-nails', { token: owToken });
+  const dueñaLee = await api('/api/salon?tenant=capra-studio', { token: owToken });
+  const publico = await api('/api/salon?tenant=capra-studio&vista=publica');
+  comprobar('L1', 'Salón: sin sesión 401, staff 403, otro salón 403, dueña 200; la vista pública no lleva cupones ni tarjetas',
+    sinSesion.status === 401 && staffLee.status === 403 && ajenoLee.status === 403 && dueñaLee.status === 200 && publico.status === 200
+      && !!publico.json?.perfil && !('cupones' in (publico.json || {})) && !('tarjetas' in (publico.json || {})),
+    `sin ${sinSesion.status}, staff ${staffLee.status}, ajeno ${ajenoLee.status}, dueña ${dueñaLee.status}, pública ${publico.status}`);
+
+  const perfilOrig = dueñaLee.json?.perfil || {};
+  const waMalo = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'perfil_guardar', tenantId: 'capra-studio', perfil: { ...perfilOrig, whatsapp: 'abc' } } });
+  const perfilOk = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'perfil_guardar', tenantId: 'capra-studio', perfil: { ...perfilOrig, eslogan: `CI ${RUN}` } } });
+  const verPerfil = await api('/api/salon?tenant=capra-studio&vista=publica');
+  const staffPerfil = await api('/api/salon', { method: 'POST', token: stToken, body: { action: 'perfil_guardar', tenantId: 'capra-studio', perfil: { ...perfilOrig } } });
+  await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'perfil_guardar', tenantId: 'capra-studio', perfil: perfilOrig } });
+  const landMala = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'landing_guardar', tenantId: 'capra-studio', landing: { bloques: ['portada', '<script>'] } } });
+  const landOk = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'landing_guardar', tenantId: 'capra-studio', landing: { historia: `CI ${RUN}`, faq: [{ p: '¿Hay parking?', r: 'Sí, enfrente.' }], bloques: ['portada', 'historia', 'reservar'] } } });
+  const temaMalo = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'tema_guardar', tenantId: 'capra-studio', tema: { paletteId: 'inventada' } } });
+  const temaOk = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'tema_guardar', tenantId: 'capra-studio', tema: { paletteId: 'rosa-velvet-oro', tenantSlug: 'andrea-nails', loyaltyStampsTarget: 6 } } });
+  const verTodo = await api('/api/salon?tenant=capra-studio&vista=publica');
+  comprobar('L2', 'Perfil, landing y tema en Neon: datos malos 400, staff 403, la dueña guarda y la vista pública lo muestra (el tema ignora tenantSlug)',
+    waMalo.status === 400 && perfilOk.status === 200 && verPerfil.json?.perfil?.eslogan === `CI ${RUN}` && staffPerfil.status === 403
+      && landMala.status === 400 && landOk.status === 200 && temaMalo.status === 400 && temaOk.status === 200
+      && verTodo.json?.landing?.historia === `CI ${RUN}` && verTodo.json?.tema?.paletteId === 'rosa-velvet-oro' && !('tenantSlug' in (verTodo.json?.tema || {})),
+    `wa ${waMalo.status}, perfil ${perfilOk.status}/${verPerfil.json?.perfil?.eslogan === `CI ${RUN}` ? 'visible' : 'NO'}, staff ${staffPerfil.status}, landing ${landMala.status}/${landOk.status}, tema ${temaMalo.status}/${temaOk.status}`);
+
+  const especial = Math.max(1, base - 3);
+  const ofCara = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'oferta_guardar', tenantId: 'capra-studio', oferta: { titulo: `CI ${RUN} cara`, servicioId: servicio.id, precioEspecialUSD: base + 1 } } });
+  const ofAjena = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'oferta_guardar', tenantId: 'capra-studio', oferta: { titulo: `CI ${RUN} ajena`, servicioId: servicioAjeno, precioEspecialUSD: 1 } } });
+  const ofOk = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'oferta_guardar', tenantId: 'capra-studio', oferta: { titulo: `CI ${RUN} oferta`, servicioId: servicio.id, precioEspecialUSD: especial } } });
+  const verOfertas = await api('/api/salon?tenant=capra-studio&vista=publica');
+  const ofVisible = (verOfertas.json?.ofertas || []).some((o) => o.id === ofOk.json?.id && o.precioEspecialUSD === especial);
+  const resOferta = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} oferta`, clientPhone: `${telBase}07`, date: fechaFutura(41), timeSlot: '03:00 PM', serviceId: servicio.id, servicePriceUSD: 0.01 } });
+  if (resOferta.json?.booking?.id) creados.bookings.push(resOferta.json.booking.id);
+  comprobar('L3', 'Oferta: precio ≥ normal 400, servicio de otro salón 403, válida 201 y pública; la reserva cobra el precio especial (el del cuerpo se ignora)',
+    ofCara.status === 400 && ofAjena.status === 403 && ofOk.status === 201 && ofVisible && resOferta.status === 201
+      && resOferta.json?.booking?.totalPriceUSD === especial && resOferta.json?.booking?.desglose?.oferta?.descuento === Math.round((base - especial) * 100) / 100,
+    `cara ${ofCara.status}, ajena ${ofAjena.status}, válida ${ofOk.status} (pública ${ofVisible ? 'sí' : 'NO'}), reserva ${resOferta.status} total ${resOferta.json?.booking?.totalPriceUSD} (esperado ${especial})`);
+
+  const codigoCupon = `CI${RUN.replace(/\D/g, '').slice(-8)}`;
+  const cupMalo = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'cupon_guardar', tenantId: 'capra-studio', cupon: { codigo: 'a b', tipo: 'porcentaje', valor: 10 } } });
+  const cupPct = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'cupon_guardar', tenantId: 'capra-studio', cupon: { codigo: 'XX1', tipo: 'porcentaje', valor: 150, descripcion: `CI ${RUN}` } } });
+  const cupOk = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'cupon_guardar', tenantId: 'capra-studio', cupon: { codigo: codigoCupon, tipo: 'porcentaje', valor: 50, usosMax: 1, descripcion: `CI ${RUN}` } } });
+  const cupRepe = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'cupon_guardar', tenantId: 'capra-studio', cupon: { codigo: codigoCupon, tipo: 'importe', valor: 1, descripcion: `CI ${RUN}` } } });
+  const conCupon = Math.round(especial * 0.5 * 100) / 100;
+  const presu = await api('/api/salon', { method: 'POST', body: { action: 'presupuesto', tenantId: 'capra-studio', servicioId: servicio.id, fecha: fechaFutura(42), turno: '04:00 PM', cupon: codigoCupon.toLowerCase() } });
+  const resCupon = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} cupon`, clientPhone: `${telBase}08`, date: fechaFutura(42), timeSlot: '04:00 PM', serviceId: servicio.id, cupon: codigoCupon } });
+  const idResCupon = resCupon.json?.booking?.id;
+  if (idResCupon) creados.bookings.push(idResCupon);
+  const agotado = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} cupon2`, clientPhone: `${telBase}09`, date: fechaFutura(43), timeSlot: '04:00 PM', serviceId: servicio.id, cupon: codigoCupon } });
+  const cancela = await api('/api/bookings', { method: 'PATCH', token: owToken, body: { id: idResCupon, status: 'cancelada' } });
+  const reactiva = await api('/api/bookings', { method: 'PATCH', token: owToken, body: { id: idResCupon, status: 'confirmada' } });
+  const presu2 = await api('/api/salon', { method: 'POST', body: { action: 'presupuesto', tenantId: 'capra-studio', servicioId: servicio.id, fecha: fechaFutura(43), turno: '04:00 PM', cupon: codigoCupon } });
+  comprobar('L4', 'Cupón: formato 400, 150 % 400, válido 201, repetido 409; presupuesto y reserva con 50 % sobre la oferta; agotado 400; al cancelar se libera; cancelada no se reactiva 409',
+    cupMalo.status === 400 && cupPct.status === 400 && cupOk.status === 201 && cupRepe.status === 409 && presu.status === 200 && presu.json?.total === conCupon
+      && resCupon.status === 201 && resCupon.json?.booking?.totalPriceUSD === conCupon && agotado.status === 400 && cancela.status === 200
+      && reactiva.status === 409 && presu2.status === 200,
+    `formato ${cupMalo.status}, 150% ${cupPct.status}, válido ${cupOk.status}, repetido ${cupRepe.status}, presupuesto ${presu.status}/${presu.json?.total}, reserva ${resCupon.status}/${resCupon.json?.booking?.totalPriceUSD} (esperado ${conCupon}), agotado ${agotado.status}, cancelar ${cancela.status}, reactivar ${reactiva.status}, liberado ${presu2.status}`);
+
+  const tarjStaff = await api('/api/salon', { method: 'POST', token: stToken, body: { action: 'tarjeta_crear', tenantId: 'capra-studio', saldoUSD: 5, nota: `CI ${RUN}` } });
+  const tarj = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'tarjeta_crear', tenantId: 'capra-studio', saldoUSD: 5, beneficiaria: 'CI', nota: `CI ${RUN}` } });
+  const codigoTarj = tarj.json?.codigo || '';
+  const lista = await api('/api/salon?tenant=capra-studio', { token: owToken });
+  const enLista = (lista.json?.tarjetas || []).find((x) => x.id === tarj.json?.id);
+  const sinCodigo = !JSON.stringify(lista.json?.tarjetas || []).includes(codigoTarj.replace(/-/g, '').slice(0, 8));
+  const pago = Math.min(5, especial);
+  const resTarj = await api('/api/bookings', { method: 'POST', body: { tenantId: 'capra-studio', clientName: `CI ${RUN} tarjeta`, clientPhone: `${telBase}10`, date: fechaFutura(44), timeSlot: '04:00 PM', serviceId: servicio.id, tarjetaRegalo: codigoTarj.toLowerCase().replace(/-/g, ' ') } });
+  const idResTarj = resTarj.json?.booking?.id;
+  if (idResTarj) creados.bookings.push(idResTarj);
+  const sinSaldo = especial >= 5 ? await api('/api/salon', { method: 'POST', body: { action: 'presupuesto', tenantId: 'capra-studio', servicioId: servicio.id, fecha: fechaFutura(45), turno: '04:00 PM', tarjetaRegalo: codigoTarj } }) : { status: 400 };
+  const borraRes = await api(`/api/bookings?id=${encodeURIComponent(idResTarj || 'x')}`, { method: 'DELETE', token: owToken });
+  const lista2 = await api('/api/salon?tenant=capra-studio', { token: owToken });
+  const saldoDevuelto = (lista2.json?.tarjetas || []).find((x) => x.id === tarj.json?.id)?.saldoUSD;
+  comprobar('L5', 'Tarjeta regalo: staff 403, la dueña la emite (código una vez, en la lista solo los 4 últimos), paga la cita, sin saldo 400 y al borrar la cita el saldo vuelve',
+    tarjStaff.status === 403 && tarj.status === 201 && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codigoTarj) && enLista?.codigoFinal === codigoTarj.slice(-4) && sinCodigo
+      && resTarj.status === 201 && resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago === pago && sinSaldo.status === 400 && borraRes.status === 200 && saldoDevuelto === 5,
+    `staff ${tarjStaff.status}, emite ${tarj.status}, lista ${enLista ? enLista.codigoFinal : 'NO'} (código oculto ${sinCodigo ? 'sí' : 'NO'}), reserva ${resTarj.status} pago ${resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago}, sin saldo ${sinSaldo.status}, borrar ${borraRes.status}, saldo ${saldoDevuelto}`);
+
   // ── G. Cron ──
   const cronSin = await api('/api/cron-reminders');
   const cronMal = await fetch(`${BASE}/api/cron-reminders`, { headers: { ...(BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : {}), Authorization: 'Bearer incorrecto' } });
@@ -580,7 +675,10 @@ async function main() {
   try {
     await limpiar();
     const restos = (await sql`SELECT count(*)::int n FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO}`)[0].n
-      + (await sql`SELECT count(*)::int n FROM public.bookings WHERE client_name LIKE ${'CI ' + RUN + '%'}`)[0].n;
+      + (await sql`SELECT count(*)::int n FROM public.bookings WHERE client_name LIKE ${'CI ' + RUN + '%'}`)[0].n
+      + (await sql`SELECT count(*)::int n FROM public.ofertas WHERE titulo LIKE ${'CI ' + RUN + '%'}`)[0].n
+      + (await sql`SELECT count(*)::int n FROM public.cupones WHERE descripcion LIKE ${'CI ' + RUN + '%'}`)[0].n
+      + (await sql`SELECT count(*)::int n FROM public.tarjetas_regalo WHERE nota LIKE ${'CI ' + RUN + '%'}`)[0].n;
     comprobar('Z1', 'Limpieza: 0 filas de esta ejecución en staging', restos === 0, `${restos} filas restantes`);
   } catch (err) {
     comprobar('Z1', 'Limpieza', false, err?.message || String(err));
