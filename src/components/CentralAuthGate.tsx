@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Lock, KeyRound, AlertTriangle, ArrowRight, CheckCircle2, RefreshCw, Smartphone, Copy, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authClient } from '../lib/authClient';
+import { VanesevLogo } from './VanesevLogo';
 
 interface CentralAuthGateProps {
   onAuthenticated: () => void;
@@ -190,12 +191,9 @@ export const CentralAuthGate: React.FC<CentralAuthGateProps> = ({
       {/* Cabecera Superior */}
       <div className="flex items-center justify-between max-w-5xl w-full mx-auto">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-v-brand flex items-center justify-center font-black text-white text-xs tracking-wider">
-            V7
-          </div>
-          <span className="font-bold text-sm tracking-tight text-v-ink">VANESEV Central</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-v-surface-2 border border-v-line text-v-muted">
-            Gobernanza
+          <VanesevLogo tono="claro" tamano={32} dedicatoria={false} />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border border-[#B89B6A]/40 text-[#7D6438]">
+            Central
           </span>
         </div>
         {onNavigateToSaaS && (

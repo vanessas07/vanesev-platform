@@ -523,9 +523,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   const tenantsCount = Math.max(2, (data?.tenants || []).length);
 
   return (
-    <div className="min-h-screen bg-[#FBFAFC] text-[#18181B] font-sans p-2 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-sans p-2 sm:p-4 lg:p-6">
       {/* ── VERTIX OUTER ROUNDED APPLICATION CONTAINER ── */}
-      <div className="max-w-[1440px] mx-auto bg-[#F5F5F8] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
+      <div className="max-w-[1440px] mx-auto bg-[#F4F2F7] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 lg:p-7 shadow-[0_14px_45px_rgba(0,0,0,0.05)] border border-white min-h-[calc(100vh-48px)] flex flex-col">
 
         {/* ── VERTIX TOP HEADER BAR (1 SINGLE CLEAN ROW) ── */}
         <header className="flex items-center justify-between gap-3">
@@ -533,11 +533,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white shadow-xs"
-              style={{ background: 'linear-gradient(135deg, #5B2A6E 0%, #4A2159 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #4A1F5C 0%, #2E1A38 100%)' }}
             >
               V
             </div>
-            <span className="font-bold text-[#18181B] text-sm sm:text-base tracking-tight truncate">
+            <span className="font-bold text-[#1A1020] text-sm sm:text-base tracking-tight truncate">
               Vanesev Central
             </span>
           </div>
@@ -560,8 +560,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   onClick={() => setActiveTab(pill.id as any)}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     active
-                      ? 'bg-[#18181B] text-white shadow-2xs'
-                      : 'text-[#52525B] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                      ? 'bg-[#1A1020] text-white shadow-2xs'
+                      : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                   }`}
                 >
                   {pill.label}
@@ -579,7 +579,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setActiveTab('tenants');
                   setShowTenantModal(true);
                 }}
-                className="text-[#5B2A6E] hover:text-[#4A2159] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                className="text-[#4A1F5C] hover:text-[#2E1A38] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                 title="Crear Nuevo Salón Cliente"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -589,15 +589,15 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 type="button"
                 onClick={fetchCentralState}
                 disabled={syncing}
-                className="text-[#52525B] hover:text-[#18181B] transition-colors cursor-pointer"
+                className="text-[#6E6478] hover:text-[#1A1020] transition-colors cursor-pointer"
                 title="Sincronizar Neon DB"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-[#5B2A6E]' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-[#4A1F5C]' : ''}`} />
               </button>
               <button
                 type="button"
                 onClick={onNavigateToSaaSLanding}
-                className="text-[#52525B] hover:text-[#18181B] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                className="text-[#6E6478] hover:text-[#1A1020] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
                 title="Abrir Web Comercial vanesev.com"
               >
                 <Globe className="w-3.5 h-3.5" />
@@ -608,18 +608,18 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             <div className="bg-white rounded-full pl-1.5 pr-3 py-1 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-black/[0.03] flex items-center gap-2">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
-                style={{ background: 'linear-gradient(135deg, #18181B 0%, #3F3F46 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #1A1020 0%, #1A1020 100%)' }}
               >
                 K
               </div>
               <div className="hidden sm:block text-left leading-tight">
-                <p className="text-[11px] font-bold text-[#18181B]">karc0 &bull; Super-Admin</p>
-                <p className="text-[9px] text-[#10B981] font-semibold">● Neon DB Live</p>
+                <p className="text-[11px] font-bold text-[#1A1020]">karc0 &bull; Super-Admin</p>
+                <p className="text-[9px] text-[#1F7A5A] font-semibold">● Neon DB Live</p>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="ml-1 text-[#A1A1AA] hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
+                className="ml-1 text-[#9A92A3] hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
                 title="Cerrar Sesión de Central"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -648,8 +648,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 onClick={() => setActiveTab(item.id as any)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   active
-                    ? 'bg-[#18181B] text-white shadow-2xs'
-                    : 'text-[#52525B] hover:text-[#18181B]'
+                    ? 'bg-[#1A1020] text-white shadow-2xs'
+                    : 'text-[#6E6478] hover:text-[#1A1020]'
                 }`}
               >
                 {item.label}
@@ -671,7 +671,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setActiveTab('tenants');
                   setShowTenantModal(true);
                 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#5B2A6E] hover:bg-[#EEE7F2] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#4A1F5C] hover:bg-[#EFEAF1] transition-all cursor-pointer"
                 title="Alta de Nuevo Salón"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -682,7 +682,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setActiveTab('tenants');
                   setEditingTenantThemeSlug('capra-studio');
                 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7] transition-all cursor-pointer"
                 title="Personalizar Tema de Capra Studio"
               >
                 <Palette className="w-4 h-4" />
@@ -708,8 +708,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     onClick={() => setActiveTab(id as any)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                       active
-                        ? 'bg-[#18181B] text-white shadow-xs'
-                        : 'text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                        ? 'bg-[#1A1020] text-white shadow-xs'
+                        : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                     }`}
                     title={title}
                   >
@@ -726,8 +726,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 onClick={() => setActiveTab('incidents')}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === 'incidents'
-                    ? 'bg-[#18181B] text-white'
-                    : 'text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6]'
+                    ? 'bg-[#1A1020] text-white'
+                    : 'text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7]'
                 }`}
                 title="Incidencias"
               >
@@ -736,7 +736,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToSaaSLanding}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F6] transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7] transition-all cursor-pointer"
                 title="Ir a Web Comercial vanesev.com"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -749,10 +749,10 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {/* Dynamic Vertix Page Title + 1-Line Subtitle */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
               <div>
-                <h1 className="text-2xl sm:text-[28px] font-bold text-[#18181B] tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-[28px] font-bold text-[#1A1020] tracking-tight leading-tight">
                   {currentHeading.title}
                 </h1>
-                <p className="text-xs sm:text-sm text-[#71717A] mt-0.5">
+                <p className="text-xs sm:text-sm text-[#6E6478] mt-0.5">
                   {currentHeading.subtitle}
                 </p>
               </div>
@@ -760,7 +760,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigateToTenant('capra-studio', false)}
-                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#EEE7F2] text-[#E35633] border border-[#F5CFC4] text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#EFEAF1] text-[#4A1F5C] border border-[#E4E2EA] text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Carta Capra</span>
@@ -768,7 +768,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigateToTenant('capra-studio', true)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#18181B] text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-full bg-[#1A1020] text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <span>Admin Capra</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
@@ -786,7 +786,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   whileHover={{ y: -2 }}
                   className="lg:col-span-7 rounded-[24px] p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between min-h-[240px] relative overflow-hidden"
                   style={{
-                    background: 'linear-gradient(135deg, #F27449 0%, #E35633 55%, #C94122 100%)',
+                    background: 'linear-gradient(135deg, #140B19 0%, #1F1226 55%, #4A1F5C 100%)',
                   }}
                 >
                   <div className="flex items-center justify-between gap-2 text-xs">
@@ -834,9 +834,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         setActiveTab('tenants');
                         setShowTenantModal(true);
                       }}
-                      className="px-4 py-2 rounded-full bg-white text-[#18181B] text-xs font-bold shadow-xs hover:scale-[1.02] transition-transform flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 rounded-full bg-white text-[#1A1020] text-xs font-bold shadow-xs hover:scale-[1.02] transition-transform flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#E35633]" />
+                      <Plus className="w-3.5 h-3.5 text-[#4A1F5C]" />
                       <span>Alta de Nuevo Salón</span>
                     </button>
                     <button
@@ -852,9 +852,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 {/* BENTO 2 (TOP-RIGHT, 5 COLS): WHITE TIER BENEFITS / ESTADO DE ZONAS CARD */}
                 <div className="lg:col-span-5 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03] flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-[#18181B]">Estado de Arquitectura &amp; Zonas</h3>
+                    <h3 className="text-sm font-bold text-[#1A1020]">Estado de Arquitectura &amp; Zonas</h3>
 
-                    <div className="mt-3 bg-[#F4F4F6] rounded-full p-1 inline-flex items-center gap-1">
+                    <div className="mt-3 bg-[#F4F2F7] rounded-full p-1 inline-flex items-center gap-1">
                       {[
                         { id: 'zones' as const, label: '4 Zonas' },
                         { id: 'database' as const, label: 'Neon Cloud' },
@@ -866,8 +866,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           onClick={() => setOverviewTier(tab.id)}
                           className={`px-3.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                             overviewTier === tab.id
-                              ? 'bg-white text-[#18181B] shadow-2xs'
-                              : 'text-[#71717A] hover:text-[#18181B]'
+                              ? 'bg-white text-[#1A1020] shadow-2xs'
+                              : 'text-[#6E6478] hover:text-[#1A1020]'
                           }`}
                         >
                           {tab.label}
@@ -897,8 +897,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             'Despliegue continuo en Vercel Cloud sin compilación local',
                           ]
                       ).map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2.5 text-xs text-[#27272A]">
-                          <span className="w-4 h-4 rounded-full bg-[#EEE7F2] text-[#E35633] flex items-center justify-center shrink-0">
+                        <div key={idx} className="flex items-center gap-2.5 text-xs text-[#1A1020]">
+                          <span className="w-4 h-4 rounded-full bg-[#EFEAF1] text-[#4A1F5C] flex items-center justify-center shrink-0">
                             <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </span>
                           <span>{item}</span>
@@ -907,7 +907,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-[#A1A1AA] mt-4 pt-3 border-t border-zinc-100">
+                  <p className="text-[11px] text-[#9A92A3] mt-4 pt-3 border-t border-[#E4E2EA]">
                     Aislamiento estricto entre Web Comercial, Central, Admin y Catálogos QR
                   </p>
                 </div>
@@ -916,25 +916,25 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <div className="lg:col-span-7 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03]">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-bold text-[#18181B]">Módulos &amp; Sedes Destacadas</h3>
-                      <p className="text-xs text-[#71717A] mt-0.5">
+                      <h3 className="text-sm font-bold text-[#1A1020]">Módulos &amp; Sedes Destacadas</h3>
+                      <p className="text-xs text-[#6E6478] mt-0.5">
                         Inspecciona o personaliza cualquier sede y herramienta desde un solo lugar.
                       </p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#EEE7F2] text-[#E35633] text-[10px] font-bold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#EFEAF1] text-[#4A1F5C] text-[10px] font-bold">
                       Operativo
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
                     {/* Sub-Card 1 */}
-                    <div className="rounded-[18px] p-4 bg-[#FFF8F6] border border-[#F5CFC4] flex flex-col justify-between min-h-[155px]">
+                    <div className="rounded-[18px] p-4 bg-[#F4F2F7] border border-[#E4E2EA] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#E35633] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#4A1F5C] mb-3">
                           <Crown className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Capra Studio (Sede #1)</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Capra Studio (Sede #1)</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           Cejas, Pestañas, Alisados, Maquillaje &amp; Capra Academy.
                         </p>
                       </div>
@@ -942,14 +942,14 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => onNavigateToTenant('capra-studio', false)}
-                          className="text-[10px] font-bold text-[#E35633] hover:underline cursor-pointer"
+                          className="text-[10px] font-bold text-[#4A1F5C] hover:underline cursor-pointer"
                         >
                           Ver Carta
                         </button>
                         <button
                           type="button"
                           onClick={() => onNavigateToTenant('capra-studio', true)}
-                          className="px-3 py-1 rounded-full bg-[#5B2A6E] text-white text-[10px] font-bold cursor-pointer shadow-2xs"
+                          className="px-3 py-1 rounded-full bg-[#1F1226] text-white text-[10px] font-bold cursor-pointer shadow-2xs"
                         >
                           Abrir Admin
                         </button>
@@ -957,22 +957,22 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     </div>
 
                     {/* Sub-Card 2 */}
-                    <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
+                    <div className="rounded-[18px] p-4 bg-[#FBFAFC] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#1A1020] mb-3">
                           <QrCode className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Generador QR `/m/`</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Generador QR `/m/`</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           Crea códigos QR de recepción y enlaces para nuevos clientes.
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-3 mt-2">
-                        <span className="text-[10px] text-[#A1A1AA] font-medium">Sin subdominios</span>
+                        <span className="text-[10px] text-[#9A92A3] font-medium">Sin subdominios</span>
                         <button
                           type="button"
                           onClick={() => setActiveTab('qr')}
-                          className="px-3 py-1 rounded-full bg-[#18181B] text-white text-[10px] font-bold cursor-pointer"
+                          className="px-3 py-1 rounded-full bg-[#1A1020] text-white text-[10px] font-bold cursor-pointer"
                         >
                           Gestionar
                         </button>
@@ -980,22 +980,22 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     </div>
 
                     {/* Sub-Card 3 */}
-                    <div className="rounded-[18px] p-4 bg-[#F8F8FA] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
+                    <div className="rounded-[18px] p-4 bg-[#FBFAFC] border border-black/[0.04] flex flex-col justify-between min-h-[155px]">
                       <div>
-                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#18181B] mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-white shadow-2xs border border-black/5 flex items-center justify-center text-[#1A1020] mb-3">
                           <Crosshair className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-bold text-[#18181B]">Radar Competencia</p>
-                        <p className="text-[11px] text-[#71717A] mt-1 leading-relaxed">
+                        <p className="text-xs font-bold text-[#1A1020]">Radar Competencia</p>
+                        <p className="text-[11px] text-[#6E6478] mt-1 leading-relaxed">
                           Auditoría de Fresha, AgendaPro, Booksy y Treatwell.
                         </p>
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-3 mt-2">
-                        <span className="text-[10px] text-[#A1A1AA] font-medium">4 auditados</span>
+                        <span className="text-[10px] text-[#9A92A3] font-medium">4 auditados</span>
                         <button
                           type="button"
                           onClick={() => setActiveTab('competitors')}
-                          className="px-3 py-1 rounded-full bg-[#18181B] text-white text-[10px] font-bold cursor-pointer"
+                          className="px-3 py-1 rounded-full bg-[#1A1020] text-white text-[10px] font-bold cursor-pointer"
                         >
                           Ver Mapa
                         </button>
@@ -1008,11 +1008,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <div className="lg:col-span-5 bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/[0.03] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-[#18181B]">Salones Registrados en Red</h3>
+                      <h3 className="text-sm font-bold text-[#1A1020]">Salones Registrados en Red</h3>
                       <button
                         type="button"
                         onClick={() => setActiveTab('tenants')}
-                        className="text-[11px] font-semibold text-[#E35633] hover:underline cursor-pointer"
+                        className="text-[11px] font-semibold text-[#4A1F5C] hover:underline cursor-pointer"
                       >
                         Ver todos &rarr;
                       </button>
@@ -1044,20 +1044,20 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       ].map((row) => (
                         <div key={row.id} className="py-2.5 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-[#FFF3EF] text-[#E35633] flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-[#F4F2F7] text-[#4A1F5C] flex items-center justify-center shrink-0">
                               <Crown className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-[#18181B] truncate">{row.name}</p>
-                              <p className="text-[10px] text-[#A1A1AA] truncate">{row.sub}</p>
+                              <p className="text-xs font-bold text-[#1A1020] truncate">{row.name}</p>
+                              <p className="text-[10px] text-[#9A92A3] truncate">{row.sub}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs font-bold text-[#10B981] tabular-nums">{row.amount}</span>
+                            <span className="text-xs font-bold text-[#1F7A5A] tabular-nums">{row.amount}</span>
                             <button
                               type="button"
                               onClick={() => onNavigateToTenant(row.id, true)}
-                              className="px-2.5 py-1 rounded-full bg-[#F4F4F6] hover:bg-[#18181B] hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                              className="px-2.5 py-1 rounded-full bg-[#F4F2F7] hover:bg-[#1A1020] hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
                             >
                               Admin
                             </button>
@@ -1072,8 +1072,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
             {loading && activeTab !== 'overview' ? (
               <div className="p-16 text-center rounded-[24px] bg-white border border-black/[0.03] shadow-xs">
-                <RefreshCw className="w-8 h-8 text-[#E35633] animate-spin mx-auto mb-3" />
-                <p className="text-sm text-[#71717A]">Sincronizando ecosistema de salones desde Neon Postgres 18...</p>
+                <RefreshCw className="w-8 h-8 text-[#4A1F5C] animate-spin mx-auto mb-3" />
+                <p className="text-sm text-[#6E6478]">Sincronizando ecosistema de salones desde Neon Postgres 18...</p>
               </div>
             ) : (
               <>
@@ -1085,10 +1085,10 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     <span className="text-[11px] font-mono uppercase tracking-widest text-amber-800 font-bold">
                       AUDITORÍA PAUSADA & APROBACIÓN EJECUTIVA
                     </span>
-                    <h2 className="text-xl font-bold text-[#0F172A] mt-1">
+                    <h2 className="text-xl font-bold text-[#1A1020] mt-1">
                       Bitácora de Sesiones de Antigravity (Persistida en Neon DB)
                     </h2>
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-[#4A4150] mt-1">
                       Aquí te dejo cargado cada elemento construido, decisiones tomadas y archivos modificados en cada sesión. Puedes revisarlo con calma, dejarme tus instrucciones y pulsar <b>Aprobar</b> o <b>Pedir Cambios</b>.
                     </p>
                   </div>
@@ -1101,14 +1101,14 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   const isChanges = ses.review_status === 'changes_requested';
 
                   return (
-                    <div key={ses.id} className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden shadow-xs">
-                      <div className="p-6 border-b border-[#E2E8F0] flex flex-wrap items-start justify-between gap-4 bg-[#F8FAFC]">
+                    <div key={ses.id} className="rounded-2xl bg-white border border-[#E4E2EA] overflow-hidden shadow-xs">
+                      <div className="p-6 border-b border-[#E4E2EA] flex flex-wrap items-start justify-between gap-4 bg-[#FBFAFC]">
                         <div>
                           <div className="flex flex-wrap items-center gap-2.5 mb-2">
                             <span className="px-2.5 py-0.5 rounded-md text-xs font-mono bg-amber-50 text-amber-800 border border-amber-200">
                               ID: {ses.id}
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-mono bg-slate-100 text-slate-700 border border-slate-200">
+                            <span className="px-2.5 py-0.5 rounded-md text-xs font-mono bg-[#F4F2F7] text-[#1A1020] border border-[#E4E2EA]">
                               Agente: {ses.agent_name}
                             </span>
                             <span
@@ -1123,8 +1123,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                               {isApproved ? '✓ APROBADA POR KARC0' : isChanges ? '⚠ CAMBIOS SOLICITADOS' : '⏳ PENDIENTE DE TU REVISIÓN'}
                             </span>
                           </div>
-                          <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">{ses.title}</h3>
-                          <p className="text-sm text-slate-600 mt-2 leading-relaxed">{ses.summary}</p>
+                          <h3 className="text-lg sm:text-xl font-bold text-[#1A1020]">{ses.title}</h3>
+                          <p className="text-sm text-[#4A4150] mt-2 leading-relaxed">{ses.summary}</p>
                         </div>
                       </div>
 
@@ -1136,8 +1136,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           </h4>
                           <div className="space-y-2">
                             {elements.map((el: any, i: number) => (
-                              <div key={i} className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-3">
-                                <span className="text-sm text-slate-800 font-medium">{el.item}</span>
+                              <div key={i} className="p-3 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] flex items-center justify-between gap-3">
+                                <span className="text-sm text-[#1A1020] font-medium">{el.item}</span>
                                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
                                   {el.status}
                                 </span>
@@ -1153,9 +1153,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           </h4>
                           <div className="space-y-2">
                             {decisions.map((dec: any, i: number) => (
-                              <div key={i} className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                                <p className="text-sm font-bold text-[#0F172A]">{dec.decision}</p>
-                                <p className="text-xs text-slate-600 mt-1">{dec.rationale}</p>
+                              <div key={i} className="p-3 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA]">
+                                <p className="text-sm font-bold text-[#1A1020]">{dec.decision}</p>
+                                <p className="text-xs text-[#4A4150] mt-1">{dec.rationale}</p>
                               </div>
                             ))}
                           </div>
@@ -1163,7 +1163,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       </div>
 
                       {/* Karc0 Review & Response Box */}
-                      <div className="p-6 bg-[#F8FAFC] border-t border-[#E2E8F0] space-y-4">
+                      <div className="p-6 bg-[#FBFAFC] border-t border-[#E4E2EA] space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <label className="text-xs font-mono uppercase tracking-wider text-amber-900 font-bold">
                             Tu Respuesta / Instrucciones sobre esta Sesión (Se guarda en Neon DB para el Agente):
@@ -1180,7 +1180,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             value={feedbackMap[ses.id] ?? ses.karc0_feedback ?? ''}
                             onChange={(e) => setFeedbackMap({ ...feedbackMap, [ses.id]: e.target.value })}
                             placeholder="Escribe aquí tus observaciones, qué aprobar o qué ajustar en la siguiente sesión..."
-                            className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-amber-500 shadow-2xs"
+                            className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] placeholder-slate-400 focus:outline-none focus:border-amber-500 shadow-2xs"
                           />
                           <div className="flex items-center gap-2">
                             <button
@@ -1212,18 +1212,18 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-rose-200 shadow-xs space-y-4 h-fit">
                   <div className="flex items-center gap-2 text-rose-700">
                     <AlertTriangle className="w-5 h-5 text-rose-600" />
-                    <h3 className="text-base font-bold uppercase tracking-wider text-[#0F172A]">Reportar Fallo o Emergencia</h3>
+                    <h3 className="text-base font-bold uppercase tracking-wider text-[#1A1020]">Reportar Fallo o Emergencia</h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-xs text-[#4A4150] leading-relaxed">
                     Si mientras pruebas desde tu móvil o PC ves cualquier detalle que falle o quieras corregir al instante, anótalo aquí. Queda grabado en Neon DB como prioridad máxima.
                   </p>
                   <form onSubmit={handleCreateIncident} className="space-y-3">
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Severidad</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Severidad</label>
                       <select
                         value={incSeverity}
                         onChange={(e) => setIncSeverity(e.target.value as any)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A] focus:bg-white"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020] focus:bg-white"
                       >
                         <option value="critical">🔥 Crítica (Atacar de inmediato)</option>
                         <option value="high">⚡ Alta (Corregir en la sesión actual)</option>
@@ -1231,11 +1231,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Zona Afectada</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Zona Afectada</label>
                       <select
                         value={incZone}
                         onChange={(e) => setIncZone(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A] focus:bg-white"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020] focus:bg-white"
                       >
                         <option value="ZONA 1 · LANDING VANESEV">ZONA 1 · Web Comercial vanesev.com</option>
                         <option value="ZONA 2 · CENTRAL">ZONA 2 · Panel Central de karc0</option>
@@ -1244,11 +1244,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Negocio / Salón</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Negocio / Salón</label>
                       <select
                         value={incTenant}
                         onChange={(e) => setIncTenant(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A] focus:bg-white"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020] focus:bg-white"
                       >
                         <option value="all">Todos / Plataforma General</option>
                         <option value="capra-studio">Capra Studio (@caprastudio_)</option>
@@ -1256,24 +1256,24 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Título corto del fallo</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Título corto del fallo</label>
                       <input
                         type="text"
                         required
                         value={incTitle}
                         onChange={(e) => setIncTitle(e.target.value)}
                         placeholder="Ej: Botón de reserva en móvil no abre..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Detalle de lo que viste</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Detalle de lo que viste</label>
                       <textarea
                         rows={3}
                         value={incDesc}
                         onChange={(e) => setIncDesc(e.target.value)}
                         placeholder="Describe qué hiciste y qué debería pasar..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                     </div>
                     <button
@@ -1286,13 +1286,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 </div>
 
                 <div className="lg:col-span-2 space-y-4">
-                  <h3 className="text-lg font-bold text-[#0F172A]">Historial de Incidencias & Errores Solucionados</h3>
+                  <h3 className="text-lg font-bold text-[#1A1020]">Historial de Incidencias & Errores Solucionados</h3>
                   {(data.incidents || []).map((inc: any) => (
                     <div
                       key={inc.id}
                       className={`p-5 rounded-2xl border ${
                         inc.status === 'resolved'
-                          ? 'bg-white border-[#E2E8F0]'
+                          ? 'bg-white border-[#E4E2EA]'
                           : 'bg-rose-50/60 border-rose-300'
                       } space-y-3 shadow-xs`}
                     >
@@ -1307,7 +1307,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           >
                             {inc.status === 'resolved' ? '✓ SOLUCIONADO' : '🔥 ABIERTO · ' + inc.severity}
                           </span>
-                          <span className="text-xs font-mono text-slate-500">{inc.affected_zone}</span>
+                          <span className="text-xs font-mono text-[#6E6478]">{inc.affected_zone}</span>
                           <span className="text-xs font-mono text-amber-800">({inc.affected_tenant})</span>
                         </div>
                         {inc.status !== 'resolved' && (
@@ -1319,8 +1319,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           </button>
                         )}
                       </div>
-                      <h4 className="text-base font-bold text-[#0F172A]">{inc.title}</h4>
-                      <p className="text-sm text-slate-600">{inc.description}</p>
+                      <h4 className="text-base font-bold text-[#1A1020]">{inc.title}</h4>
+                      <p className="text-sm text-[#4A4150]">{inc.description}</p>
                       {inc.agent_resolution_note && (
                         <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
                           <b>Solución aplicada por Agente:</b> {inc.agent_resolution_note}
@@ -1338,43 +1338,43 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-amber-200 shadow-xs space-y-4 h-fit">
                   <div className="flex items-center gap-2 text-amber-800">
                     <MessageSquare className="w-5 h-5 text-amber-600" />
-                    <h3 className="text-base font-bold uppercase tracking-wider text-[#0F172A]">Dejar Orden o Nota al Agente</h3>
+                    <h3 className="text-base font-bold uppercase tracking-wider text-[#1A1020]">Dejar Orden o Nota al Agente</h3>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-xs text-[#4A4150] leading-relaxed">
                     Escribe aquí cualquier idea, requerimiento, cambio de precios o instrucción mientras navegas. Cuando abras sesión conmigo y me digas <i>"lee el buzón de Central"</i>, lo tendré todo cargado al instante.
                   </p>
                   <form onSubmit={handleSendMessage} className="space-y-3">
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Asunto / Tema</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Asunto / Tema</label>
                       <input
                         type="text"
                         required
                         value={msgSubject}
                         onChange={(e) => setMsgSubject(e.target.value)}
                         placeholder="Ej: Nuevos servicios para Capra Studio..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Prioridad</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Prioridad</label>
                       <select
                         value={msgPriority}
                         onChange={(e) => setMsgPriority(e.target.value as any)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A]"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020]"
                       >
                         <option value="high">Alta Prioridad</option>
                         <option value="normal">Normal / Idea futura</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-600 block mb-1">Mensaje detallado para Antigravity</label>
+                      <label className="text-xs text-[#4A4150] block mb-1">Mensaje detallado para Antigravity</label>
                       <textarea
                         rows={4}
                         required
                         value={msgBody}
                         onChange={(e) => setMsgBody(e.target.value)}
                         placeholder="Escribe aquí todo lo que quieras que ejecute..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                     </div>
                     <button
@@ -1388,7 +1388,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 </div>
 
                 <div className="lg:col-span-2 space-y-4">
-                  <h3 className="text-lg font-bold text-[#0F172A]">Bandeja de Comunicaciones (karc0 ↔ Antigravity)</h3>
+                  <h3 className="text-lg font-bold text-[#1A1020]">Bandeja de Comunicaciones (karc0 ↔ Antigravity)</h3>
                   {(data.mailbox || []).map((m: any) => {
                     const fromKarc0 = m.sender === 'karc0';
                     return (
@@ -1397,7 +1397,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         className={`p-5 rounded-2xl border ${
                           fromKarc0
                             ? 'bg-amber-50/70 border-amber-300'
-                            : 'bg-white border-[#E2E8F0]'
+                            : 'bg-white border-[#E4E2EA]'
                         } space-y-2 shadow-xs`}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1409,14 +1409,14 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             >
                               {fromKarc0 ? '👑 DE: KARC0 (DIRECTOR)' : '🤖 DE: ANTIGRAVITY'}
                             </span>
-                            <span className="text-xs font-mono text-slate-500">→ PARA: {m.recipient.toUpperCase()}</span>
+                            <span className="text-xs font-mono text-[#6E6478]">→ PARA: {m.recipient.toUpperCase()}</span>
                           </div>
-                          <span className="text-xs font-mono text-slate-400">
+                          <span className="text-xs font-mono text-[#6E6478]">
                             {new Date(m.created_at).toLocaleString('es-VE')}
                           </span>
                         </div>
-                        <h4 className="text-base font-bold text-[#0F172A]">{m.subject}</h4>
-                        <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{m.body}</p>
+                        <h4 className="text-base font-bold text-[#1A1020]">{m.subject}</h4>
+                        <p className="text-sm text-[#1A1020] leading-relaxed whitespace-pre-line">{m.body}</p>
                         {m.related_doc_path && (
                           <p className="text-xs font-mono text-amber-800 pt-1">
                             📄 Doc vinculado: {m.related_doc_path}
@@ -1433,13 +1433,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {activeTab === 'tasks_roadmap' && (
               <div className="space-y-8">
                 {/* ARCHITECTURE COMPARISON: ACTUAL VS PROYECTADA */}
-                <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs space-y-4">
+                <div className="p-6 rounded-2xl bg-white border border-[#E4E2EA] shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xs font-mono uppercase tracking-widest text-amber-800 font-bold">
                         MAPA DE INGENIERÍA EN VIVO
                       </span>
-                      <h3 className="text-xl font-bold text-[#0F172A]">Estructura Actual vs. Proyectada de las 4 Zonas</h3>
+                      <h3 className="text-xl font-bold text-[#1A1020]">Estructura Actual vs. Proyectada de las 4 Zonas</h3>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1469,11 +1469,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         desc: 'Perfiles de Andrea Labrador V2 y Capra Studio (6 áreas + Cursos) con Ficha VIP conectada a citas reales y guía visual.',
                       },
                     ].map((z, i) => (
-                      <div key={i} className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col justify-between space-y-3">
+                      <div key={i} className="p-4 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] flex flex-col justify-between space-y-3">
                         <div>
                           <span className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold">{z.zone}</span>
-                          <h4 className="text-base font-bold text-[#0F172A] mt-1">{z.title}</h4>
-                          <p className="text-xs text-slate-600 mt-2 leading-relaxed">{z.desc}</p>
+                          <h4 className="text-base font-bold text-[#1A1020] mt-1">{z.title}</h4>
+                          <p className="text-xs text-[#4A4150] mt-2 leading-relaxed">{z.desc}</p>
                         </div>
                         <span className="inline-block w-fit px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           ● {z.status}
@@ -1485,8 +1485,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
                 {/* TASKS BACKLOG + ADD TASK */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs space-y-4 h-fit">
-                    <h3 className="text-base font-bold text-[#0F172A] uppercase tracking-wider">Agregar Tarea Pendiente</h3>
+                  <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-[#E4E2EA] shadow-xs space-y-4 h-fit">
+                    <h3 className="text-base font-bold text-[#1A1020] uppercase tracking-wider">Agregar Tarea Pendiente</h3>
                     <form onSubmit={handleCreateTask} className="space-y-3">
                       <input
                         type="text"
@@ -1494,12 +1494,12 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         value={taskTitle}
                         onChange={(e) => setTaskTitle(e.target.value)}
                         placeholder="Título de la tarea..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                       <select
                         value={taskZone}
                         onChange={(e) => setTaskZone(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A]"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020]"
                       >
                         <option value="ZONA 2 · CENTRAL">ZONA 2 · CENTRAL</option>
                         <option value="ZONA 4 · CAPRA STUDIO">ZONA 4 · CAPRA STUDIO</option>
@@ -1510,7 +1510,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       <select
                         value={taskPriority}
                         onChange={(e) => setTaskPriority(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] text-sm text-[#0F172A]"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#E4E2EA] text-sm text-[#1A1020]"
                       >
                         <option value="critical">Prioridad Crítica</option>
                         <option value="high">Prioridad Alta</option>
@@ -1521,7 +1521,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         value={taskDesc}
                         onChange={(e) => setTaskDesc(e.target.value)}
                         placeholder="Especificaciones para el agente..."
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#CBD5E1] text-sm text-[#0F172A] focus:border-amber-500"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#E4E2EA] text-sm text-[#1A1020] focus:border-amber-500"
                       />
                       <button
                         type="submit"
@@ -1533,25 +1533,25 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   </div>
 
                   <div className="lg:col-span-2 space-y-4">
-                    <h3 className="text-lg font-bold text-[#0F172A]">Tablero de Tareas Pendientes & Cronograma</h3>
+                    <h3 className="text-lg font-bold text-[#1A1020]">Tablero de Tareas Pendientes & Cronograma</h3>
                     {(data.tasks || []).map((t: any) => (
-                      <div key={t.id} className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div key={t.id} className="p-4 rounded-xl bg-white border border-[#E4E2EA] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-50 text-amber-800 border border-amber-200">{t.zone}</span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-slate-100 text-slate-700">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#F4F2F7] text-[#1A1020]">
                               Resp: {t.assigned_to}
                             </span>
                             <span className="text-xs font-mono text-emerald-700">{t.due_label}</span>
                           </div>
-                          <h4 className="text-sm font-bold text-[#0F172A]">{t.title}</h4>
-                          <p className="text-xs text-slate-600">{t.description}</p>
+                          <h4 className="text-sm font-bold text-[#1A1020]">{t.title}</h4>
+                          <p className="text-xs text-[#4A4150]">{t.description}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <select
                             value={t.status}
                             onChange={(e) => postAction('upsert_task', { ...t, assignedTo: t.assigned_to, dueLabel: t.due_label, karc0Notes: t.karc0_notes, status: e.target.value })}
-                            className="px-3 py-1.5 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1] text-xs text-[#0F172A]"
+                            className="px-3 py-1.5 rounded-lg bg-[#FBFAFC] border border-[#E4E2EA] text-xs text-[#1A1020]"
                           >
                             <option value="pending">⏳ Pendiente</option>
                             <option value="in_progress">⚡ En Curso</option>
@@ -1568,22 +1568,22 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {/* TAB 5: SALONES (TENANTS), FICHAS DE CLIENTES & PERSONALIZADOR DE TEMAS */}
             {activeTab === 'tenants' && (
               <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-[28px] border border-[#1E181A]/8 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-[28px] border border-[#1A1020]/8 shadow-xs">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9E475B] block mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4A1F5C] block mb-1">
                       GOBERNADOR MULTI-SEDE &bull; LIBERTAD ABSOLUTA DE EDICIÓN
                     </span>
-                    <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1E181A]">
+                    <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1A1020]">
                       Salones Activos, Fichas de Clientes &amp; Diseño de Cartas
                     </h2>
-                    <p className="text-xs sm:text-sm text-[#6E6266] mt-1">
+                    <p className="text-xs sm:text-sm text-[#6E6478] mt-1">
                       Crea nuevos clientes, edita su paleta de colores y tipografía en vivo, o entra directamente a su Admin para gestionar sus servicios, citas y equipo.
                     </p>
                   </div>
                   <button
                     onClick={() => setShowTenantModal(true)}
                     className="px-5 py-3 rounded-full text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer hover:opacity-95"
-                    style={{ background: 'linear-gradient(135deg, #9E475B 0%, #C87D65 100%)' }}
+                    style={{ background: 'linear-gradient(135deg, #1F1226 0%, #4A1F5C 100%)' }}
                   >
                     <Plus className="w-4 h-4" />
                     Crear Nuevo Salón / Cliente
@@ -1594,7 +1594,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       setStaffError(null);
                       setShowStaffModal(true);
                     }}
-                    className="px-5 py-3 rounded-full bg-[#18181B] hover:bg-black text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer transition-colors"
+                    className="px-5 py-3 rounded-full bg-[#1A1020] hover:bg-black text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer transition-colors"
                   >
                     <UserPlus className="w-4 h-4" />
                     Alta de Personal
@@ -1603,13 +1603,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
                 {/* EMBEDDED SALON THEME STUDIO WHEN EDITING A CLIENT'S DESIGN */}
                 {editingTenantThemeSlug && (
-                  <div className="bg-white rounded-[32px] border-2 border-[#9E475B]/25 shadow-xl p-6 sm:p-8 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#1E181A]/10">
+                  <div className="bg-white rounded-[32px] border-2 border-[#4A1F5C]/25 shadow-xl p-6 sm:p-8 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#1A1020]/10">
                       <div className="flex items-center gap-2.5">
-                        <span className="px-3 py-1 rounded-full bg-[#FAF0F2] text-[#9E475B] text-[10px] font-bold uppercase tracking-widest">
+                        <span className="px-3 py-1 rounded-full bg-[#EFEAF1] text-[#4A1F5C] text-[10px] font-bold uppercase tracking-widest">
                           Modo Super-Admin &bull; Edición en Vivo
                         </span>
-                        <span className="text-xs font-mono text-[#6E6266]">
+                        <span className="text-xs font-mono text-[#6E6478]">
                           Sede: <strong>{editingTenantThemeSlug}</strong>
                         </span>
                       </div>
@@ -1617,7 +1617,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => onNavigateToTenant(editingTenantThemeSlug, true)}
-                          className="px-4 py-2 rounded-full bg-[#1E181A] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                          className="px-4 py-2 rounded-full bg-[#1A1020] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                         >
                           <span>Ir al Admin Completo de esta Sede</span>
                           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1625,7 +1625,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingTenantThemeSlug(null)}
-                          className="p-2 rounded-full bg-[#FAF7F2] hover:bg-rose-50 text-[#1E181A] hover:text-rose-700 border border-[#1E181A]/10 cursor-pointer"
+                          className="p-2 rounded-full bg-[#FBFAFC] hover:bg-rose-50 text-[#1A1020] hover:text-rose-700 border border-[#1A1020]/10 cursor-pointer"
                           title="Cerrar editor de diseño"
                         >
                           <X className="w-4 h-4" />
@@ -1653,7 +1653,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       <motion.div
                         key={ten.id}
                         whileHover={{ y: -3 }}
-                        className="rounded-[28px] bg-white border border-[#1E181A]/8 shadow-xs overflow-hidden flex flex-col justify-between"
+                        className="rounded-[28px] bg-white border border-[#1A1020]/8 shadow-xs overflow-hidden flex flex-col justify-between"
                       >
                         <div className="p-6 space-y-4">
                           <div className="flex items-start justify-between gap-3">
@@ -1666,11 +1666,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                               </div>
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="font-display text-lg font-bold text-[#1E181A]">
+                                  <h3 className="font-display text-lg font-bold text-[#1A1020]">
                                     {liveTheme.salonName || ten.business_name}
                                   </h3>
                                   {isLegacyAndrea ? (
-                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#F4F2F7] text-[#4A4150] border border-[#E4E2EA]">
                                       Cliente Externo Aislado
                                     </span>
                                   ) : (
@@ -1687,7 +1687,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-[#6E6266] mt-0.5">
+                                <p className="text-xs text-[#6E6478] mt-0.5">
                                   {ten.owner_name} &bull; {liveTheme.instagramHandle || ten.instagram_handle} &bull; +{liveTheme.whatsappPhone || ten.whatsapp_phone}
                                 </p>
                               </div>
@@ -1697,45 +1697,45 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             </span>
                           </div>
 
-                          <p className="text-xs text-[#6E6266] italic">
+                          <p className="text-xs text-[#6E6478] italic">
                             &ldquo;{liveTheme.heroSubheadline || ten.slogan}&rdquo;
                           </p>
 
                           {/* Clean QR Route & Subdomain */}
-                          <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#1E181A]/8 space-y-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#9E475B] block">
+                          <div className="p-3.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/8 space-y-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4A1F5C] block">
                               Rutas Activas (Generador QR `/m/` &amp; Subdominio):
                             </span>
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#1E181A]">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#1A1020]">
                               <span className="font-bold">vanesev.com/m/{ten.id}</span>
-                              <span className="text-[#9A8C90]">|</span>
+                              <span className="text-[#6E6478]">|</span>
                               <span>{ten.custom_subdomain}.vanesev.com</span>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2.5 text-center">
-                            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#1E181A]/6">
-                              <p className="text-[10px] text-[#9A8C90] uppercase font-bold">Equipo</p>
-                              <p className="text-sm font-bold text-[#1E181A] mt-0.5">{tenantStaff.length} Pros</p>
+                            <div className="p-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/6">
+                              <p className="text-[10px] text-[#6E6478] uppercase font-bold">Equipo</p>
+                              <p className="text-sm font-bold text-[#1A1020] mt-0.5">{tenantStaff.length} Pros</p>
                             </div>
-                            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#1E181A]/6">
-                              <p className="text-[10px] text-[#9A8C90] uppercase font-bold">Cabinas</p>
-                              <p className="text-sm font-bold text-[#1E181A] mt-0.5">{tenantZones.length} Áreas</p>
+                            <div className="p-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/6">
+                              <p className="text-[10px] text-[#6E6478] uppercase font-bold">Cabinas</p>
+                              <p className="text-sm font-bold text-[#1A1020] mt-0.5">{tenantZones.length} Áreas</p>
                             </div>
-                            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#1E181A]/6">
-                              <p className="text-[10px] text-[#9A8C90] uppercase font-bold">Pasaporte VIP</p>
-                              <p className="text-sm font-bold text-[#9E475B] mt-0.5">
+                            <div className="p-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/6">
+                              <p className="text-[10px] text-[#6E6478] uppercase font-bold">Pasaporte VIP</p>
+                              <p className="text-sm font-bold text-[#4A1F5C] mt-0.5">
                                 {liveTheme.loyaltyStampsGoal || ten.loyalty_stamps_target} Visitas
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-[#FAF7F2] border-t border-[#1E181A]/8 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="p-4 bg-[#FBFAFC] border-t border-[#1A1020]/8 grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <button
                             type="button"
                             onClick={() => setEditingTenantThemeSlug(ten.id)}
-                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#FAF0F2] border border-[#9E475B]/30 text-[#9E475B] text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#EFEAF1] border border-[#4A1F5C]/30 text-[#4A1F5C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
                           >
                             <Palette className="w-3.5 h-3.5" />
                             <span>Diseño &amp; Ficha</span>
@@ -1743,21 +1743,21 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => onNavigateToTenant(ten.id, true)}
-                            className="py-2.5 px-3 rounded-xl bg-[#1E181A] hover:bg-[#33292C] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                            className="py-2.5 px-3 rounded-xl bg-[#1A1020] hover:bg-[#1A1020] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
                           >
-                            <Sliders className="w-3.5 h-3.5 text-[#E6B89C]" />
+                            <Sliders className="w-3.5 h-3.5 text-[#B89B6A]" />
                             <span>Entrar al Admin</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => onNavigateToTenant(ten.id, false)}
-                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#1E181A]/12 text-[#1E181A] text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#FBFAFC] border border-[#1A1020]/12 text-[#1A1020] text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#9E475B]" />
+                            <Eye className="w-3.5 h-3.5 text-[#4A1F5C]" />
                             <span>Carta Pública</span>
                           </button>
                         </div>
-                        <div className="p-3 bg-[#FAF7F2] border-t border-[#1E181A]/8 flex flex-wrap items-center gap-2">
+                        <div className="p-3 bg-[#FBFAFC] border-t border-[#1A1020]/8 flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -1781,9 +1781,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                               setTrialError(null);
                               setShowTrialModal(true);
                             }}
-                            className="py-2 px-3 rounded-xl bg-white hover:bg-zinc-100 border border-zinc-300 text-zinc-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                            className="py-2 px-3 rounded-xl bg-white hover:bg-[#F4F2F7] border border-[#E4E2EA] text-[#1A1020] text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
                           >
-                            <RefreshCw className="w-3.5 h-3.5 text-zinc-600" />
+                            <RefreshCw className="w-3.5 h-3.5 text-[#4A4150]" />
                             <span>Regenerar contraseña</span>
                           </button>
                         </div>
@@ -1793,25 +1793,25 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 </div>
 
                 {/* Sección de Peticiones de Puesta a Punto (Orden B1-c §2.3) */}
-                <div className="bg-white rounded-[28px] border border-[#1E181A]/8 shadow-xs p-6 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1E181A]/8">
+                <div className="bg-white rounded-[28px] border border-[#1A1020]/8 shadow-xs p-6 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1A1020]/8">
                     <div>
-                      <h3 className="font-display text-lg font-bold text-[#1E181A]">Peticiones de Puesta a Punto</h3>
-                      <p className="text-xs text-[#6E6266] mt-0.5">Historial y seguimiento de solicitudes enviadas por los salones en puesta a punto.</p>
+                      <h3 className="font-display text-lg font-bold text-[#1A1020]">Peticiones de Puesta a Punto</h3>
+                      <p className="text-xs text-[#6E6478] mt-0.5">Historial y seguimiento de solicitudes enviadas por los salones en puesta a punto.</p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
                       {(data?.peticionesPuestaAPunto || []).length} Registradas
                     </span>
                   </div>
                   {(data?.peticionesPuestaAPunto || []).length === 0 ? (
-                    <p className="text-xs text-[#9A8C90] py-6 text-center">No hay peticiones de puesta a punto registradas todavía.</p>
+                    <p className="text-xs text-[#6E6478] py-6 text-center">No hay peticiones de puesta a punto registradas todavía.</p>
                   ) : (
                     <div className="divide-y divide-zinc-100">
                       {(data?.peticionesPuestaAPunto || []).map((p: any) => (
                         <div key={p.id} className="py-3.5 flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-1.5 min-w-0 max-w-2xl">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-mono text-xs font-bold text-[#18181B] bg-zinc-100 px-2.5 py-0.5 rounded-md border border-zinc-200">
+                              <span className="font-mono text-xs font-bold text-[#1A1020] bg-[#F4F2F7] px-2.5 py-0.5 rounded-md border border-[#E4E2EA]">
                                 {p.sender}
                               </span>
                               {p.priority === 'high' && (
@@ -1819,11 +1819,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                   Requiere llamada
                                 </span>
                               )}
-                              <span className="text-[11px] text-zinc-400">
+                              <span className="text-[11px] text-[#6E6478]">
                                 {p.created_at ? new Date(p.created_at).toLocaleString('es-ES') : ''}
                               </span>
                             </div>
-                            <p className="text-xs text-zinc-800 whitespace-pre-wrap leading-relaxed">{p.body}</p>
+                            <p className="text-xs text-[#1A1020] whitespace-pre-wrap leading-relaxed">{p.body}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${
@@ -1836,7 +1836,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             <select
                               value={p.estado || 'recibida'}
                               onChange={(e) => handleUpdatePeticionEstado(p.id, e.target.value)}
-                              className="px-2.5 py-1 rounded-lg border border-zinc-300 text-xs bg-white text-zinc-800 cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg border border-[#E4E2EA] text-xs bg-white text-[#1A1020] cursor-pointer"
                             >
                               <option value="recibida">Recibida</option>
                               <option value="en_curso">En curso</option>
@@ -1850,21 +1850,21 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 </div>
 
                 {showTenantModal && (
-                  <div className="fixed inset-0 z-50 bg-[#1E181A]/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white border border-[#1E181A]/10 rounded-[32px] max-w-2xl w-full p-6 sm:p-8 space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl">
+                  <div className="fixed inset-0 z-50 bg-[#1A1020]/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#1A1020]/10 rounded-[32px] max-w-2xl w-full p-6 sm:p-8 space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9E475B] block">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4A1F5C] block">
                             ALTA DE CLIENTE MULTI-TENANT &bull; SIN PLANTILLAS HEREDADAS
                           </span>
-                          <h3 className="font-display text-xl font-bold text-[#1E181A] mt-1">
+                          <h3 className="font-display text-xl font-bold text-[#1A1020] mt-1">
                             Crear Nuevo Salón con Identidad de Autor Propia
                           </h3>
                         </div>
                         <button
                           type="button"
                           onClick={() => setShowTenantModal(false)}
-                          className="p-2 rounded-full bg-[#FAF7F2] text-[#6E6266] hover:text-[#1E181A] cursor-pointer"
+                          className="p-2 rounded-full bg-[#FBFAFC] text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1873,7 +1873,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       <form onSubmit={handleSaveTenant} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">Nombre del Salón / Clínica</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">Nombre del Salón / Clínica</label>
                             <input
                               type="text"
                               required
@@ -1883,25 +1883,25 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                 setTenantForm({ ...tenantForm, businessName: e.target.value, id: slug, customSubdomain: slug.replace(/-/g, '') });
                               }}
                               placeholder="Ej: Lumière Hair & Spa"
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-sm text-[#1E181A] font-medium"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-sm text-[#1A1020] font-medium"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">Ruta QR (`/m/slug`) y Subdominio</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">Ruta QR (`/m/slug`) y Subdominio</label>
                             <input
                               type="text"
                               required
                               value={tenantForm.customSubdomain}
                               onChange={(e) => setTenantForm({ ...tenantForm, customSubdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                               placeholder="lumierespa"
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-sm text-[#9E475B] font-mono font-bold"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-sm text-[#4A1F5C] font-mono font-bold"
                             />
                           </div>
                         </div>
 
                         {/* Selector de Paleta de Autor */}
                         <div>
-                          <label className="text-xs font-bold text-[#1E181A] block mb-2">
+                          <label className="text-xs font-bold text-[#1A1020] block mb-2">
                             Selecciona la Paleta de Color del Salón (Modificable luego por la clienta):
                           </label>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -1921,8 +1921,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                   }
                                   className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                                     selected
-                                      ? 'border-[#1E181A] bg-[#FAF7F2] shadow-xs ring-2 ring-[#1E181A]/10'
-                                      : 'border-[#1E181A]/10 bg-white hover:border-[#1E181A]/30'
+                                      ? 'border-[#1A1020] bg-[#FBFAFC] shadow-xs ring-2 ring-[#1A1020]/10'
+                                      : 'border-[#1A1020]/10 bg-white hover:border-[#1A1020]/30'
                                   }`}
                                 >
                                   <div className="flex items-center gap-1.5 mb-1.5">
@@ -1930,8 +1930,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                                     <span className="w-4 h-4 rounded-full" style={{ backgroundColor: pal.primary }} />
                                     <span className="w-4 h-4 rounded-full" style={{ backgroundColor: pal.secondary }} />
                                   </div>
-                                  <p className="text-xs font-bold text-[#1E181A]">{pal.name}</p>
-                                  <p className="text-[10px] text-[#6E6266] truncate">{pal.subtitle}</p>
+                                  <p className="text-xs font-bold text-[#1A1020]">{pal.name}</p>
+                                  <p className="text-[10px] text-[#6E6478] truncate">{pal.subtitle}</p>
                                 </button>
                               );
                             })}
@@ -1941,11 +1941,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                         {/* Selector de Tipografía y Layout */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">Tipografía Editorial</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">Tipografía Editorial</label>
                             <select
                               value={tenantForm.typographyId}
                               onChange={(e) => setTenantForm({ ...tenantForm, typographyId: e.target.value as SalonTypographyId })}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-xs font-bold text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs font-bold text-[#1A1020]"
                             >
                               {SALON_TYPOGRAPHIES.map((t) => (
                                 <option key={t.id} value={t.id}>{t.name}</option>
@@ -1953,11 +1953,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">Disposición de Tarjetas</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">Disposición de Tarjetas</label>
                             <select
                               value={tenantForm.layoutId}
                               onChange={(e) => setTenantForm({ ...tenantForm, layoutId: e.target.value as SalonCardLayoutId })}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-xs font-bold text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs font-bold text-[#1A1020]"
                             >
                               {SALON_LAYOUTS.map((l) => (
                                 <option key={l.id} value={l.id}>{l.name}</option>
@@ -1968,73 +1968,73 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">Directora / Propietaria</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">Directora / Propietaria</label>
                             <input
                               type="text"
                               value={tenantForm.ownerName}
                               onChange={(e) => setTenantForm({ ...tenantForm, ownerName: e.target.value })}
                               placeholder="Nombre y Apellido"
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-sm text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-sm text-[#1A1020]"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">WhatsApp de Recepción (con código país)</label>
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">WhatsApp de Recepción (con código país)</label>
                             <input
                               type="text"
                               value={tenantForm.whatsappPhone}
                               onChange={(e) => setTenantForm({ ...tenantForm, whatsappPhone: e.target.value })}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-sm text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-sm text-[#1A1020]"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-xs font-bold text-[#1E181A] block mb-1">Propuesta de Valor / Slogan de Portada</label>
+                          <label className="text-xs font-bold text-[#1A1020] block mb-1">Propuesta de Valor / Slogan de Portada</label>
                           <input
                             type="text"
                             value={tenantForm.slogan}
                             onChange={(e) => setTenantForm({ ...tenantForm, slogan: e.target.value })}
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-sm text-[#1E181A]"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-sm text-[#1A1020]"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">
                               Áreas / Cabinas Iniciales (separadas por coma)
                             </label>
                             <input
                               type="text"
                               value={tenantForm.initialZonesCsv}
                               onChange={(e) => setTenantForm({ ...tenantForm, initialZonesCsv: e.target.value })}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-xs text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs text-[#1A1020]"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-[#1E181A] block mb-1">
+                            <label className="text-xs font-bold text-[#1A1020] block mb-1">
                               Especialistas Iniciales (separadas por coma)
                             </label>
                             <input
                               type="text"
                               value={tenantForm.initialStaffCsv}
                               onChange={(e) => setTenantForm({ ...tenantForm, initialStaffCsv: e.target.value })}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E181A]/12 text-xs text-[#1E181A]"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs text-[#1A1020]"
                             />
                           </div>
                         </div>
 
-                        <div className="flex justify-end gap-2.5 pt-3 border-t border-[#1E181A]/10">
+                        <div className="flex justify-end gap-2.5 pt-3 border-t border-[#1A1020]/10">
                           <button
                             type="button"
                             onClick={() => setShowTenantModal(false)}
-                            className="px-5 py-2.5 rounded-full bg-[#FAF7F2] hover:bg-[#F0EBE3] text-[#1E181A] text-xs font-bold cursor-pointer"
+                            className="px-5 py-2.5 rounded-full bg-[#FBFAFC] hover:bg-[#F4F2F7] text-[#1A1020] text-xs font-bold cursor-pointer"
                           >
                             Cancelar
                           </button>
                           <button
                             type="submit"
                             className="px-6 py-2.5 rounded-full text-white text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer"
-                            style={{ background: 'linear-gradient(135deg, #9E475B 0%, #C87D65 100%)' }}
+                            style={{ background: 'linear-gradient(135deg, #1F1226 0%, #4A1F5C 100%)' }}
                           >
                             Crear Salón + Diseño + Equipo en 1 Clic
                           </button>
@@ -2050,7 +2050,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {activeTab === 'docs' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-3">
-                  <h3 className="text-base font-bold text-[#0F172A] uppercase tracking-wider">
+                  <h3 className="text-base font-bold text-[#1A1020] uppercase tracking-wider">
                     Documentos en `Desktop\vanesev app`
                   </h3>
                   {(data.docs || []).map((doc: any) => (
@@ -2059,31 +2059,31 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                       onClick={() => setSelectedDoc(doc)}
                       className={`w-full text-left p-4 rounded-xl border transition-all ${
                         selectedDoc?.id === doc.id
-                          ? 'bg-amber-50/80 border-amber-500 text-[#0F172A] ring-1 ring-amber-500/20'
-                          : 'bg-white border-[#E2E8F0] text-slate-700 hover:bg-slate-50'
+                          ? 'bg-amber-50/80 border-amber-500 text-[#1A1020] ring-1 ring-amber-500/20'
+                          : 'bg-white border-[#E4E2EA] text-[#1A1020] hover:bg-[#F4F2F7]'
                       }`}
                     >
                       <span className="text-[10px] font-mono uppercase text-amber-800 font-bold">{doc.category} · {doc.version}</span>
-                      <h4 className="text-sm font-bold mt-1 text-[#0F172A]">{doc.title}</h4>
-                      <p className="text-xs text-slate-600 mt-1 line-clamp-2">{doc.summary}</p>
-                      <p className="text-[10px] font-mono text-slate-400 mt-2 truncate">{doc.local_path}</p>
+                      <h4 className="text-sm font-bold mt-1 text-[#1A1020]">{doc.title}</h4>
+                      <p className="text-xs text-[#4A4150] mt-1 line-clamp-2">{doc.summary}</p>
+                      <p className="text-[10px] font-mono text-[#6E6478] mt-2 truncate">{doc.local_path}</p>
                     </button>
                   ))}
                 </div>
 
-                <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs">
+                <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-[#E4E2EA] shadow-xs">
                   {selectedDoc ? (
                     <div className="space-y-4">
-                      <div className="border-b border-[#E2E8F0] pb-4">
+                      <div className="border-b border-[#E4E2EA] pb-4">
                         <span className="text-xs font-mono text-amber-800 font-semibold">{selectedDoc.local_path}</span>
-                        <h3 className="text-xl font-bold text-[#0F172A] mt-1">{selectedDoc.title}</h3>
+                        <h3 className="text-xl font-bold text-[#1A1020] mt-1">{selectedDoc.title}</h3>
                       </div>
-                      <pre className="text-xs sm:text-sm text-slate-800 font-mono whitespace-pre-wrap leading-relaxed bg-[#F8FAFC] p-5 rounded-xl border border-[#E2E8F0] max-h-[600px] overflow-y-auto">
+                      <pre className="text-xs sm:text-sm text-[#1A1020] font-mono whitespace-pre-wrap leading-relaxed bg-[#FBFAFC] p-5 rounded-xl border border-[#E4E2EA] max-h-[600px] overflow-y-auto">
                         {selectedDoc.content_markdown}
                       </pre>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">Selecciona un documento a la izquierda para inspeccionarlo.</p>
+                    <p className="text-sm text-[#6E6478]">Selecciona un documento a la izquierda para inspeccionarlo.</p>
                   )}
                 </div>
               </div>
@@ -2115,7 +2115,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
                   <KeyRound className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-base text-[#18181B]">
+                <h3 className="font-bold text-base text-[#1A1020]">
                   {trialModalType === 'create' ? 'Crear Acceso de Prueba' : 'Regenerar Contraseña de Prueba'}
                 </h3>
               </div>
@@ -2125,7 +2125,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setShowTrialModal(false);
                   setTrialResult(null);
                 }}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-full text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2173,7 +2173,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     setShowTrialModal(false);
                     setTrialResult(null);
                   }}
-                  className="w-full py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+                  className="w-full py-2.5 rounded-2xl border border-[#E4E2EA] text-[#1A1020] text-xs font-semibold hover:bg-[#F4F2F7] cursor-pointer"
                 >
                   Cerrar
                 </button>
@@ -2188,7 +2188,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Slug del Salón / Organización *
                   </label>
                   <input
@@ -2197,9 +2197,9 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     value={trialModalOrg}
                     onChange={(e) => setTrialModalOrg(e.target.value)}
                     placeholder="slug-del-salon"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs font-mono focus:outline-none focus:border-amber-500"
                   />
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[10px] text-[#6E6478] mt-1 block">
                     El usuario será <code>{trialModalOrg.trim().toLowerCase() || 'slug'}@prueba.vanesev.internal</code> con rol <code>owner</code>.
                   </span>
                 </div>
@@ -2208,7 +2208,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowTrialModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#4A4150] hover:bg-[#F4F2F7] cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -2238,10 +2238,10 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
             <div className="flex items-center justify-between pb-3 border-b border-black/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] flex items-center justify-center">
                   <UserPlus className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-base text-[#18181B]">Alta de Personal de Salón</h3>
+                <h3 className="font-bold text-base text-[#1A1020]">Alta de Personal de Salón</h3>
               </div>
               <button
                 type="button"
@@ -2249,7 +2249,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   setShowStaffModal(false);
                   setCreatedStaffResult(null);
                 }}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-full text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2278,7 +2278,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     setCopiedTempPassword(true);
                     setTimeout(() => setCopiedTempPassword(false), 2000);
                   }}
-                  className="w-full py-3 rounded-2xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all"
+                  className="w-full py-3 rounded-2xl bg-[#1F1226] hover:bg-[#2E1A38] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all"
                 >
                   {copiedTempPassword ? (
                     <>
@@ -2293,7 +2293,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   )}
                 </button>
 
-                <div className="pt-2 text-xs text-slate-500 text-center">
+                <div className="pt-2 text-xs text-[#6E6478] text-center">
                   Usuario: <strong>{createdStaffResult.email}</strong> &bull; Salón: <strong>{createdStaffResult.organizationSlug}</strong> &bull; Rol: <strong>{createdStaffResult.role}</strong>
                 </div>
 
@@ -2303,7 +2303,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     setShowStaffModal(false);
                     setCreatedStaffResult(null);
                   }}
-                  className="w-full py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+                  className="w-full py-2.5 rounded-2xl border border-[#E4E2EA] text-[#1A1020] text-xs font-semibold hover:bg-[#F4F2F7] cursor-pointer"
                 >
                   Cerrar
                 </button>
@@ -2318,7 +2318,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Correo Electrónico *
                   </label>
                   <input
@@ -2327,12 +2327,12 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     value={staffFormEmail}
                     onChange={(e) => setStaffFormEmail(e.target.value)}
                     placeholder="especialista@salon.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-[#4A1F5C]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Nombre Completo (opcional)
                   </label>
                   <input
@@ -2340,19 +2340,19 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                     value={staffFormName}
                     onChange={(e) => setStaffFormName(e.target.value)}
                     placeholder="Nombre y Apellidos"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-[#4A1F5C]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Salón (Organización) *
                   </label>
                   <select
                     required
                     value={staffFormOrg}
                     onChange={(e) => setStaffFormOrg(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E] bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-[#4A1F5C] bg-white"
                   >
                     <option value="">Selecciona un salón...</option>
                     {(data?.tenants || []).map((t: any) => (
@@ -2364,13 +2364,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                     Rol en el Salón *
                   </label>
                   <select
                     value={staffFormRole}
                     onChange={(e) => setStaffFormRole(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E] bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-[#4A1F5C] bg-white"
                   >
                     <option value="staff">Especialista / Personal (Staff)</option>
                     <option value="admin">Administrador del Salón (Admin)</option>
@@ -2382,14 +2382,14 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowStaffModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#4A4150] hover:bg-[#F4F2F7] cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={staffLoading}
-                    className="px-5 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
                   >
                     {staffLoading ? (
                       <>
@@ -2413,15 +2413,15 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-black/10 space-y-5 animate-in fade-in">
             <div className="flex items-center justify-between pb-3 border-b border-black/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] flex items-center justify-center">
                   <QrCode className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-base text-[#18181B]">Nueva Campaña QR</h3>
+                <h3 className="font-bold text-base text-[#1A1020]">Nueva Campaña QR</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCampaignModal(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-full text-[#6E6478] hover:text-[#1A1020] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2436,7 +2436,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                   Código de Campaña (/q/&lt;código&gt;) *
                 </label>
                 <input
@@ -2445,13 +2445,13 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campCode}
                   onChange={(e) => setCampCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   placeholder="ej: promo-otono"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#5B2A6E]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs font-mono focus:outline-none focus:border-[#4A1F5C]"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">3-32 caracteres a-z, 0-9 o guiones.</span>
+                <span className="text-[10px] text-[#6E6478] mt-1 block">3-32 caracteres a-z, 0-9 o guiones.</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                   Nombre de la Campaña *
                 </label>
                 <input
@@ -2460,12 +2460,12 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campName}
                   onChange={(e) => setCampName(e.target.value)}
                   placeholder="ej: Campaña Otoño 2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5B2A6E]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs focus:outline-none focus:border-[#4A1F5C]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#1A1020] mb-1">
                   Destino Interno *
                 </label>
                 <input
@@ -2474,23 +2474,23 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                   value={campTarget}
                   onChange={(e) => setCampTarget(e.target.value)}
                   placeholder="ej: /capra-studio o /"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-[#5B2A6E]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E2EA] text-xs font-mono focus:outline-none focus:border-[#4A1F5C]"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Debe ser una ruta interna que comience por una sola «/».</span>
+                <span className="text-[10px] text-[#6E6478] mt-1 block">Debe ser una ruta interna que comience por una sola «/».</span>
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowCampaignModal(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#4A4150] hover:bg-[#F4F2F7] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingCamp}
-                  className="px-5 py-2.5 rounded-xl bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   {savingCamp ? (
                     <>
