@@ -142,6 +142,23 @@ async function runAudit() {
 
         await page.screenshot({ path: filePath, fullPage: false });
 
+        // En la web, además, capturas de las secciones de mitad de página (scroll 3D, panel, tarjetas).
+        if (route.slug === 'landing') {
+          for (const [ancla, avance] of [['un-dia', 0.12], ['un-dia', 0.55], ['panel-duena', 0], ['signature', 0], ['precios', 0]]) {
+            const ok = await page.evaluate(([id, k]) => {
+              const el = document.getElementById(id);
+              if (!el) return false;
+              const y = el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * k;
+              window.scrollTo(0, Math.max(0, y));
+              return true;
+            }, [ancla, avance]);
+            if (!ok) continue;
+            await page.waitForTimeout(1600);
+            await page.screenshot({ path: path.join(OUTPUT_DIR, `landing-${ancla}-${Math.round(avance * 100)}-${vp.width}px.png`), fullPage: false });
+          }
+          await page.evaluate(() => window.scrollTo(0, 0));
+        }
+
         // Una página que cae en la pantalla de error de React NO está bien, aunque no desborde.
         const pantallaDeError = await page.evaluate(() => document.body.innerText.includes('Estamos actualizando la plataforma'));
         if (pantallaDeError) globalHasViolations = true;
