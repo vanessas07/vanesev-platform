@@ -193,12 +193,12 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
   return (
     <div className="space-y-6">
       {/* Guía corta de sección */}
-      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#24152B]/10 flex items-start gap-3.5">
-        <div className="p-2 rounded-xl bg-[#5B2A6E]/10 text-[#5B2A6E] shrink-0 mt-0.5">
+      <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start gap-3.5">
+        <div className="p-2 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] shrink-0 mt-0.5">
           <HelpCircle className="w-4 h-4" />
         </div>
         <div className="text-xs text-[#6E6478] leading-relaxed">
-          <p className="font-bold text-[#24152B] text-sm mb-0.5">Landing & Presencia Web</p>
+          <p className="font-bold text-[#1A1020] text-sm mb-0.5">Landing & Presencia Web</p>
           <p>
             Diseña la estructura de la página pública de tu salón: redacta tu historia, sube tu galería de trabajos,
             define tus preguntas frecuentes y ordena los bloques con flechas según tu prioridad comercial.
@@ -207,7 +207,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
       </div>
 
       {/* Barra de estado público y enlace */}
-      <div className="p-4 rounded-2xl bg-white border border-[#24152B]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 rounded-2xl bg-white border border-[#1A1020]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -216,10 +216,10 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
               onChange={(e) => setLanding({ ...landing, publicada: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5B2A6E]" />
+            <div className="w-11 h-6 bg-[#E4E2EA] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#E4E2EA] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1F1226]" />
           </label>
           <div>
-            <span className="text-xs font-bold text-[#24152B] block">
+            <span className="text-xs font-bold text-[#1A1020] block">
               {landing.publicada ? 'Página pública ACTIVA' : 'Página pública PAUSADA'}
             </span>
             <span className="text-[11px] text-[#6E6478]">
@@ -231,9 +231,9 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
         <button
           type="button"
           onClick={copiarEnlace}
-          className="px-4 py-2 rounded-xl bg-[#FBFAFC] hover:bg-[#F2EDF3] border border-[#24152B]/15 text-xs font-bold text-[#24152B] flex items-center gap-2 cursor-pointer transition-colors"
+          className="px-4 py-2 rounded-xl bg-[#FBFAFC] hover:bg-[#F4F2F7] border border-[#1A1020]/15 text-xs font-bold text-[#1A1020] flex items-center gap-2 cursor-pointer transition-colors"
         >
-          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#5B2A6E]" />}
+          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#4A1F5C]" />}
           <span>{copiedLink ? '¡Copiado!' : `vanesev.com/${tenantSlug}`}</span>
         </button>
       </div>
@@ -254,9 +254,9 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Historia del Salón */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/10 space-y-3">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/10 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-[#24152B]">
+            <label className="block text-xs font-bold text-[#1A1020]">
               Historia & Filosofía del Estudio (≤ 600 caracteres)
             </label>
             <span className={`text-[11px] font-mono ${((landing.historia || '').length > 600) ? 'text-rose-600 font-bold' : 'text-[#6E6478]'}`}>
@@ -269,23 +269,23 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
             value={landing.historia || ''}
             onChange={(e) => setLanding({ ...landing, historia: e.target.value })}
             placeholder="Narra brevemente el origen de tu estudio, tu pasión por el detalle y el estándar de atención que ofreces a cada clienta..."
-            className="w-full p-3 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#5B2A6E] resize-none"
+            className="w-full p-3 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#4A1F5C] resize-none"
           />
         </div>
 
         {/* Orden de Bloques con Flechas */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/10 space-y-4">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/10 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#5B2A6E]" />
+              <h4 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#4A1F5C]" />
                 <span>Orden de Secciones en la Web</span>
               </h4>
               <p className="text-[11px] text-[#6E6478] mt-0.5">
                 Organiza la secuencia visual de tu landing utilizando las flechas ↑ y ↓.
               </p>
             </div>
-            <span className="text-[11px] font-bold text-[#5B2A6E] bg-[#5B2A6E]/10 px-2.5 py-1 rounded-full">
+            <span className="text-[11px] font-bold text-[#4A1F5C] bg-[#1F1226]/10 px-2.5 py-1 rounded-full">
               {landing.bloques?.length || 10} bloques
             </span>
           </div>
@@ -296,14 +296,14 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
               return (
                 <div
                   key={bId}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#FBFAFC] border border-[#24152B]/10 hover:border-[#5B2A6E]/30 transition-all"
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/10 hover:border-[#4A1F5C]/30 transition-all"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-6 h-6 rounded-full bg-[#24152B]/5 text-[#24152B] font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-[#1A1020]/5 text-[#1A1020] font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-[#24152B] truncate">{meta.label}</p>
+                      <p className="text-xs font-bold text-[#1A1020] truncate">{meta.label}</p>
                       <p className="text-[10px] text-[#6E6478] truncate">{meta.desc}</p>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
                       type="button"
                       disabled={idx === 0}
                       onClick={() => moverBloque(idx, 'arriba')}
-                      className="p-1.5 rounded-lg border border-[#24152B]/15 text-[#24152B] hover:bg-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      className="p-1.5 rounded-lg border border-[#1A1020]/15 text-[#1A1020] hover:bg-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                       title="Mover arriba"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -322,7 +322,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
                       type="button"
                       disabled={idx === (landing.bloques?.length || 10) - 1}
                       onClick={() => moverBloque(idx, 'abajo')}
-                      className="p-1.5 rounded-lg border border-[#24152B]/15 text-[#24152B] hover:bg-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      className="p-1.5 rounded-lg border border-[#1A1020]/15 text-[#1A1020] hover:bg-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                       title="Mover abajo"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -335,10 +335,10 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
         </div>
 
         {/* Galería (≤ 8 fotos) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/10 space-y-4">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/10 space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-[#24152B] flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-[#5B2A6E]" />
+            <h4 className="text-sm font-bold text-[#1A1020] flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-[#4A1F5C]" />
               <span>Galería Visual (≤ 8 fotografías)</span>
             </h4>
             <span className="text-[11px] font-mono text-[#6E6478]">
@@ -352,13 +352,13 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
               placeholder="Pega la URL de una imagen (https://...)"
               value={nuevaFotoUrl}
               onChange={(e) => setNuevaFotoUrl(e.target.value)}
-              className="flex-1 p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+              className="flex-1 p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
             />
             <button
               type="button"
               onClick={agregarFoto}
               disabled={(landing.galeria || []).length >= 8 || !nuevaFotoUrl.trim()}
-              className="px-4 py-2 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Añadir</span>
@@ -367,7 +367,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {(landing.galeria || []).map((url, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden border border-[#24152B]/10 group aspect-square bg-stone-100">
+              <div key={i} className="relative rounded-xl overflow-hidden border border-[#1A1020]/10 group aspect-square bg-[#F4F2F7]">
                 <img src={url} alt={`Trabajo ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
@@ -383,22 +383,22 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
         </div>
 
         {/* Preguntas Frecuentes (≤ 8 items) */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/10 space-y-4">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/10 space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-[#24152B]">Preguntas Frecuentes (≤ 8 items)</h4>
+            <h4 className="text-sm font-bold text-[#1A1020]">Preguntas Frecuentes (≤ 8 items)</h4>
             <span className="text-[11px] font-mono text-[#6E6478]">
               {(landing.faq || []).length} / 8
             </span>
           </div>
 
-          <div className="space-y-2 p-3 rounded-xl bg-[#FBFAFC] border border-[#24152B]/10">
+          <div className="space-y-2 p-3 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/10">
             <input
               type="text"
               maxLength={140}
               placeholder="Pregunta (≤ 140 caracteres)..."
               value={nuevaPregunta}
               onChange={(e) => setNuevaPregunta(e.target.value)}
-              className="w-full p-2 bg-white border border-[#24152B]/15 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+              className="w-full p-2 bg-white border border-[#1A1020]/15 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
             />
             <textarea
               rows={2}
@@ -406,14 +406,14 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
               placeholder="Respuesta explicativa (≤ 400 caracteres)..."
               value={nuevaRespuesta}
               onChange={(e) => setNuevaRespuesta(e.target.value)}
-              className="w-full p-2 bg-white border border-[#24152B]/15 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E] resize-none"
+              className="w-full p-2 bg-white border border-[#1A1020]/15 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C] resize-none"
             />
             <div className="flex justify-end">
               <button
                 type="button"
                 onClick={agregarFaq}
                 disabled={(landing.faq || []).length >= 8 || !nuevaPregunta.trim() || !nuevaRespuesta.trim()}
-                className="px-3.5 py-1.5 bg-[#5B2A6E] hover:bg-[#4A2159] text-white rounded-lg text-xs font-bold disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-1.5 bg-[#1F1226] hover:bg-[#2E1A38] text-white rounded-lg text-xs font-bold disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar FAQ</span>
@@ -423,15 +423,15 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
 
           <div className="space-y-2.5">
             {(landing.faq || []).map((faqItem, i) => (
-              <div key={i} className="p-3 rounded-xl bg-[#FBFAFC] border border-[#24152B]/10 flex items-start justify-between gap-3">
+              <div key={i} className="p-3 rounded-xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start justify-between gap-3">
                 <div className="space-y-1 text-xs">
-                  <p className="font-bold text-[#24152B]">¿{faqItem.p}?</p>
+                  <p className="font-bold text-[#1A1020]">¿{faqItem.p}?</p>
                   <p className="text-[#6E6478] leading-relaxed">{faqItem.r}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => eliminarFaq(i)}
-                  className="p-1 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0"
+                  className="p-1 text-[#6E6478] hover:text-rose-600 transition-colors cursor-pointer shrink-0"
                   title="Eliminar FAQ"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -442,12 +442,12 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
         </div>
 
         {/* Optimización SEO */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#24152B]/10 space-y-4">
-          <h4 className="text-sm font-bold text-[#24152B]">Optimización para Buscadores (SEO)</h4>
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#1A1020]/10 space-y-4">
+          <h4 className="text-sm font-bold text-[#1A1020]">Optimización para Buscadores (SEO)</h4>
           <div className="space-y-3">
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold text-[#24152B]">Título SEO (≤ 70 caracteres)</label>
+                <label className="block text-xs font-bold text-[#1A1020]">Título SEO (≤ 70 caracteres)</label>
                 <span className="text-[10px] font-mono text-[#6E6478]">{(landing.seoTitulo || '').length} / 70</span>
               </div>
               <input
@@ -456,13 +456,13 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
                 value={landing.seoTitulo || ''}
                 onChange={(e) => setLanding({ ...landing, seoTitulo: e.target.value })}
                 placeholder="Ej: Capra Studio | Belleza y Arquitectura de Miradas en San Cristóbal"
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E]"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
               />
             </div>
 
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold text-[#24152B]">Descripción SEO (≤ 160 caracteres)</label>
+                <label className="block text-xs font-bold text-[#1A1020]">Descripción SEO (≤ 160 caracteres)</label>
                 <span className="text-[10px] font-mono text-[#6E6478]">{(landing.seoDescripcion || '').length} / 160</span>
               </div>
               <textarea
@@ -471,7 +471,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
                 value={landing.seoDescripcion || ''}
                 onChange={(e) => setLanding({ ...landing, seoDescripcion: e.target.value })}
                 placeholder="Ej: Reserva en línea en Capra Studio. Cejas perfectas, lifting de pestañas, manicura y alisados orgánicos en San Cristóbal."
-                className="w-full p-2.5 bg-[#FBFAFC] border border-[#24152B]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5B2A6E] resize-none"
+                className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C] resize-none"
               />
             </div>
           </div>
@@ -482,7 +482,7 @@ export const SalonLandingTab: React.FC<SalonLandingTabProps> = ({ tenantSlug }) 
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2.5 rounded-full bg-[#5B2A6E] hover:bg-[#4A2159] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-6 py-2.5 rounded-full bg-[#1F1226] hover:bg-[#2E1A38] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Guardando...' : 'Guardar Landing'}</span>
