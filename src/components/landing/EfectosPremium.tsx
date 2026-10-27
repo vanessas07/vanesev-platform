@@ -137,12 +137,14 @@ const ESCENAS = [
   },
 ];
 
+// Puntos siempre dentro de [0, 1] y crecientes: framer-motion acelera estas transformaciones con
+// la API de animación del navegador, que rechaza posiciones fuera de rango (y tumba toda la página).
 function useOpacidadDeEscena(p: MotionValue<number>, i: number, total: number) {
   const a = i / total;
   const b = (i + 1) / total;
-  const entrada = i === 0 ? [-1, 0] : [a - 0.04, a + 0.02];
-  const salida = i === total - 1 ? [1, 2] : [b - 0.02, b + 0.04];
-  return useTransform(p, [entrada[0], entrada[1], salida[0], salida[1]], [i === 0 ? 1 : 0, 1, 1, i === total - 1 ? 1 : 0]);
+  if (i === 0) return useTransform(p, [0, b - 0.02, b + 0.04], [1, 1, 0]);
+  if (i === total - 1) return useTransform(p, [a - 0.04, a + 0.02, 1], [0, 1, 1]);
+  return useTransform(p, [a - 0.04, a + 0.02, b - 0.02, b + 0.04], [0, 1, 1, 0]);
 }
 
 const PantallaQr: React.FC = () => (
