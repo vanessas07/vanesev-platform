@@ -63,6 +63,12 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false, // Endpoints públicos no pueden escribir esta columna
       },
+      cuenta_prueba: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false, // Endpoints públicos no pueden escribir esta columna
+      },
     },
   },
   emailAndPassword: {
