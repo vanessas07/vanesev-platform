@@ -1,4 +1,5 @@
 import { VanesevLogo } from './VanesevLogo';
+import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
 import {
 
@@ -205,6 +206,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
   onClientLoginSuccess,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const inclinacion = useInclinacion3D(9);
 
   // Interactive Phone Simulator State in Hero
   const [phoneStep, setPhoneStep] = useState<'catalog' | 'passport' | 'whatsapp'>('catalog');
@@ -252,7 +254,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
   const [legalModalTitle, setLegalModalTitle] = useState<string | null>(null);
 
   // 3D Scroll Perspective Ref
-  const showcaseRef = useRef<HTMLDivElement>(null);
+  const showcaseRef = useRef<HTMLElement>(null);
   const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: showcaseRef,
@@ -440,6 +442,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             'radial-gradient(circle at 85% 15%, rgba(74, 31, 92, 0.09) 0%, transparent 45%), radial-gradient(circle at 12% 80%, rgba(184, 155, 106, 0.12) 0%, transparent 50%), #FBFAFC',
         }}
       >
+        <AuroraFondo />
         <div className="mx-auto max-w-6xl grid items-center gap-12 lg:gap-16 lg:grid-cols-[1.15fr_1fr]">
           {/* Left Commercial SaaS Pitch */}
           <motion.div
@@ -452,13 +455,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
               Inspirado en Vanessa · Suite Tecnológica de Autor para Salones &bull; 0% comisiones
             </p>
 
-            <h1 className="font-cormorant mt-6 text-[42px] sm:text-6xl lg:text-[76px] font-semibold leading-[0.98] tracking-tight text-[#1A1020]">
-              Tu salón de belleza, con{" "}
-              <span className="italic font-normal text-[#4A1F5C]">sistema y marca</span> propia.
-            </h1>
+            <TituloRevelado
+              className="font-cormorant mt-6 text-[44px] sm:text-6xl lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.02em] text-[#1A1020]"
+              partes={[{ texto: 'Tu salón de belleza, con' }, { texto: 'sistema y marca', acento: true }, { texto: 'propia.' }]}
+            />
 
             <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-[#4A4150] font-medium">
-              Tu carta interactiva con código QR en recepción, agenda por especialista conectada a WhatsApp y tu propio Pasaporte VIP de sellos digitales. Una libreta de citas la tiene cualquiera: nosotros te damos una marca de autor que llena tus sillones.
+              Carta QR con tu firma, agenda por especialista conectada a WhatsApp y Pasaporte VIP de sellos. Una libreta de citas la tiene cualquiera: VANESEV te da una marca de autor que llena tus sillones. Sin comisiones. Tus clientas, siempre tuyas.
             </p>
 
             {/* Primary & Secondary Commercial CTAs */}
@@ -521,7 +524,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </motion.div>
           {/* Right: 3D Interactive Phone Showcase + 4 Floating Live Salon Badges */}
-          <div className="relative mx-auto w-full max-w-[350px]" style={{ perspective: '1600px' }}>
+          <div
+            className="relative mx-auto w-full max-w-[350px]"
+            style={{ perspective: '1600px' }}
+            onMouseMove={inclinacion.onMouseMove}
+            onMouseLeave={inclinacion.onMouseLeave}
+          >
             {/* Floating Badge 1 (Top-Left) */}
             <motion.div
               initial={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
@@ -592,7 +600,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
 
             {/* Phone Bezel */}
-            <div className="rounded-[46px] p-3 bg-gradient-to-b from-[#3A2A40] via-[#241829] to-[#140B19] shadow-[0_40px_90px_-20px_rgba(20,11,25,0.32)] border border-white">
+            <motion.div style={inclinacion.estilo} className="rounded-[46px] p-3 bg-gradient-to-b from-[#3A2A40] via-[#241829] to-[#140B19] shadow-[0_40px_90px_-20px_rgba(20,11,25,0.32)] border border-white">
               <div
                 className="rounded-[36px] overflow-hidden border border-black/5 flex flex-col min-h-[560px] transition-colors duration-500"
                 style={{ backgroundColor: phonePalette.bgPrimary, color: phonePalette.textPrimary }}
@@ -788,10 +796,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
+
+      {/* Un día en tu salón: scroll 3D (G-036) */}
+      <UnDiaEnTuSalon />
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           3. INFINITE EDITORIAL MARQUEE STRIP (MARQUESINA COMERCIAL)
@@ -824,7 +835,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════════════
           4. FULL-BLEED ARCHITECTURAL MANIFESTO BANNER (70SVH)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section className="relative h-[64svh] min-h-[400px] overflow-hidden">
+      <motion.section {...revelarSeccion} className="relative h-[64svh] min-h-[400px] overflow-hidden">
         <img
           src="/vanesev/hero-atelier.jpg"
           alt="Interior arquitectónico de salón de belleza de lujo"
@@ -842,12 +853,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             Sin directorios intermediarios entre tu sillón y tu clienta
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           5. "¿TE SUENA?" — 4 NUMBERED PAIN POINTS COSTING SALONS MONEY EVERY WEEK
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
+      <motion.section {...revelarSeccion} className="bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">¿Te suena?</p>
           <h2 className="font-cormorant mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
@@ -912,12 +923,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           6. "QUÉ HACEMOS" — 3 NUMBERED PRODUCT TIERS (01, 02, 03)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="signature" className="py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
+      <motion.section {...revelarSeccion} id="signature" className="py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">Qué hacemos</p>
           <h2 className="font-cormorant mt-3 max-w-3xl text-3xl sm:text-5xl font-semibold leading-[1.04] text-[#1A1020]">
@@ -1000,12 +1011,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           7. "LA PUERTA DE ENTRADA · CARTA QR" + 6 SUPERPOWERS
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="carta-qr" className="scroll-mt-20 bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
+      <motion.section {...revelarSeccion} id="carta-qr" className="scroll-mt-20 bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
             La puerta de entrada &bull; Carta QR
@@ -1071,12 +1082,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           8. INTERACTIVE AUTHOR DESIGN STUDIO ("NINGÚN SALÓN SE PARECE A OTRO")
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section ref={showcaseRef} id="personalizador" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
+      <motion.section {...revelarSeccion} ref={showcaseRef} id="personalizador" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
         <div className="mx-auto max-w-6xl space-y-10">
           <div className="max-w-3xl">
             <span className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
@@ -1274,12 +1285,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           9. COMPARISON TABLE: CARTA QR vs ATELIER SIGNATURE + 5 SECTORS
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="sectores" className="scroll-mt-20 bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
+      <motion.section {...revelarSeccion} id="sectores" className="scroll-mt-20 bg-[#F4F2F7] py-20 sm:py-28 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl space-y-20">
           {/* Comparison Table */}
           <div className="max-w-4xl mx-auto">
@@ -1396,12 +1407,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           10. PRICING PLANS + PLAN FUNDADOR BANNER + ROI CALCULATOR
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="precios" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
+      <motion.section {...revelarSeccion} id="precios" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
         <div className="mx-auto max-w-6xl space-y-16">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
@@ -1581,12 +1592,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           11. CASOS DE ÉXITO REALES & DEMO EN VIVO (CAPRA STUDIO)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="casos" className="scroll-mt-20 bg-[#140B19] text-white py-20 sm:py-28 px-4 sm:px-6">
+      <motion.section {...revelarSeccion} id="casos" className="scroll-mt-20 bg-[#140B19] text-white py-20 sm:py-28 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl space-y-16">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
@@ -1659,12 +1670,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           12. BLOG EDITORIAL DE GESTIÓN BEAUTY + PREGUNTAS FRECUENTES (FAQ)
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section id="blog" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
+      <motion.section {...revelarSeccion} id="blog" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-6 bg-[#FBFAFC]">
         <div className="mx-auto max-w-6xl space-y-20">
           {/* Blog Editorial */}
           <div className="space-y-8">
@@ -1758,12 +1769,12 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           13. FINAL CLOSING COMMERCIAL CTA BANNER
       ═══════════════════════════════════════════════════════════════════════════ */}
-      <section
+      <motion.section {...revelarSeccion}
         className="py-20 sm:py-28 px-4 sm:px-6 text-center text-white"
         style={{ background: 'radial-gradient(120% 140% at 85% 0%, #4A1F5C 0%, #1F1226 45%, #140B19 100%)' }}
       >
@@ -1794,7 +1805,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
           14. COMPLETE 5-COLUMN CORPORATE SAAS FOOTER (ZERO DEBUG/CENTRAL LINKS)
