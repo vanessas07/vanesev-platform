@@ -1,0 +1,73 @@
+=== PRUEBA 5: 2FA DEL SUPERADMIN (BETTER-AUTH) ===
+FECHA: 2026-10-27 01:09 UTC+1
+DEPLOYMENT: https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app
+
+5.1. ACTIVACIÓN DE 2FA TOTP (POST /api/auth/two-factor/enable):
+$ npx vercel curl /api/auth/two-factor/enable --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.session_token=JwncJmtXEGOvVhZfXijd6eq9VOb7ZsDn.26MVzCBrDyBl5IPk8yjakjpdx%2Fu1EE%2BJkUC80FljpmQ%3D" -H "Authorization: Bearer JwncJmtXEGOvVhZfXijd6eq9VOb7ZsDn" -d '@payload_enable_2fa.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:08:51 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::pmnsz-1793059730850-1e75311fcd74
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"method":"totp","totpURI":"otpauth://totp/VANESEV%20Central:staff.capra%40vanesev.com?secret=NRJF6QS2J5SGK42WK5VWEUCSLF2VSVDLNEYVC3CHKBSG2R2EO5TQ&issuer=VANESEV+Central&digits=6&period=30","backupCodes":["r4eT9-9CvJM","p3mDB-uo4o9","8y6eC-rnWzP","mZD26-I3rF2","6QocV-cw8RO","MG9xH-u3rJS","wrIDM-v9NGz","1CJOJ-Bfae8","M6c9Q-2qlwq","WlCiq-UQAQH"]}
+
+5.2. LOGIN CON CONTRASEÑA REQUIERE RETO 2FA (POST /api/auth/sign-in/email):
+$ npx vercel curl /api/auth/sign-in/email --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -d '@payload_signin_staff.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:09:22 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Set-Cookie: __Secure-better-auth.session_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: __Secure-better-auth.session_data=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: __Secure-better-auth.two_factor=2fa-fvu5bJGPyaDwsDskNkcI.vEP7gGk41K06eoCVjFqy1ojqHwLiNuMIRrfjL1JVcXE%3D; Max-Age=600; Path=/; HttpOnly; Secure; SameSite=Lax
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::9jmc4-1793059762378-71d0ae1855c5
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"twoFactorRedirect":true,"twoFactorMethods":["totp"]}
+
+5.3. VALIDACIÓN EXITOSA DE CÓDIGO TOTP (POST /api/auth/two-factor/verify-totp):
+$ npx vercel curl /api/auth/two-factor/verify-totp --deployment https://vanesev-platform-dx1bzgu1z-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -H "Origin: https://vanesev.com" -H "Cookie: __Secure-better-auth.two_factor=2fa-fvu5bJGPyaDwsDskNkcI.vEP7gGk41K06eoCVjFqy1ojqHwLiNuMIRrfjL1JVcXE%3D" -d '@payload_verify_totp.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2026 00:09:34 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Set-Cookie: __Secure-better-auth.session_token=26c6Y1O7A1ykKA4d3TPqxLIrZecjozTZ.oX9pGKx9aFx2Dlks%2BSYXLZJwQBeOI219U8U4sJLkPX8%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: __Secure-better-auth.two_factor=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::89xv2-1793059774110-02eaa89cb283
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"token":"26c6Y1O7A1ykKA4d3TPqxLIrZecjozTZ","user":{"name":"Directora Capra","email":"staff.capra@vanesev.com","emailVerified":false,"image":null,"createdAt":"2026-10-26T23:56:52.614Z","updatedAt":"2026-10-27T00:09:11.359Z","twoFactorEnabled":true,"phoneNumber":null,"phoneNumberVerified":false,"id":"v6kZz2LZM7NWhavoBuQO8wR39K0CHDUt"}}
+
+VEREDICTO: ✅ CUMPLE (Superadmin activa TOTP con backupCodes; el login exige twoFactorRedirect: true; al validar el token TOTP emite la cookie de sesión definitiva con twoFactorEnabled: true).

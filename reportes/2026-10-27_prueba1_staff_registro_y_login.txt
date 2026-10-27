@@ -1,0 +1,51 @@
+=== PRUEBA 1: REGISTRO Y LOGIN DE STAFF (BETTER-AUTH) ===
+FECHA: 2026-10-27 00:57 UTC+1
+DEPLOYMENT: https://vanesev-platform-ats8t0aa5-vanesevapp-4342.vercel.app
+
+1.1. COMANDO DE REGISTRO (POST /api/auth/sign-up/email):
+$ npx vercel curl /api/auth/sign-up/email --deployment https://vanesev-platform-ats8t0aa5-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -d '@payload_signup.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Mon, 26 Oct 2026 23:56:52 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Set-Cookie: __Secure-better-auth.session_token=nPUjncQ8hLDipnsm994lhUBaX5atDwtG.Q9Rgvx6p7BurdXf4%2FbdFme2ytOYRUaDzbNzvXpHNP%2F4%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::hnbb2-1793059012108-63e96ac2e8bd
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"token":"nPUjncQ8hLDipnsm994lhUBaX5atDwtG","user":{"name":"Directora Capra","email":"staff.capra@vanesev.com","emailVerified":false,"image":null,"createdAt":"2026-10-26T23:56:52.614Z","updatedAt":"2026-10-26T23:56:52.614Z","twoFactorEnabled":false,"phoneNumber":null,"phoneNumberVerified":false,"id":"v6kZz2LZM7NWhavoBuQO8wR39K0CHDUt"}}
+
+--------------------------------------------------------------------------------
+
+1.2. COMANDO DE LOGIN (POST /api/auth/sign-in/email):
+$ npx vercel curl /api/auth/sign-in/email --deployment https://vanesev-platform-ats8t0aa5-vanesevapp-4342.vercel.app --cwd "C:\Users\karc0\projects\andrea-labrador-nails-app" --yes -- -i -X POST -H "Content-Type: application/json" -d '@payload_signin_staff.json'
+
+SALIDA REAL:
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Mon, 26 Oct 2026 23:57:13 GMT
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Set-Cookie: __Secure-better-auth.session_token=sIZeadmUma1CDJ9rjkRJ1mj6Tvrqt7jJ.aClrMarOiUlB1N5prKjFhCP44ASwCfAR25W4sZ3qJvo%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=Lax
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Robots-Tag: noindex
+X-Vercel-Cache: MISS
+X-Vercel-Id: cdg1::iad1::xgbcz-1793059032841-b48e695a6277
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
+{"redirect":false,"token":"sIZeadmUma1CDJ9rjkRJ1mj6Tvrqt7jJ","user":{"name":"Directora Capra","email":"staff.capra@vanesev.com","emailVerified":false,"image":null,"createdAt":"2026-10-26T23:56:52.614Z","updatedAt":"2026-10-26T23:56:52.614Z","twoFactorEnabled":false,"phoneNumber":null,"phoneNumberVerified":false,"id":"v6kZz2LZM7NWhavoBuQO8wR39K0CHDUt"}}
+
+VEREDICTO: ✅ CUMPLE (Cookie __Secure-better-auth.session_token con HttpOnly; Secure; SameSite=Lax recibida).
