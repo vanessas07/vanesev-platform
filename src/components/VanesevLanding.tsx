@@ -210,13 +210,13 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
 
   // Interactive Phone Simulator State in Hero
   const [phoneStep, setPhoneStep] = useState<'catalog' | 'passport' | 'whatsapp'>('catalog');
-  const [phonePaletteId, setPhonePaletteId] = useState<SalonPaletteId>('rose-cashmere');
+  const [phonePaletteId, setPhonePaletteId] = useState<SalonPaletteId>('champagne-atelier');
   const [selectedDemoService, setSelectedDemoService] = useState(0);
   const [selectedDemoTime, setSelectedDemoTime] = useState('10:30 AM');
   const [simulatedStamps, setSimulatedStamps] = useState(4);
 
   // Interactive Live Theme Studio on Landing Page
-  const [studioPaletteId, setStudioPaletteId] = useState<SalonPaletteId>('rose-cashmere');
+  const [studioPaletteId, setStudioPaletteId] = useState<SalonPaletteId>('champagne-atelier');
   const [studioTypographyId, setStudioTypographyId] = useState<SalonTypographyId>('haute-couture');
   const [studioLayoutId, setStudioLayoutId] = useState<SalonCardLayoutId>('editorial-magazine');
 
@@ -441,7 +441,7 @@ export const VanesevLanding: React.FC<VanesevLandingProps> = ({
       >
         <FotoPortada src="/vanesev/hero-atelier.jpg" alt="Atelier de belleza luminoso con recepción y código QR de reservas" />
         <AuroraFondo />
-        <div className="mx-auto max-w-6xl grid items-center gap-12 lg:gap-16 lg:grid-cols-[1.15fr_1fr]">
+        <div className="relative z-10 mx-auto max-w-6xl grid items-center gap-12 lg:gap-16 lg:grid-cols-[1.15fr_1fr]">
           {/* Left Commercial SaaS Pitch */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
