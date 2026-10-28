@@ -372,7 +372,7 @@ const PaginaLegal: React.FC<{ id: string }> = ({ id }) => {
         </nav>
         <article className="max-w-3xl">
           <h1 className="font-lujo text-[40px] font-medium leading-[1.05] tracking-[-0.02em] text-[#1A1020] sm:text-6xl">{doc.titulo}</h1>
-          <p className="mt-3 text-[14px] text-[#6E6478]">Última actualización: 29 de octubre de 2026</p>
+          <p className="mt-3 text-[14px] text-[#6E6478]">Última actualización: 28 de octubre de 2026</p>
           <p className="mt-6 text-[17px] leading-relaxed text-[#4A4150]">{doc.resumen}</p>
           {doc.secciones.map(([t, parrafos]) => (
             <section key={t} className="mt-10">
