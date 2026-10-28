@@ -424,7 +424,7 @@ export const VanesevLanding: React.FC = () => {
             </p>
 
             <TituloRevelado
-              className="font-lujo mt-6 text-[44px] sm:text-6xl lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.02em] text-[#1A1020]"
+              className="font-lujo mt-6 text-[38px] sm:text-6xl lg:text-[76px] font-semibold leading-[0.98] tracking-[-0.02em] text-[#1A1020]"
               partes={[{ texto: 'Tu talento merece una' }, { texto: 'agenda llena.', acento: true }, { texto: 'Y una marca que no se confunda con nadie.' }]}
             />
 
