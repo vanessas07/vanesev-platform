@@ -4,7 +4,8 @@ import {
   Globe, Plus, RefreshCw, ExternalLink, Send, Check, XCircle,
   Clock, Server, Database, HardDrive, GitBranch, ArrowUpRight, Users,
   MapPin, DollarSign, Crown, Eye, Terminal, Activity, Lock, QrCode, Crosshair,
-  Palette, Sliders, X, LogOut, Copy, UserPlus, KeyRound
+  Palette, Sliders, X, LogOut, Copy, UserPlus, KeyRound,
+  Store,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authClient } from '../lib/authClient';
@@ -12,6 +13,7 @@ import { CentralAuthGate } from './CentralAuthGate';
 import { VanesevLogo } from './VanesevLogo';
 import { DynamicQrManager } from './DynamicQrManager';
 import { CentralCompetitors } from './CentralCompetitors';
+import { CentralAltas } from './CentralAltas';
 import { SalonThemeStudio } from './SalonThemeStudio';
 import {
   SALON_PALETTES,
@@ -34,7 +36,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
   onNavigateToTenant,
   onNavigateToSaaSLanding,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'sessions' | 'incidents' | 'mailbox' | 'tasks_roadmap' | 'docs' | 'qr' | 'competitors'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'sessions' | 'incidents' | 'mailbox' | 'tasks_roadmap' | 'docs' | 'qr' | 'competitors' | 'altas'>('overview');
   const [overviewTier, setOverviewTier] = useState<'zones' | 'database' | 'governance'>('zones');
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -543,6 +545,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {[
               { id: 'overview', label: 'Overview' },
               { id: 'tenants', label: 'Salones' },
+              { id: 'altas', label: 'Altas' },
               { id: 'qr', label: 'Motor QR' },
               { id: 'competitors', label: 'Mercado' },
               { id: 'mailbox', label: 'Buzón' },
@@ -629,6 +632,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'tenants', label: 'Salones' },
+            { id: 'altas', label: 'Altas' },
             { id: 'qr', label: 'Motor QR' },
             { id: 'competitors', label: 'Mercado' },
             { id: 'mailbox', label: 'Buzón' },
@@ -690,6 +694,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
               {[
                 { id: 'overview', Icon: Activity, title: 'Overview General' },
                 { id: 'tenants', Icon: Crown, title: 'Salones & Fichas de Clientes' },
+                { id: 'altas', Icon: Store, title: 'Altas de salones' },
                 { id: 'qr', Icon: QrCode, title: 'Motor QR & Escaneos' },
                 { id: 'competitors', Icon: Crosshair, title: 'Radar de Competidores' },
                 { id: 'mailbox', Icon: MessageSquare, title: 'Buzón karc0 ↔ Agente' },
@@ -2091,6 +2096,11 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
                 tenantSlug="all"
                 tenantName="VANESEV Central (Todos los Salones)"
               />
+            )}
+
+            {/* ALTAS DE SALONES (G-063 a G-066) */}
+            {activeTab === 'altas' && (
+              <CentralAltas solicitudes={data?.solicitudesAlta || []} ajustesCobro={data?.ajustesCobro || {}} onCambio={fetchCentralState} />
             )}
 
             {/* TAB 8: RADAR DE COMPETIDORES & GUERRA COMERCIAL */}
