@@ -698,6 +698,12 @@ async function main() {
     actCorta.status === 400 && actFalsa.status === 400 && actOk.status === 200 && actOtra.status === 400 && loginAlta.status === 200 && estadoFinal === 'activa',
     `corta ${actCorta.status}, falsa ${actFalsa.status}, válida ${actOk.status}, repetida ${actOtra.status}, login ${loginAlta.status}, ficha ${estadoFinal}`);
 
+  const abrir = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_abrir_salon', payload: { id: sol?.id } } });
+  const abrirDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_abrir_salon', payload: { id: sol?.id } } });
+  const abierto = (await sql`SELECT en_prueba FROM public.tenants WHERE id = ${slugAlta}`)[0]?.en_prueba;
+  comprobar('X5', 'Alta: solo Central abre el salón al público (dueña 403) y sale de puesta a punto', abrir.status === 200 && abrirDueña.status === 403 && abierto === false,
+    `central ${abrir.status}, dueña ${abrirDueña.status}, en_prueba ${abierto}`);
+
   // ── W. WhatsApp del salón con la API de Meta (C-01) ──
   const waDatos = { phoneNumberId: '100000000000001', wabaId: '200000000000002', token: `EAAci${RUN.replace(/\W/g, '')}`.padEnd(60, 'x'), appSecret: 'a1b2c3d4e5f60718293a4b5c6d7e8f90' };
   const waSin = await api('/api/salon', { method: 'POST', body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos } });

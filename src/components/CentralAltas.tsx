@@ -152,6 +152,13 @@ export const CentralAltas: React.FC<{ solicitudes: any[]; ajustesCobro: Record<s
               <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_reenviar_activacion', { id: s.id }, () => 'Enlace de activación reenviado.')} className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[13px] font-bold text-[#1A1020] ring-1 ring-[#1A1020]/15 cursor-pointer"><RefreshCw className="h-4 w-4" /> Reenviar activación</button>
             )}
             {s.estado === 'activa' && <p className="flex items-center gap-2 text-[13px] font-bold text-emerald-800"><CheckCircle2 className="h-4 w-4" /> La dueña ya activó su cuenta.</p>}
+            {s.tenant_id && ['pago_recibido', 'activa'].includes(s.estado) && (
+              <div className="rounded-2xl border border-[#1A1020]/10 p-4">
+                <p className="text-[14px] font-bold text-[#1A1020]">Abrir al público</p>
+                <p className="mt-1 text-[12px] text-[#4A4150]">Saca el salón de «puesta a punto» cuando su carta tenga precios y fotos. Su pestaña «Puesta a punto» (peticiones de cambio) desaparece de su panel.</p>
+                <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_abrir_salon', { id: s.id }, () => 'Salón abierto al público.')} className="mt-3 rounded-full bg-[#1F1226] px-5 py-2.5 text-[13px] font-bold text-white disabled:opacity-50 cursor-pointer">Abrir al público</button>
+              </div>
+            )}
 
             <label className="block text-[12px] font-bold text-[#1A1020]">Notas internas
               <textarea defaultValue={s.notas || ''} key={s.id} onBlur={(e) => { if (e.target.value !== (s.notas || '')) ejecutar('alta_nota', { id: s.id, notas: e.target.value }, () => 'Notas guardadas.'); }} onChange={(e) => setNota(e.target.value)} rows={3} className={`mt-1 ${campo}`} />

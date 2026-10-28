@@ -513,6 +513,12 @@ export default async function handler(req: any, res: any) {
           await anotar(sql, id, null, `Enlace de activación reenviado: ${enviado ? 'sí' : 'NO'}.`);
           return res.status(enviado ? 200 : 502).json(enviado ? { success: true, solicitud: await ficha() } : { error: 'No se pudo enviar el correo.' });
         }
+        if (action === 'alta_abrir_salon') {
+          if (!s.tenant_id) return res.status(409).json({ error: 'Este caso aún no tiene salón creado.' });
+          await sql`UPDATE public.tenants SET en_prueba = false, subscription_status = 'active', updated_at = now() WHERE id = ${s.tenant_id};`;
+          await anotar(sql, id, null, 'Salón abierto al público (fuera de puesta a punto).');
+          return res.status(200).json({ success: true, solicitud: await ficha() });
+        }
         return res.status(400).json({ error: 'Acción de alta desconocida.' });
       }
 
