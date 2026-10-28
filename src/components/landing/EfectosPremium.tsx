@@ -215,11 +215,11 @@ export const PantallaQr: React.FC = () => {
 
 export const PantallaReserva: React.FC = () => (
   <div className="flex h-full flex-col bg-[#FBFAFC]">
-    <div className="relative h-[34%] shrink-0 overflow-hidden" style={{ background: 'linear-gradient(135deg, #3E2050 0%, #1F1226 55%, #8A6A2E 130%)' }}>
-      <span aria-hidden="true" className="absolute -right-4 -top-10 font-lujo text-[120px] leading-none text-[#C9A45C]/25">Á</span>
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0) 40%, rgba(20,11,25,0.55) 100%)' }} />
+    <div className="relative h-[36%] shrink-0 overflow-hidden bg-[#1F1226]">
+      <img src="/vanesev/fotos/pestanas-tecnica.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[50%_30%]" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.35) 0%, rgba(20,11,25,0) 35%, rgba(20,11,25,0.75) 100%)' }} />
       <p className="absolute bottom-2.5 left-3.5 font-lujo text-[17px] leading-none text-white">Lifting de pestañas</p>
-      <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8A6A2E]">Oferta jueves</span>
+      <span className="absolute right-3 top-11 rounded-full bg-white/90 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8A6A2E]">Oferta jueves</span>
     </div>
     <div className="flex flex-1 flex-col gap-2.5 px-3.5 pt-3">
       <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#6E6478]">Especialista</p>
