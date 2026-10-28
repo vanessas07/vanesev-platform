@@ -669,6 +669,20 @@ async function main() {
   comprobar('X1', 'Alta: la solicitud pública valida el correo (400) y se guarda en Central como «nueva» (201)',
     altaMala.status === 400 && altaOk.status === 201 && sol?.estado === 'nueva', `mala ${altaMala.status}, válida ${altaOk.status}, ficha ${sol?.estado || 'NO'}`);
 
+  // ── PT. «Para ti, karc0» (G-072): la respuesta pasa al Buzón de Claude y la tarea sale de su lista ──
+  const idPt = `K-CI-${RUN}`.slice(0, 40);
+  await sql`INSERT INTO public.central_tasks (id, title, description, zone, priority, status, assigned_to, updated_at) VALUES (${idPt}, 'CI tarea de karc0', 'CI', 'CI', 'high', 'pending', 'karc0', now())`;
+  const ptDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'karc0_responde', payload: { id: idPt, respuesta: 'notas', notas: 'CI' } } });
+  const ptSinNota = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'karc0_responde', payload: { id: idPt, respuesta: 'no_pude', notas: '' } } });
+  const ptOk = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'karc0_responde', payload: { id: idPt, respuesta: 'notas', notas: `CI nota ${RUN}` } } });
+  const ptTarea = (await sql`SELECT status, karc0_notes FROM public.central_tasks WHERE id = ${idPt}`)[0];
+  const ptBuzon = (await sql`SELECT count(*)::int n FROM public.central_mailbox WHERE recipient = 'claude' AND category = 'respuesta_tarea' AND is_read = false AND subject LIKE ${`[${idPt}]%`}`)[0].n;
+  comprobar('PT1', 'Para ti: la dueña no puede (403), sin nota 400; «Te paso notas» deja la tarea «respondida» con la nota y un mensaje sin leer en el Buzón de Claude',
+    ptDueña.status === 403 && ptSinNota.status === 400 && ptOk.status === 200 && ptTarea?.status === 'respondida' && /CI nota/.test(ptTarea?.karc0_notes || '') && ptBuzon === 1,
+    `dueña ${ptDueña.status}, sin nota ${ptSinNota.status}, ok ${ptOk.status}, tarea ${ptTarea?.status}, buzón ${ptBuzon}`);
+  await sql`DELETE FROM public.central_mailbox WHERE subject LIKE ${`[${idPt}]%`}`;
+  await sql`DELETE FROM public.central_tasks WHERE id = ${idPt}`;
+
   // ── X-S. Seguimiento de la solicitud y cuestionario (G-067 y G-068) ──
   const tSeg = new URLSearchParams(String(altaOk.json?.seguimiento || '')).get('t') || '';
   const segOk = await api('/api/central', { method: 'POST', body: { action: 'solicitud_estado', t: tSeg } });

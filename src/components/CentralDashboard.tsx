@@ -14,6 +14,7 @@ import { VanesevLogo } from './VanesevLogo';
 import { DynamicQrManager } from './DynamicQrManager';
 import { CentralCompetitors } from './CentralCompetitors';
 import { CentralAltas } from './CentralAltas';
+import { CentralParaTi } from './CentralParaTi';
 import { SalonThemeStudio } from './SalonThemeStudio';
 import {
   SALON_PALETTES,
@@ -391,7 +392,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
     if (!msgSubject.trim() || !msgBody.trim()) return;
     await postAction('send_mailbox_message', {
       sender: 'karc0',
-      recipient: 'antigravity',
+      recipient: 'claude', // G-072: Claude lee primero y reparte a Antigravity
       subject: msgSubject,
       body: msgBody,
       category: 'order',
@@ -410,7 +411,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
       zone: taskZone,
       priority: taskPriority,
       status: 'pending',
-      assignedTo: 'antigravity',
+      assignedTo: 'claude',
       dueLabel: 'Asignado desde Central',
     });
     setTaskTitle('');
@@ -782,6 +783,8 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             ══════════════════════════════════════════════════════════════════ */}
             {activeTab === 'overview' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* G-072: lo primero que ve karc0 al entrar son sus pendientes, con respuesta en un toque */}
+                <div className="lg:col-span-12"><CentralParaTi tareas={data.tasks || []} onCambio={fetchCentralState} /></div>
                 {/* BENTO 1 (TOP-LEFT, 7 COLS): WARM CORAL-TERRACOTTA HERO CARD WITH PROGRESS BAR */}
                 <motion.div
                   whileHover={{ y: -2 }}
@@ -1433,6 +1436,7 @@ export const CentralDashboard: React.FC<CentralDashboardProps> = ({
             {/* TAB 4: TAREAS PENDIENTES, CRONOGRAMA DE LANZAMIENTO & ARQUITECTURA */}
             {activeTab === 'tasks_roadmap' && (
               <div className="space-y-8">
+                <CentralParaTi tareas={data.tasks || []} onCambio={fetchCentralState} />
                 {/* ARCHITECTURE COMPARISON: ACTUAL VS PROYECTADA */}
                 <div className="p-6 rounded-2xl bg-white border border-[#E4E2EA] shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
