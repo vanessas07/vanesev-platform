@@ -618,14 +618,11 @@ export const App: React.FC = () => {
     setIsBookingOpen(true);
   };
 
+  // Mismo preloader que index.html (estilos en línea allí): marca VANESEV en la web y Central, neutro en los paneles de salón.
   const lazyFallback = (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1E181A] flex items-center justify-center p-6">
-      <div className="text-center space-y-3">
-        <div className="w-10 h-10 rounded-full border-2 border-[#9E475B]/25 border-t-[#9E475B] animate-spin mx-auto" />
-        <p className="text-[11px] font-bold text-[#9E475B] tracking-[0.22em] uppercase">
-          VANESEV &bull; Preparando Experiencia
-        </p>
-      </div>
+    <div className={`v-preloader${isAdminRoute ? ' salon' : ''}`} role="status" aria-label="Cargando">
+      <span className="v-preloader-anillo" aria-hidden="true" />
+      <span className="v-preloader-v" aria-hidden="true">V</span>
     </div>
   );
 

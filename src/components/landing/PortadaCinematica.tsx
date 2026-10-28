@@ -775,25 +775,119 @@ const Deslizador: React.FC<{ etiqueta: string; valor: number; min: number; max: 
   </label>
 );
 
-const COLUMNAS_COMPARA = ['Apps de reservas', 'Instagram y WhatsApp a mano', 'VANESEV'];
-const FILAS_COMPARA: { t: string; icono: React.ElementType; v: [string, string, string]; pronto?: boolean }[] = [
-  { t: 'Comisión por tus clientas', icono: Percent, v: ['Por cada clienta nueva', 'Ninguna', 'Nunca. Cuota fija'] },
-  { t: 'De quién son tus clientas', icono: Users, v: ['Del directorio, junto a tu competencia', 'Tuyas, perdidas entre chats', 'Tuyas, con su historial y sus sellos'] },
-  { t: 'Tu marca', icono: Palette, v: ['Plantilla igual para todas', 'Tu perfil, sin carta', 'Carta con tus colores, letras y fotos'] },
-  { t: 'Reservas a cualquier hora', icono: CalendarCheck, v: ['Sí', 'Solo cuando contestas', 'Sí, con tus huecos reales y sin cruces'] },
-  { t: 'Precios en $ y Bs', icono: Wallet, v: ['No', 'Rehaces el PDF cada día', 'Al día y al instante'] },
-  { t: 'Tu equipo', icono: Lock, v: ['Pagas por cada una', 'Un solo móvil para todas', 'Agenda y clave por especialista'] },
-  { t: 'Ofertas y tarjetas regalo', icono: Gift, v: ['Limitadas', 'A mano, con errores', 'Precio exacto y saldo automático'] },
-  { t: 'Motivo para volver', icono: Award, v: ['Ninguno', 'Tarjeta de cartulina', 'Pasaporte VIP en su móvil'] },
-  { t: 'Recordatorios de cita', icono: BellRing, v: ['Sí', 'Tú, una a una', 'Automáticos desde tu WhatsApp'], pronto: true },
+// Comparativa en duelo: «Hoy» (según cómo trabajas) frente a «Con VANESEV». Cada casilla lleva su estado real.
+type Estado = 'bien' | 'regular' | 'mal';
+type ModoHoy = 'app' | 'mano';
+const MODOS_HOY: { id: ModoHoy; corto: string; largo: string }[] = [
+  { id: 'app', corto: 'Uso una app de reservas', largo: 'con una app de reservas' },
+  { id: 'mano', corto: 'Lo llevo por Instagram y WhatsApp', largo: 'por Instagram y WhatsApp' },
 ];
+const FILAS_COMPARA: { t: string; icono: React.ElementType; app: [Estado, string]; mano: [Estado, string]; vanesev: string; pronto?: string }[] = [
+  { t: 'Comisión', icono: Percent, app: ['mal', 'Te cobran por cada clienta nueva'], mano: ['bien', 'Ninguna'], vanesev: 'Nunca. Pagas una cuota fija' },
+  { t: 'Tus clientas', icono: Users, app: ['mal', 'En su directorio, junto a tu competencia'], mano: ['regular', 'Tuyas, pero perdidas entre chats'], vanesev: 'Tuyas, con su historial y sus sellos' },
+  { t: 'Tu marca', icono: Palette, app: ['mal', 'La misma plantilla para todas'], mano: ['regular', 'Tu perfil, pero sin carta'], vanesev: 'Tu carta con tus colores, letras y fotos' },
+  { t: 'Reservas a cualquier hora', icono: CalendarCheck, app: ['bien', 'Sí'], mano: ['mal', 'Solo cuando contestas'], vanesev: 'Sí, con tus huecos reales y sin cruces' },
+  { t: 'Precios en $ y Bs', icono: Wallet, app: ['mal', 'En una sola moneda'], mano: ['mal', 'Rehaces el PDF cada día'], vanesev: 'Al día y al instante' },
+  { t: 'Tu equipo', icono: Lock, app: ['regular', 'Pagas por cada especialista'], mano: ['mal', 'Un solo móvil para todas'], vanesev: 'Agenda y clave para cada una' },
+  { t: 'Ofertas y tarjetas regalo', icono: Gift, app: ['regular', 'Limitadas'], mano: ['mal', 'A mano y con errores'], vanesev: 'Precio exacto y saldo automático' },
+  { t: 'Motivo para volver', icono: Award, app: ['mal', 'Ninguno'], mano: ['regular', 'Una tarjeta de cartulina'], vanesev: 'Su Pasaporte VIP en el móvil' },
+  { t: 'Recordatorios de cita', icono: BellRing, app: ['bien', 'Sí'], mano: ['mal', 'Tú, una a una'], vanesev: 'Solos: el día antes y 2 h antes, por correo', pronto: 'Por WhatsApp, muy pronto' },
+];
+
+const IconoEstado: React.FC<{ e: Estado }> = ({ e }) =>
+  e === 'bien' ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-white/60" strokeWidth={2.4} aria-label="Bien" />
+  : e === 'regular' ? <Minus className="mt-0.5 h-4 w-4 shrink-0 text-[#E3B26B]" strokeWidth={2.4} aria-label="A medias" />
+  : <X className="mt-0.5 h-4 w-4 shrink-0 text-[#E58A8A]" strokeWidth={2.4} aria-label="Mal" />;
+
+const DueloComparativa: React.FC = () => {
+  const [modo, setModo] = useState<ModoHoy>('mano');
+  const reducir = useReducedMotion();
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 70%', 'end 60%'] });
+  const relleno = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const mejoras = FILAS_COMPARA.filter((f) => f[modo][0] !== 'bien').length;
+  const actual = MODOS_HOY.find((m) => m.id === modo)!;
+  return (
+    <div className="mt-20">
+      <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <Etiqueta oscuro>Compáralo con lo tuyo</Etiqueta>
+          <h3 className="mt-4 font-lujo text-[32px] font-medium leading-[1.05] sm:text-5xl">¿Cómo trabajas <span className="italic font-light text-[#E7CF9C]">hoy?</span></h3>
+          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/65">Elige tu caso y mira, punto por punto, qué cambia con VANESEV.</p>
+        </div>
+        <div role="radiogroup" aria-label="Cómo trabajas hoy" className="relative grid grid-cols-2 rounded-full border border-white/15 bg-white/[0.04] p-1 text-[13px] font-bold sm:text-[14px]">
+          {MODOS_HOY.map((m) => (
+            <button key={m.id} type="button" role="radio" aria-checked={modo === m.id} onClick={() => setModo(m.id)} className={`relative rounded-full px-4 py-3 leading-tight transition-colors cursor-pointer ${modo === m.id ? 'text-[#1F1226]' : 'text-white/70 hover:text-white'}`}>
+              {modo === m.id && <motion.span layoutId="duelo-modo" transition={{ duration: reducir ? 0 : 0.45, ease: CURVA }} className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(115deg, #F3E6C4 0%, #C9A45C 50%, #EBD9AE 100%)' }} />}
+              <span className="relative">{m.corto}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Marcador */}
+      <div className="mt-8 flex items-center gap-4 rounded-[22px] border border-[#C9A45C]/30 bg-[#C9A45C]/[0.08] px-5 py-4">
+        <span className="shrink-0 font-lujo text-[44px] font-medium leading-none text-[#E7CF9C]">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={mejoras} initial={{ opacity: 0, y: reducir ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reducir ? 0 : -10 }} transition={{ duration: 0.3 }} className="inline-block">{mejoras}</motion.span>
+          </AnimatePresence>
+          <span className="text-[22px] text-white/40"> / {FILAS_COMPARA.length}</span>
+        </span>
+        <p className="text-[15px] leading-snug text-white/80">puntos en los que mejoras si hoy trabajas <b className="text-white">{actual.largo}</b>.</p>
+      </div>
+
+      {/* Duelo: cabecera fija y una fila por punto */}
+      <div ref={ref} className="relative mt-6 rounded-[28px] border border-white/10 bg-white/[0.03]">
+        <div className="sticky top-[76px] z-10 grid grid-cols-2 rounded-t-[28px] border-b border-white/10 bg-[#1F1226]/95 text-[11px] font-bold uppercase tracking-[0.2em] backdrop-blur sm:top-[84px] sm:grid-cols-[1fr_1fr_1.15fr]">
+          <span className="hidden p-4 text-white/40 sm:block sm:p-5">Punto</span>
+          <span className="p-4 text-white/55 sm:p-5">Hoy</span>
+          <span className="rounded-tr-[28px] bg-[#C9A45C]/15 p-4 text-[#E7CF9C] sm:p-5">Con VANESEV</span>
+        </div>
+        {/* Hilo de oro que se llena con el scroll a lo largo de la columna de VANESEV */}
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 top-0 w-[3px] overflow-hidden rounded-r-[28px] bg-white/[0.04]">
+          <motion.div style={{ height: reducir ? '100%' : relleno }} className="w-full bg-gradient-to-b from-[#F3E6C4] via-[#C9A45C] to-[#9C7A3C]" />
+        </div>
+        {FILAS_COMPARA.map((f, k) => {
+          const Icono = f.icono;
+          const [estado, texto] = f[modo];
+          return (
+            <div key={f.t} className={`grid grid-cols-2 sm:grid-cols-[1fr_1fr_1.15fr] ${k ? 'border-t border-white/[0.07]' : ''}`}>
+              <p className="col-span-2 flex items-center gap-2.5 px-4 pt-5 text-[15px] font-bold sm:col-span-1 sm:p-5">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#C9A45C]/15"><Icono className="h-4 w-4 text-[#E7CF9C]" strokeWidth={1.8} /></span>
+                {f.t}
+              </p>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p key={modo} initial={{ opacity: 0, x: reducir ? 0 : -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className={`flex gap-2 px-4 pb-5 pt-3 text-[14px] leading-snug sm:p-5 sm:text-[15px] ${estado === 'bien' ? 'text-white/75' : 'text-white/50'}`}>
+                  <IconoEstado e={estado} />
+                  <span>{texto}</span>
+                </motion.p>
+              </AnimatePresence>
+              <p className="flex gap-2 bg-[#C9A45C]/[0.08] px-4 pb-5 pt-3 text-[14px] font-bold leading-snug text-white sm:p-5 sm:text-[15px]">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
+                <span>
+                  {f.vanesev}
+                  {f.pronto && <span className="mt-1.5 block w-fit rounded-full border border-[#E7CF9C]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">{f.pronto}</span>}
+                </span>
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-white/50">
+        <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-white/60" strokeWidth={2.4} /> Bien</span>
+        <span className="flex items-center gap-1.5"><Minus className="h-3.5 w-3.5 text-[#E3B26B]" strokeWidth={2.4} /> A medias</span>
+        <span className="flex items-center gap-1.5"><X className="h-3.5 w-3.5 text-[#E58A8A]" strokeWidth={2.4} /> Te cuesta clientas o tiempo</span>
+      </p>
+    </div>
+  );
+};
 
 export const Comparativa: React.FC = () => {
   const [ticket, setTicket] = useState(25);
   const [perdidas, setPerdidas] = useState(5);
   const mes = ticket * perdidas * 4;
   return (
-    <section id="comparativa" className="relative overflow-hidden px-5 py-24 text-white sm:px-8 sm:py-32" style={{ background: 'radial-gradient(90% 70% at 100% 0%, rgba(122,62,140,0.5) 0%, transparent 60%), #1F1226' }}>
+    <section id="comparativa" className="relative overflow-clip px-5 py-24 text-white sm:px-8 sm:py-32" style={{ background: 'radial-gradient(90% 70% at 100% 0%, rgba(122,62,140,0.5) 0%, transparent 60%), #1F1226' }}>
       <div className="relative mx-auto max-w-6xl">
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-end lg:gap-20">
           <div>
@@ -818,62 +912,7 @@ export const Comparativa: React.FC = () => {
           </div>
         </div>
 
-        {/* Comparativa: tabla en escritorio, fichas en el móvil */}
-        <div className="mt-20">
-          <h3 className="font-lujo text-[30px] font-medium leading-tight sm:text-4xl">Lo mismo que ya haces, comparado sin rodeos.</h3>
-          <div className="mt-8 hidden overflow-hidden rounded-[28px] border border-white/10 lg:block">
-            <div className="grid grid-cols-[1.1fr_1fr_1fr_1.2fr] bg-white/[0.04] text-[12px] font-bold uppercase tracking-[0.18em]">
-              <span className="p-5 text-white/40" />
-              {COLUMNAS_COMPARA.map((c, k) => (
-                <span key={c} className={`p-5 ${k === 2 ? 'bg-gradient-to-b from-[#C9A45C]/25 to-[#C9A45C]/10 text-[#E7CF9C]' : 'text-white/55'}`}>{c}</span>
-              ))}
-            </div>
-            {FILAS_COMPARA.map((f, k) => {
-              const Icono = f.icono;
-              return (
-                <motion.div key={f.t} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.6 }} transition={{ duration: 0.5, delay: k * 0.04, ease: CURVA }} className="grid grid-cols-[1.1fr_1fr_1fr_1.2fr] border-t border-white/[0.07] text-[15px]">
-                  <span className="flex items-center gap-3 p-5 font-bold">
-                    <Icono className="h-5 w-5 shrink-0 text-[#C9A45C]" strokeWidth={1.6} />
-                    {f.t}
-                  </span>
-                  <span className="flex items-start gap-2 p-5 text-white/50"><X className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A7A]" strokeWidth={2.2} />{f.v[0]}</span>
-                  <span className="flex items-start gap-2 p-5 text-white/50"><Minus className="mt-0.5 h-4 w-4 shrink-0 text-white/40" strokeWidth={2.2} />{f.v[1]}</span>
-                  <span className="flex items-start gap-2 bg-[#C9A45C]/[0.08] p-5 font-bold text-white">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
-                    <span>
-                      {f.v[2]}
-                      {f.pronto && <span className="ml-2 rounded-full border border-[#E7CF9C]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">Muy pronto</span>}
-                    </span>
-                  </span>
-                </motion.div>
-              );
-            })}
-          </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:hidden">
-            {FILAS_COMPARA.map((f, k) => {
-              const Icono = f.icono;
-              return (
-                <motion.div key={f.t} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.5, delay: (k % 2) * 0.06, ease: CURVA }} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                  <p className="flex items-center gap-2.5 text-[15px] font-bold">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C9A45C]/15"><Icono className="h-[18px] w-[18px] text-[#E7CF9C]" strokeWidth={1.7} /></span>
-                    {f.t}
-                  </p>
-                  <div className="mt-4 space-y-2 text-[14px]">
-                    <p className="flex gap-2 text-white/45"><X className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A7A]" strokeWidth={2.2} /><span><b className="font-semibold text-white/60">Apps:</b> {f.v[0]}</span></p>
-                    <p className="flex gap-2 text-white/45"><Minus className="mt-0.5 h-4 w-4 shrink-0 text-white/40" strokeWidth={2.2} /><span><b className="font-semibold text-white/60">A mano:</b> {f.v[1]}</span></p>
-                    <p className="flex gap-2 rounded-xl bg-[#C9A45C]/[0.12] px-3 py-2 font-bold text-white">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
-                      <span>
-                        {f.v[2]}
-                        {f.pronto && <span className="ml-1.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">· muy pronto</span>}
-                      </span>
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+        <DueloComparativa />
       </div>
     </section>
   );

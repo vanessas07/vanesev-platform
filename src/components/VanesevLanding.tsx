@@ -1,6 +1,6 @@
 import { VanesevLogo } from './VanesevLogo';
 import { PortadaCinematica } from './landing/PortadaCinematica';
-import { PaginaWeb, esPaginaWeb, MENU_FUNCIONES, MENU_OFICIOS } from './web/PaginasWeb';
+import { Migas, PaginaWeb, esPaginaWeb, MENU_FUNCIONES, MENU_OFICIOS } from './web/PaginasWeb';
 import { AvisoCookies } from './web/AvisoCookies';
 import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla, Magnetico, TarjetaTilt, PanelDeDuena } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ArrowRight,
   ArrowUpRight,
+  Home,
   Check,
   Clock,
   Star,
@@ -298,9 +299,12 @@ export const VanesevLanding: React.FC = () => {
           className="flex w-full max-w-6xl min-w-0 items-center justify-between gap-2 rounded-full border border-[#E4E2EA] bg-white/95 text-[#1A1020] shadow-[0_14px_40px_rgba(20,11,25,0.12)] backdrop-blur-xl py-2 pl-3 sm:pl-5 pr-2 sm:pr-2.5"
         >
           {/* Brand Logo */}
+          {/* En la portada sube arriba; en cualquier otra página lleva a la portada. */}
           <a
-            href="#inicio"
+            href="/"
+            aria-label="VANESEV, ir al inicio"
             onClick={(e) => {
+              if (ruta !== '/') return;
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
@@ -345,10 +349,11 @@ export const VanesevLanding: React.FC = () => {
               </li>
             ))}
             {[
+              ['/', 'Inicio'],
               ['/precios', 'Precios'],
               ['/fundadoras', 'Fundadoras'],
               ['/blog', 'Blog'],
-            ].map(([href, texto]) => (
+            ].filter(([href]) => href !== '/' || ruta !== '/').map(([href, texto]) => (
               <li key={href}>
                 <a href={href} className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-bold transition-colors hover:bg-[#F4F2F7] ${ruta === href ? 'text-[#1A1020]' : 'text-[#6E6478] hover:text-[#1A1020]'}`}>
                   {texto}
@@ -391,6 +396,10 @@ export const VanesevLanding: React.FC = () => {
               className="fixed inset-x-3 top-20 z-50 rounded-3xl bg-white border border-[#1A1020]/10 shadow-2xl p-5 space-y-3 lg:hidden"
             >
               <div className="max-h-[62svh] space-y-4 overflow-y-auto">
+                <a href="/" className={`flex items-center justify-between rounded-2xl px-4 py-3 text-[14px] font-bold ${ruta === '/' ? 'bg-[#F4F0EA] text-[#1A1020]' : 'bg-[#1F1226] text-white'}`}>
+                  <span className="flex items-center gap-2"><Home className="w-4 h-4" strokeWidth={1.8} /> Inicio</span>
+                  <ArrowUpRight className="w-4 h-4 opacity-70" />
+                </a>
                 {([['Funciones', MENU_FUNCIONES], ['Oficios', MENU_OFICIOS]] as const).map(([titulo, items]) => (
                   <div key={titulo}>
                     <p className="px-1 text-[11px] font-bold uppercase tracking-[0.24em] text-[#7D6438]">{titulo}</p>
@@ -442,6 +451,7 @@ export const VanesevLanding: React.FC = () => {
           <div className="mx-auto max-w-6xl space-y-8">
           {/* Blog Editorial */}
           <div className="space-y-8">
+            <Migas actual="Blog" />
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#4A1F5C]">
                 El blog de VANESEV
@@ -500,7 +510,9 @@ export const VanesevLanding: React.FC = () => {
           <div className="grid grid-cols-2 gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
             {/* Column 1: Brand & Partner CTA */}
             <div className="col-span-2 md:col-span-1">
-              <VanesevLogo tono="oscuro" tamano={38} />
+              <a href="/" aria-label="VANESEV, ir al inicio" className="inline-block">
+                <VanesevLogo tono="oscuro" tamano={38} />
+              </a>
               <p className="mt-4 max-w-xs text-xs sm:text-sm leading-relaxed text-white/60">
                 Para estudios de belleza de autor: tu carta, tus reservas y tus clientas, con tu marca y sin comisiones.
               </p>
@@ -517,7 +529,7 @@ export const VanesevLanding: React.FC = () => {
             {([
               ['Funciones', MENU_FUNCIONES.map((m) => [m.ruta, m.texto])],
               ['Oficios', MENU_OFICIOS.map((m) => [m.ruta, m.texto])],
-              ['VANESEV', [['/precios', 'Precios'], ['/fundadoras', 'Fundadoras'], ['/blog', 'Blog'], ['/#faq', 'Preguntas frecuentes']]],
+              ['VANESEV', [['/', 'Inicio'], ['/precios', 'Precios'], ['/fundadoras', 'Fundadoras'], ['/blog', 'Blog'], ['/#faq', 'Preguntas frecuentes']]],
               ['Legal', [['/legal/aviso-legal', 'Aviso legal'], ['/legal/privacidad', 'Privacidad'], ['/legal/cookies', 'Cookies'], ['/legal/condiciones', 'Condiciones del servicio']]],
             ] as [string, string[][]][]).map(([titulo, enlaces]) => (
               <nav key={titulo} aria-label={titulo}>
