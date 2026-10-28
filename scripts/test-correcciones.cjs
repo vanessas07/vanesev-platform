@@ -70,7 +70,7 @@ if (!dbHost.includes("ep-nameless-math-b838isnk")) {
 const sql = neon(connectionString);
 
 // 3. Configuración de cliente HTTP hacia la vista previa
-const baseUrl = process.env.PREVIEW_URL || "https://vanesev-platform-git-feat-b1-auth-vanesevapp-4342.vercel.app";
+const baseUrl = process.env.PREVIEW_URL || process.env.TEST_TARGET_URL || "https://vanesev-platform-git-feat-b1-auth-vanesevapp-4342.vercel.app";
 const headersBase = {
   "Content-Type": "application/json",
   "Origin": "https://vanesev.com",
