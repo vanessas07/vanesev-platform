@@ -268,7 +268,7 @@ export const SalonTarjetasTab: React.FC<SalonTarjetasTabProps> = ({ tenantSlug }
                   type="text"
                   value={beneficiaria}
                   onChange={(e) => setBeneficiaria(e.target.value)}
-                  placeholder="Ej: Laura Méndez"
+                  placeholder="Ej: Camila Rojas"
                   className="w-full p-2.5 bg-[#FBFAFC] border border-[#1A1020]/15 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#4A1F5C]"
                 />
               </div>
