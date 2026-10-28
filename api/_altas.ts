@@ -2,7 +2,7 @@
 // Solicitud desde la web → análisis → pago pedido → «pago recibido» en Central → el salón se crea solo:
 // salón, organización, carta por oficio (oculta y sin precio), landing y tema base, Pasaporte VIP, QR de recepción,
 // cuenta de la dueña con su correo real y enlace de activación de un solo uso (72 h). Ninguna contraseña viaja por correo.
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { hashPassword } from 'better-auth/crypto';
 import { enviarCorreo } from './_correo.js';
 import { plantilla } from './_avisos.js';
@@ -60,7 +60,7 @@ function cartaDe(oficio: Oficio): ServicioBase[] {
 }
 
 // ─── Utilidades ──────────────────────────────────────────────────────────────
-const RESERVADOS = new Set(['central', 'admin', 'm', 'api', 'blog', 'para', 'funciones', 'legal', 'precios', 'fundadoras', 'activar', 'r', 'q', 'www', 'assets', 'vanesev', 'soporte', 'staff']);
+const RESERVADOS = new Set(['central', 'admin', 'm', 'api', 'blog', 'para', 'funciones', 'legal', 'precios', 'fundadoras', 'activar', 'solicitud', 'r', 'q', 'www', 'assets', 'vanesev', 'soporte', 'staff']);
 
 export function slugDe(nombre: string): string {
   const s = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/g, '');
@@ -108,9 +108,9 @@ export async function correoSolicitudRecibida(s: any) {
   const nombre = String(s.duena_nombre).split(' ')[0];
   const html = plantilla({
     salon: 'VANESEV', etiqueta: 'Solicitud recibida', previa: `Hemos recibido la solicitud de ${s.salon_nombre}.`, pie: PIE,
-    titulo: `¡Gracias, ${nombre}!`, intro: 'Hemos recibido tu solicitud para ser fundadora de VANESEV. La revisamos y te escribimos en menos de 24 horas con los siguientes pasos.',
+    titulo: `¡Gracias, ${nombre}!`, intro: 'Hemos recibido tu solicitud para ser fundadora de VANESEV. La revisamos y te escribimos en menos de 24 horas con los siguientes pasos. Mientras tanto, cuéntanos cómo es tu salón (3 minutos): así tu montaje sale a tu medida. En el mismo enlace ves en qué punto está tu solicitud.',
     filas: [['Estudio', s.salon_nombre], ['Oficio', OFICIOS[s.oficio as Oficio] || s.oficio], ['WhatsApp', s.whatsapp]],
-    botones: [{ texto: 'Ver los precios', url: `${WEB}/precios`, principal: true }],
+    botones: [{ texto: 'Cuéntanos tu salón', url: enlaceSeguimiento(s.id), principal: true }, { texto: 'Ver los precios', url: `${WEB}/precios` }],
   });
   const a = await correo(s.email, 'Hemos recibido tu solicitud · VANESEV', html, `Hemos recibido la solicitud de ${s.salon_nombre}. Te escribimos en menos de 24 horas.`);
   const aviso = plantilla({
@@ -137,11 +137,71 @@ export async function correoPagoSolicitado(sql: any, s: any, importeUSD: number,
       ? `Hemos revisado la solicitud de ${s.salon_nombre} y está aprobada. Te enviamos ahora por WhatsApp los datos para el pago.`
       : `Hemos revisado la solicitud de ${s.salon_nombre} y está aprobada. Para completar el alta, haz el pago con uno de estos medios y responde a este correo o escríbenos por WhatsApp con el comprobante.`,
     filas,
-    botones: [{ texto: 'Enviar el comprobante por WhatsApp', url: `https://wa.me/584223794800?text=${encodeURIComponent(`Hola, adjunto el comprobante del alta de ${s.salon_nombre}.`)}`, principal: true }],
+    botones: [
+      { texto: 'Enviar el comprobante por WhatsApp', url: `https://wa.me/584223794800?text=${encodeURIComponent(`Hola, adjunto el comprobante del alta de ${s.salon_nombre}.`)}`, principal: true },
+      { texto: 'Ver mi solicitud', url: enlaceSeguimiento(s.id) },
+    ],
     nota: c.nota || 'En cuanto confirmemos el pago, te llega el acceso a tu panel con tu carta ya creada.',
   });
   return correo(s.email, `Completa el alta de ${s.salon_nombre} · VANESEV`, html, `Importe: ${importeUSD} $. ${concepto}.`);
 }
+
+/** Aviso a la dueña cuando karc0 pasa su solicitud a análisis (G-067: cada cambio de estado le llega). */
+export async function correoEnAnalisis(s: any) {
+  const html = plantilla({
+    salon: 'VANESEV', etiqueta: 'Tu solicitud avanza', previa: `Estamos revisando la solicitud de ${s.salon_nombre}.`, pie: PIE,
+    titulo: 'Estamos con tu salón.',
+    intro: s.cuestionario
+      ? `Ya estamos revisando la solicitud de ${s.salon_nombre} con lo que nos contaste. Si hace falta algo, te escribimos por WhatsApp; si todo encaja, el siguiente correo trae los datos del pago.`
+      : `Ya estamos revisando la solicitud de ${s.salon_nombre}. Si aún no nos has contado cómo es tu salón, hazlo ahora (3 minutos): preparamos tu montaje con tus respuestas.`,
+    filas: [['Estudio', s.salon_nombre], ['Estado', 'En análisis'], ['Siguiente paso', 'Correo con el pago del montaje']],
+    botones: [{ texto: s.cuestionario ? 'Ver mi solicitud' : 'Cuéntanos tu salón', url: enlaceSeguimiento(s.id), principal: true }],
+  });
+  return correo(s.email, `Estamos revisando tu solicitud · VANESEV`, html, `Estamos revisando la solicitud de ${s.salon_nombre}: ${enlaceSeguimiento(s.id)}`);
+}
+
+// ─── Seguimiento de la solicitud (G-067): enlace firmado, sin token guardado en la base ─
+function firmaSeguimiento(id: string): string {
+  const secreto = process.env.BETTER_AUTH_SECRET;
+  if (!secreto) throw new Error('Falta BETTER_AUTH_SECRET');
+  return createHmac('sha256', secreto).update(`seguimiento-alta:${id}`).digest('base64url').slice(0, 32);
+}
+
+export function enlaceSeguimiento(id: string): string {
+  return `${WEB}/solicitud?t=${id}.${firmaSeguimiento(id)}`;
+}
+
+/** Devuelve el id de la solicitud si el enlace es auténtico; si no, null. */
+export function idDesdeSeguimiento(t: string): string | null {
+  const m = /^(alta_[0-9a-f]{16})\.([A-Za-z0-9_-]{32})$/.exec(String(t || ''));
+  if (!m) return null;
+  const esperada = Buffer.from(firmaSeguimiento(m[1]));
+  const recibida = Buffer.from(m[2]);
+  return esperada.length === recibida.length && timingSafeEqual(esperada, recibida) ? m[1] : null;
+}
+
+/** Lo que ve la dueña en /solicitud: sin correo, WhatsApp, notas, importes de otros ni historial interno. */
+export function estadoPublico(s: any) {
+  const fechaDe = (estado: string) => (s.historial || []).find((h: any) => h.estado === estado)?.fecha || null;
+  return {
+    salon: s.salon_nombre,
+    nombre: String(s.duena_nombre).split(' ')[0],
+    oficio: OFICIOS[s.oficio as Oficio] || s.oficio,
+    plan: s.plan === 'atelier' ? 'Atelier' : 'Esencial',
+    estado: s.estado,
+    fechas: {
+      nueva: s.created_at,
+      en_analisis: fechaDe('en_analisis'),
+      pago_solicitado: fechaDe('pago_solicitado'),
+      pago_recibido: fechaDe('pago_recibido'),
+      activa: fechaDe('activa'),
+    },
+    importe: s.estado === 'pago_solicitado' ? s.importe_usd : null,
+    cuestionario: s.cuestionario || null,
+    cuestionarioAt: s.cuestionario_at || null,
+  };
+}
+
 
 async function correoBienvenida(s: any, slug: string, enlace: string) {
   const html = plantilla({

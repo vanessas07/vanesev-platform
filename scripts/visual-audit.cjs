@@ -30,6 +30,16 @@ const ROUTES = [
   { slug: 'web-pelo', path: '/para/peluqueria', name: 'Zona 1: Peluquería' },
   { slug: 'web-estetica', path: '/para/estetica', name: 'Zona 1: Estética' },
   { slug: 'web-legal', path: '/legal/privacidad', name: 'Zona 1: Privacidad' },
+  // G-067: /solicitud con la API simulada (vite preview no tiene funciones): recién enviada y con el cuestionario hecho.
+  { slug: 'web-solicitud', path: '/solicitud?t=demo&nueva=1', name: 'Zona 1: Seguimiento de la solicitud (cuestionario)', mock: { solicitud: {
+    salon: 'Estudio Ámbar', nombre: 'Valentina', oficio: 'Uñas', plan: 'Esencial', estado: 'nueva', importe: null, cuestionario: null, cuestionarioAt: null,
+    fechas: { nueva: '2026-10-28T19:00:00Z', en_analisis: null, pago_solicitado: null, pago_recibido: null, activa: null },
+  } } },
+  { slug: 'web-solicitud-hecha', path: '/solicitud?t=demo', name: 'Zona 1: Seguimiento de la solicitud (respuestas)', mock: { solicitud: {
+    salon: 'Estudio Ámbar', nombre: 'Valentina', oficio: 'Uñas', plan: 'Atelier', estado: 'pago_solicitado', importe: 49, cuestionarioAt: '2026-10-28T19:05:00Z',
+    cuestionario: { agenda_hoy: ['whatsapp', 'libreta'], soltura: 4, usadas: ['booksy'], no_gusto: ['comision', 'directorio'], funciones: ['reservas', 'recordatorios', 'pasaporte'], dolor: 'ausencias', frase: 'Que mis clientas reserven solas y yo solo tenga que atenderlas.', especialistas: '2_3', citas: '20_50', modalidad: 'local', instagram: '@estudioambar' },
+    fechas: { nueva: '2026-10-28T19:00:00Z', en_analisis: '2026-10-28T20:00:00Z', pago_solicitado: '2026-10-28T21:00:00Z', pago_recibido: null, activa: null },
+  } } },
   { slug: 'central-gate', path: '/central', name: 'Zona 2: Central Superadmin (Login Gate)' },
   { slug: 'pwa-capra', path: '/m/capra-studio', name: 'Zona 4: PWA Catálogo Capra Studio' },
   { slug: 'admin-andrea', path: '/andrea-nails/admin', name: 'Zona 3: Admin Salón Andrea Nails' },
@@ -63,6 +73,8 @@ async function runAudit() {
       const filePath = path.join(OUTPUT_DIR, fileName);
 
       try {
+        await page.unroute('**/api/central').catch(() => {});
+        if (route.mock) await page.route('**/api/central', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(route.mock) }));
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
         // Esperar a que se resuelva lazy loading si aplica
@@ -172,8 +184,8 @@ async function runAudit() {
         }
 
         // Páginas de funciones y oficios (diseño de autor): capturas a lo largo de toda la página.
-        if (/^web-(carta|unas|pasaporte|equipo|ofertas|qr|mirada|pelo|estetica)$/.test(route.slug)) {
-          for (const k of [0.12, 0.24, 0.36, 0.48, 0.6, 0.72]) {
+        if (/^web-(carta|unas|pasaporte|equipo|ofertas|qr|mirada|pelo|estetica|solicitud|solicitud-hecha)$/.test(route.slug)) {
+          for (const k of route.slug.startsWith('web-solicitud') ? [0.35, 0.7, 1] : [0.12, 0.24, 0.36, 0.48, 0.6, 0.72]) {
             await page.evaluate((f) => window.scrollTo(0, (document.documentElement.scrollHeight - window.innerHeight) * f), k);
             await page.waitForTimeout(1400);
             await page.screenshot({ path: path.join(OUTPUT_DIR, `${route.slug}-${Math.round(k * 100)}-${vp.width}px.png`), fullPage: false });

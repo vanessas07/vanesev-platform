@@ -2,6 +2,7 @@ import { VanesevLogo } from './VanesevLogo';
 import { PortadaCinematica } from './landing/PortadaCinematica';
 import { Migas, PaginaWeb, esPaginaWeb, MENU_FUNCIONES, MENU_OFICIOS } from './web/PaginasWeb';
 import { PaginaActivar } from './web/PaginaActivar';
+import { PaginaSolicitud } from './web/PaginaSolicitud';
 import { AvisoCookies } from './web/AvisoCookies';
 import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla, Magnetico, TarjetaTilt, PanelDeDuena } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
@@ -208,7 +209,8 @@ export const VanesevLanding: React.FC = () => {
   const ruta = typeof window !== 'undefined' ? window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/' : '/';
   const esBlog = ruta.startsWith('/blog');
   const esActivar = ruta === '/activar';
-  const esPagina = esPaginaWeb(ruta) || esActivar;
+  const esSolicitud = ruta === '/solicitud'; // G-067: seguimiento de la solicitud y cuestionario
+  const esPagina = esPaginaWeb(ruta) || esActivar || esSolicitud;
   const [menuAbierto, setMenuAbierto] = useState<'funciones' | 'oficios' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const inclinacion = useInclinacion3D(9);
@@ -303,7 +305,11 @@ export const VanesevLanding: React.FC = () => {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) setLeadError(json?.error || 'No se pudo enviar. Escríbenos por WhatsApp.');
-      else setLeadSubmitted(true);
+      else if (typeof json?.seguimiento === 'string' && json.seguimiento.startsWith('?t=')) {
+        // G-067: sin callejón sin salida, pasa directamente a su solicitud y a «Cuéntanos tu salón».
+        window.location.assign(`/solicitud${json.seguimiento}&nueva=1`);
+        return;
+      } else setLeadSubmitted(true);
     } catch {
       setLeadError('Sin conexión. Inténtalo de nuevo o escríbenos por WhatsApp.');
     }
@@ -467,7 +473,8 @@ export const VanesevLanding: React.FC = () => {
       </header>
 
       {esActivar && <PaginaActivar />}
-      {esPagina && !esActivar && <PaginaWeb ruta={ruta} onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
+      {esSolicitud && <PaginaSolicitud />}
+      {esPagina && !esActivar && !esSolicitud && <PaginaWeb ruta={ruta} onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
       {!esBlog && !esPagina && <PortadaCinematica onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
 
       {esBlog && (
