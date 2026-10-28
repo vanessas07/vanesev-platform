@@ -1,6 +1,7 @@
 import { VanesevLogo } from './VanesevLogo';
 import { PortadaCinematica } from './landing/PortadaCinematica';
 import { Migas, PaginaWeb, esPaginaWeb, MENU_FUNCIONES, MENU_OFICIOS } from './web/PaginasWeb';
+import { PaginaActivar } from './web/PaginaActivar';
 import { AvisoCookies } from './web/AvisoCookies';
 import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla, Magnetico, TarjetaTilt, PanelDeDuena } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
@@ -206,7 +207,8 @@ export const VanesevLanding: React.FC = () => {
   // /blog es una página propia (G-042): misma cabecera y pie, sin las secciones de la portada.
   const ruta = typeof window !== 'undefined' ? window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/' : '/';
   const esBlog = ruta.startsWith('/blog');
-  const esPagina = esPaginaWeb(ruta);
+  const esActivar = ruta === '/activar';
+  const esPagina = esPaginaWeb(ruta) || esActivar;
   const [menuAbierto, setMenuAbierto] = useState<'funciones' | 'oficios' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const inclinacion = useInclinacion3D(9);
@@ -244,8 +246,13 @@ export const VanesevLanding: React.FC = () => {
   const [leadSalonName, setLeadSalonName] = useState('');
   const [leadOwnerName, setLeadOwnerName] = useState('');
   const [leadWhatsapp, setLeadWhatsapp] = useState('');
-  const [leadSpecialty, setLeadSpecialty] = useState('Cejas, Pestañas & Maquillaje');
+  const [leadSpecialty, setLeadSpecialty] = useState('unas');
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadCiudad, setLeadCiudad] = useState('');
+  const [leadTrampa, setLeadTrampa] = useState('');
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [leadEnviando, setLeadEnviando] = useState(false);
+  const [leadError, setLeadError] = useState<string | null>(null);
 
   // Legal Modal State
   const [legalModalTitle, setLegalModalTitle] = useState<string | null>(null);
@@ -281,12 +288,28 @@ export const VanesevLanding: React.FC = () => {
     setOnboardingModalOpen(true);
   };
 
-  const handleLeadSubmit = (e: React.FormEvent) => {
+  const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLeadSubmitted(true);
-    const msg = `Hola equipo VANESEV, quiero activar mi salón en el plan *${selectedPlanName}*.\n\n• Salón: ${leadSalonName || 'Mi Salón'}\n• Responsable: ${leadOwnerName || 'Directora'}\n• Especialidad: ${leadSpecialty}\n• WhatsApp: ${leadWhatsapp}`;
-    window.open(`https://wa.me/584223794800?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+    setLeadEnviando(true);
+    setLeadError(null);
+    try {
+      const res = await fetch('/api/central', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'solicitud_alta', salon: leadSalonName, nombre: leadOwnerName, email: leadEmail, whatsapp: leadWhatsapp,
+          oficio: leadSpecialty, ciudad: leadCiudad, plan: /atelier/i.test(selectedPlanName) ? 'atelier' : 'esencial', web: leadTrampa,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) setLeadError(json?.error || 'No se pudo enviar. Escríbenos por WhatsApp.');
+      else setLeadSubmitted(true);
+    } catch {
+      setLeadError('Sin conexión. Inténtalo de nuevo o escríbenos por WhatsApp.');
+    }
+    setLeadEnviando(false);
   };
+
 
   return (
     <div className="min-h-screen bg-[#FBFAFC] text-[#1A1020] font-texto selection:bg-[#4A1F5C]/15 selection:text-[#1A1020] overflow-x-clip">
@@ -443,7 +466,8 @@ export const VanesevLanding: React.FC = () => {
         </AnimatePresence>
       </header>
 
-      {esPagina && <PaginaWeb ruta={ruta} onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
+      {esActivar && <PaginaActivar />}
+      {esPagina && !esActivar && <PaginaWeb ruta={ruta} onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
       {!esBlog && !esPagina && <PortadaCinematica onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
 
       {esBlog && (
@@ -609,10 +633,18 @@ export const VanesevLanding: React.FC = () => {
                 Reserva tu plaza
               </h3>
               <p className="text-xs text-[#6E6478] mt-1">
-                <strong className="text-[#4A1F5C]">{selectedPlanName}</strong>. Te escribimos por WhatsApp y te enseñamos tu carta antes de cobrarte nada.
+                <strong className="text-[#4A1F5C]">{selectedPlanName}</strong>. Revisamos tu solicitud y te escribimos en menos de 24 horas con los siguientes pasos.
               </p>
 
+              {leadSubmitted ? (
+                <div className="mt-6 rounded-3xl bg-[#1F1226] p-6 text-white">
+                  <p className="font-lujo text-2xl">¡Solicitud recibida!</p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/75">Te hemos enviado un correo a <b className="text-white">{leadEmail}</b>. Revisamos tu caso y te escribimos con el pago del montaje; en cuanto lo confirmemos, te llega el acceso a tu panel con tu carta ya creada.</p>
+                  <a href={`https://wa.me/584223794800?text=${encodeURIComponent(`Hola, acabo de enviar la solicitud de ${leadSalonName}.`)}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex rounded-full border border-white/30 px-5 py-3 text-xs font-bold hover:border-white/70">Escribirnos por WhatsApp</a>
+                </div>
+              ) : (
               <form onSubmit={handleLeadSubmit} className="space-y-3.5 mt-5">
+                <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={leadTrampa} onChange={(e) => setLeadTrampa(e.target.value)} className="hidden" name="web" />
                 <div>
                   <label className="text-xs font-bold text-[#1A1020] block mb-1">
                     Nombre de tu estudio
@@ -656,32 +688,64 @@ export const VanesevLanding: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#1A1020] block mb-1">
+                      Tu correo
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={leadEmail}
+                      onChange={(e) => setLeadEmail(e.target.value)}
+                      placeholder="Aquí te llega tu acceso"
+                      className="w-full px-4 py-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs font-semibold focus:outline-none focus:border-[#4A1F5C]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#1A1020] block mb-1">
+                      Tu ciudad
+                    </label>
+                    <input
+                      type="text"
+                      value={leadCiudad}
+                      onChange={(e) => setLeadCiudad(e.target.value)}
+                      placeholder="Ej: Caracas"
+                      className="w-full px-4 py-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs font-semibold focus:outline-none focus:border-[#4A1F5C]"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-[#1A1020] block mb-1">
-                    Tu especialidad
+                    Tu oficio
                   </label>
                   <select
                     value={leadSpecialty}
                     onChange={(e) => setLeadSpecialty(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/12 text-xs font-semibold focus:outline-none focus:border-[#4A1F5C]"
                   >
-                    <option value="Cejas, Pestañas & Maquillaje">Cejas, Pestañas &amp; Maquillaje</option>
-                    <option value="Peluquería, Colorimetría & Alisados">Peluquería, Colorimetría &amp; Alisados</option>
-                    <option value="Clínica Estética, Facial & Spa">Clínica Estética, Facial &amp; Spa</option>
-                    <option value="Nail Bar & Spa de Manos y Pies">Nail Bar &amp; Spa de Manos y Pies</option>
-                    <option value="Barbería de Autor">Barbería de Autor</option>
+                    <option value="unas">Uñas</option>
+                    <option value="pestanas_cejas">Pestañas y cejas</option>
+                    <option value="peluqueria">Peluquería</option>
+                    <option value="estetica">Estética</option>
+                    <option value="varios">Varios oficios</option>
                   </select>
                 </div>
 
+                {leadError && <p className="text-xs font-bold text-rose-700">{leadError}</p>}
+
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-full text-white text-xs sm:text-sm font-bold shadow-lg flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                  disabled={leadEnviando}
+                  className="w-full py-3.5 rounded-full text-white text-xs sm:text-sm font-bold shadow-lg flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-60"
                   style={{ background: '#1F1226' }}
                 >
                   <Send className="w-4 h-4" />
-                  <span>Quiero ver mi carta</span>
+                  <span>{leadEnviando ? 'Enviando…' : 'Enviar mi solicitud'}</span>
                 </button>
               </form>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -6,6 +6,12 @@ import { hashPassword } from 'better-auth/crypto';
 import { getDb } from './_db.js';
 import { requireCentral } from './_session.js';
 import { applyCors } from './_cors.js';
+import { claveDeLimite, huella, ipDeLaPeticion, limiteSuperado } from './_limite.js';
+import { OFICIOS, activarCuenta, ajustesCobro, anotar, correoPagoSolicitado, correoSolicitudRecibida, crearSalonDesdeSolicitud, nuevoIdSolicitud, reenviarActivacion } from './_altas.js';
+
+const CORREO = /^[^\s@]{1,64}@[^\s@]{1,120}\.[a-z]{2,24}$/i;
+const corto = (v: any, max: number) => String(v ?? '').trim().slice(0, max);
+
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -108,7 +114,9 @@ export default async function handler(req: any, res: any) {
         staff,
         zones,
         bookingStats,
-        peticionesPuestaAPunto
+        peticionesPuestaAPunto,
+        solicitudesAlta,
+        ajustesCobroFila
       ] = await Promise.all([
         sql`SELECT * FROM public.tenants ORDER BY is_lifetime_free DESC, created_at ASC`,
         sql`SELECT * FROM public.central_sessions ORDER BY session_date DESC`,
@@ -128,7 +136,9 @@ export default async function handler(req: any, res: any) {
           FROM public.bookings
           GROUP BY tenant_id
         `,
-        sql`SELECT * FROM public.central_mailbox WHERE category = 'puesta_a_punto' ORDER BY created_at DESC`
+        sql`SELECT * FROM public.central_mailbox WHERE category = 'puesta_a_punto' ORDER BY created_at DESC`,
+        sql`SELECT * FROM public.solicitudes_alta ORDER BY created_at DESC LIMIT 300`,
+        sql`SELECT valor FROM public.central_ajustes WHERE clave = 'cobro' LIMIT 1`
       ]);
 
       return res.status(200).json({
@@ -143,6 +153,8 @@ export default async function handler(req: any, res: any) {
         zones,
         bookingStats,
         peticionesPuestaAPunto,
+        solicitudesAlta,
+        ajustesCobro: ajustesCobroFila[0]?.valor || {},
         infrastructure: {
           githubAccount: 'vanessas07',
           vercelAccount: 'vanesevapp-4342',
@@ -155,6 +167,46 @@ export default async function handler(req: any, res: any) {
 
     // ─── POST: Mutaciones protegidas en Central ──────────────────────────────
     if (req.method === 'POST') {
+      const cuerpoPublico = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+
+      // ─── Público: solicitud de alta desde la web (G-063) ───
+      if (cuerpoPublico.action === 'solicitud_alta') {
+        const ip = ipDeLaPeticion(req);
+        if (await limiteSuperado(claveDeLimite('solicitud-alta-ip', ip), 5, 3600)) {
+          res.setHeader('Retry-After', '3600');
+          return res.status(429).json({ error: 'Has enviado varias solicitudes seguidas. Escríbenos por WhatsApp y te atendemos.' });
+        }
+        if (cuerpoPublico.web) return res.status(201).json({ success: true }); // campo trampa para bots
+        const d = {
+          salon_nombre: corto(cuerpoPublico.salon, 120), duena_nombre: corto(cuerpoPublico.nombre, 120),
+          email: corto(cuerpoPublico.email, 160).toLowerCase(), whatsapp: corto(cuerpoPublico.whatsapp, 40),
+          oficio: corto(cuerpoPublico.oficio, 30), ciudad: corto(cuerpoPublico.ciudad, 80) || null,
+          plan: cuerpoPublico.plan === 'atelier' ? 'atelier' : 'esencial', mensaje: corto(cuerpoPublico.mensaje, 1000) || null,
+        };
+        if (d.salon_nombre.length < 2 || d.duena_nombre.length < 2) return res.status(400).json({ error: 'Escribe el nombre de tu estudio y el tuyo.' });
+        if (!CORREO.test(d.email)) return res.status(400).json({ error: 'Escribe un correo válido: ahí te llega el acceso a tu panel.' });
+        if (d.whatsapp.replace(/\D/g, '').length < 10) return res.status(400).json({ error: 'Escribe tu WhatsApp con el código de país.' });
+        if (!(d.oficio in OFICIOS)) return res.status(400).json({ error: 'Elige tu oficio.' });
+        const id = nuevoIdSolicitud();
+        await sql`
+          INSERT INTO public.solicitudes_alta (id, salon_nombre, duena_nombre, email, whatsapp, oficio, ciudad, plan, mensaje, ip_hash, historial)
+          VALUES (${id}, ${d.salon_nombre}, ${d.duena_nombre}, ${d.email}, ${d.whatsapp}, ${d.oficio}, ${d.ciudad}, ${d.plan}, ${d.mensaje},
+            ${huella(ip)}, ${JSON.stringify([{ fecha: new Date().toISOString(), estado: 'nueva', nota: 'Solicitud desde la web.' }])}::jsonb);
+        `;
+        await Promise.race([correoSolicitudRecibida({ id, ...d }), new Promise((r) => setTimeout(r, 6000))]);
+        return res.status(201).json({ success: true });
+      }
+
+      // ─── Público: la dueña activa su cuenta con el enlace del correo (G-064) ───
+      if (cuerpoPublico.action === 'activar_cuenta') {
+        if (await limiteSuperado(claveDeLimite('activar-ip', ipDeLaPeticion(req)), 10, 3600)) {
+          return res.status(429).json({ error: 'Demasiados intentos. Inténtalo en una hora.' });
+        }
+        const r = await activarCuenta(sql, corto(cuerpoPublico.token, 100), String(cuerpoPublico.password || ''));
+        if (!r.ok) return res.status(r.status).json({ error: r.error });
+        return res.status(200).json({ success: true, panel: `/${r.slug}/admin` });
+      }
+
       const authCheck = await requireCentral(req);
       if (authCheck.status !== 200) {
         return res.status(authCheck.status).json({ error: authCheck.error });
@@ -410,6 +462,71 @@ export default async function handler(req: any, res: any) {
           );
         `;
         return res.status(201).json({ ok: true, id });
+      }
+
+      // ─── Altas de salones (G-063 a G-066) ───
+      if (typeof action === 'string' && action.startsWith('alta_')) {
+        const id = corto(payload.id, 40);
+        const s = (await sql`SELECT * FROM public.solicitudes_alta WHERE id = ${id} LIMIT 1;`)[0];
+        if (!s) return res.status(404).json({ error: 'Solicitud no encontrada.' });
+        const ficha = async () => (await sql`SELECT * FROM public.solicitudes_alta WHERE id = ${id} LIMIT 1;`)[0];
+
+        if (action === 'alta_estado') {
+          const estado = String(payload.estado || '');
+          if (!['en_analisis', 'rechazada', 'nueva'].includes(estado)) return res.status(400).json({ error: 'Estado no válido aquí.' });
+          if (['pago_recibido', 'activa'].includes(s.estado)) return res.status(409).json({ error: 'Este salón ya está creado.' });
+          await anotar(sql, id, estado as any, corto(payload.nota, 300) || `Estado: ${estado}.`);
+          return res.status(200).json({ success: true, solicitud: await ficha() });
+        }
+        if (action === 'alta_nota') {
+          const notas = corto(payload.notas, 2000);
+          await sql`UPDATE public.solicitudes_alta SET notas = ${notas}, updated_at = now() WHERE id = ${id};`;
+          return res.status(200).json({ success: true, solicitud: await ficha() });
+        }
+        if (action === 'alta_pedir_pago') {
+          if (['pago_recibido', 'activa', 'rechazada'].includes(s.estado)) return res.status(409).json({ error: 'Esta solicitud ya no admite pedir el pago.' });
+          const importe = Number(payload.importeUSD);
+          if (!Number.isFinite(importe) || importe <= 0 || importe > 5000) return res.status(400).json({ error: 'Importe no válido.' });
+          const concepto = corto(payload.concepto, 200) || 'Montaje de fundadora';
+          await sql`UPDATE public.solicitudes_alta SET importe_usd = ${importe}, updated_at = now() WHERE id = ${id};`;
+          const enviado = await correoPagoSolicitado(sql, s, importe, concepto);
+          await anotar(sql, id, 'pago_solicitado', `Pago pedido: ${importe} $ (${concepto}). Correo ${enviado ? 'enviado' : 'NO enviado'}.`);
+          return res.status(200).json({ success: true, correo: enviado, solicitud: await ficha() });
+        }
+        if (action === 'alta_pago_recibido') {
+          if (['pago_recibido', 'activa'].includes(s.estado)) return res.status(409).json({ error: 'El pago ya estaba registrado y el salón creado.' });
+          if (s.estado === 'rechazada') return res.status(409).json({ error: 'La solicitud está rechazada.' });
+          const metodo = corto(payload.metodo, 30);
+          if (!['pago_movil', 'zelle', 'binance', 'efectivo', 'otro'].includes(metodo)) return res.status(400).json({ error: 'Elige el medio de pago.' });
+          const importe = Number(payload.importeUSD ?? s.importe_usd);
+          if (!Number.isFinite(importe) || importe <= 0) return res.status(400).json({ error: 'Indica el importe recibido.' });
+          const referencia = corto(payload.referencia, 120) || null;
+          const creado = await crearSalonDesdeSolicitud(sql, s);
+          if (!creado.ok) return res.status(creado.status).json({ error: creado.error });
+          await sql`UPDATE public.solicitudes_alta SET metodo_pago = ${metodo}, referencia_pago = ${referencia}, importe_usd = ${importe}, updated_at = now() WHERE id = ${id};`;
+          await anotar(sql, id, 'pago_recibido', `Pago recibido: ${importe} $ por ${metodo}. Salón creado: ${creado.slug}. Bienvenida ${creado.correo ? 'enviada' : 'NO enviada'}.`);
+          return res.status(200).json({ success: true, slug: creado.slug, correo: creado.correo, solicitud: await ficha() });
+        }
+        if (action === 'alta_reenviar_activacion') {
+          if (s.estado !== 'pago_recibido') return res.status(409).json({ error: 'Solo para salones creados que aún no activaron la cuenta.' });
+          const enviado = await reenviarActivacion(sql, s);
+          await anotar(sql, id, null, `Enlace de activación reenviado: ${enviado ? 'sí' : 'NO'}.`);
+          return res.status(enviado ? 200 : 502).json(enviado ? { success: true, solicitud: await ficha() } : { error: 'No se pudo enviar el correo.' });
+        }
+        return res.status(400).json({ error: 'Acción de alta desconocida.' });
+      }
+
+      if (action === 'ajustes_cobro_guardar') {
+        const v: Record<string, string> = {};
+        for (const k of ['titular', 'pago_movil', 'zelle', 'binance', 'nota']) {
+          const t = corto(payload[k], k === 'nota' ? 400 : 200);
+          if (t) v[k] = t;
+        }
+        await sql`
+          INSERT INTO public.central_ajustes (clave, valor, updated_at) VALUES ('cobro', ${JSON.stringify(v)}::jsonb, now())
+          ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, updated_at = now();
+        `;
+        return res.status(200).json({ success: true, ajustesCobro: await ajustesCobro(sql) });
       }
 
       if (action === 'upsert_task') {
