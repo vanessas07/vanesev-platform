@@ -1,5 +1,7 @@
 import { VanesevLogo } from './VanesevLogo';
 import { PortadaCinematica } from './landing/PortadaCinematica';
+import { PaginaWeb, esPaginaWeb, MENU_FUNCIONES, MENU_OFICIOS } from './web/PaginasWeb';
+import { AvisoCookies } from './web/AvisoCookies';
 import { revelarSeccion, TituloRevelado, AuroraFondo, useInclinacion3D, UnDiaEnTuSalon, FotoPortada, ReflejoPantalla, Magnetico, TarjetaTilt, PanelDeDuena } from './landing/EfectosPremium';
 import React, { useState, useRef } from 'react';
 import {
@@ -201,7 +203,10 @@ const FAQ_ITEMS = [
 
 export const VanesevLanding: React.FC = () => {
   // /blog es una página propia (G-042): misma cabecera y pie, sin las secciones de la portada.
-  const esBlog = typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/blog');
+  const ruta = typeof window !== 'undefined' ? window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/' : '/';
+  const esBlog = ruta.startsWith('/blog');
+  const esPagina = esPaginaWeb(ruta);
+  const [menuAbierto, setMenuAbierto] = useState<'funciones' | 'oficios' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const inclinacion = useInclinacion3D(9);
 
@@ -304,24 +309,50 @@ export const VanesevLanding: React.FC = () => {
             <VanesevLogo tono="claro" tamano={34} />
           </a>
 
-          {/* Center Commercial Funnel Links (Desktop) */}
-          <ul className="hidden lg:flex items-center gap-0.5">
-            {[
-              { id: 'un-dia', label: 'Cómo funciona' },
-              { id: 'equipo', label: 'Tu equipo' },
-              { id: 'personalizador', label: 'Tu marca' },
-              { id: 'sectores', label: 'Especialidades' },
-              { id: 'precios', label: 'Precios' },
-              { id: 'fundadoras', label: 'Fundadoras' },
-            ].map((item) => (
-              <li key={item.id}>
+          {/* Menú de escritorio: desplegables de funciones y oficios, y páginas propias */}
+          <ul className="hidden lg:flex items-center gap-0.5" onMouseLeave={() => setMenuAbierto(null)}>
+            {([['funciones', 'Funciones', MENU_FUNCIONES], ['oficios', 'Oficios', MENU_OFICIOS]] as const).map(([id, texto, items]) => (
+              <li key={id} className="relative" onMouseEnter={() => setMenuAbierto(id)}>
                 <button
                   type="button"
-                  onClick={() => scrollToSection(item.id)}
-                  className="whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-bold text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7] transition-colors cursor-pointer"
+                  aria-expanded={menuAbierto === id}
+                  onClick={() => setMenuAbierto(menuAbierto === id ? null : id)}
+                  className="flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-bold text-[#6E6478] hover:text-[#1A1020] hover:bg-[#F4F2F7] transition-colors cursor-pointer"
                 >
-                  {item.label}
+                  {texto}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${menuAbierto === id ? 'rotate-180' : ''}`} />
                 </button>
+                <AnimatePresence>
+                  {menuAbierto === id && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 top-full pt-3"
+                    >
+                      <div className="w-64 rounded-3xl border border-[#1A1020]/8 bg-white p-2 shadow-[0_24px_60px_-20px_rgba(20,11,25,0.35)]">
+                        {items.map((it) => (
+                          <a key={it.ruta} href={it.ruta} className="flex items-center justify-between rounded-2xl px-4 py-3 text-[14px] font-bold text-[#1A1020] hover:bg-[#F4F0EA]">
+                            {it.texto}
+                            <ArrowUpRight className="w-4 h-4 text-[#7D6438]" />
+                          </a>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </li>
+            ))}
+            {[
+              ['/precios', 'Precios'],
+              ['/fundadoras', 'Fundadoras'],
+              ['/blog', 'Blog'],
+            ].map(([href, texto]) => (
+              <li key={href}>
+                <a href={href} className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-bold transition-colors hover:bg-[#F4F2F7] ${ruta === href ? 'text-[#1A1020]' : 'text-[#6E6478] hover:text-[#1A1020]'}`}>
+                  {texto}
+                </a>
               </li>
             ))}
           </ul>
@@ -359,28 +390,30 @@ export const VanesevLanding: React.FC = () => {
               exit={{ opacity: 0, y: -10 }}
               className="fixed inset-x-3 top-20 z-50 rounded-3xl bg-white border border-[#1A1020]/10 shadow-2xl p-5 space-y-3 lg:hidden"
             >
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'un-dia', label: 'Cómo funciona' },
-                  { id: 'equipo', label: 'Tu equipo' },
-                  { id: 'personalizador', label: 'Tu marca' },
-                  { id: 'sectores', label: 'Especialidades' },
-                  { id: 'precios', label: 'Precios' },
-                  { id: 'fundadoras', label: 'Fundadoras' },
-                  { id: 'faq', label: 'Preguntas' },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      scrollToSection(item.id);
-                    }}
-                    className="p-3 rounded-2xl bg-[#FBFAFC] text-left text-xs font-bold text-[#1A1020] border border-[#1A1020]/5 cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
+              <div className="max-h-[62svh] space-y-4 overflow-y-auto">
+                {([['Funciones', MENU_FUNCIONES], ['Oficios', MENU_OFICIOS]] as const).map(([titulo, items]) => (
+                  <div key={titulo}>
+                    <p className="px-1 text-[11px] font-bold uppercase tracking-[0.24em] text-[#7D6438]">{titulo}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {items.map((it) => (
+                        <a key={it.ruta} href={it.ruta} className="rounded-2xl bg-[#FBFAFC] p-3 text-[13px] font-bold text-[#1A1020] border border-[#1A1020]/5">
+                          {it.texto}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 ))}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ['/precios', 'Precios'],
+                    ['/fundadoras', 'Fundadoras'],
+                    ['/blog', 'Blog'],
+                  ].map(([href, texto]) => (
+                    <a key={href} href={href} className="rounded-2xl bg-[#1F1226] p-3 text-center text-[13px] font-bold text-white">
+                      {texto}
+                    </a>
+                  ))}
+                </div>
               </div>
               <div className="pt-2 border-t border-[#1A1020]/10 flex flex-col gap-2">
                 <button
@@ -401,7 +434,8 @@ export const VanesevLanding: React.FC = () => {
         </AnimatePresence>
       </header>
 
-      {!esBlog && <PortadaCinematica onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
+      {esPagina && <PaginaWeb ruta={ruta} onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
+      {!esBlog && !esPagina && <PortadaCinematica onPlaza={() => openCheckoutWithPlan('Plan Fundadora')} />}
 
       {esBlog && (
         <section id="blog" className="pt-32 sm:pt-40 pb-20 sm:pb-28 px-4 sm:px-6 bg-[#FBFAFC]">
@@ -463,9 +497,9 @@ export const VanesevLanding: React.FC = () => {
       ═══════════════════════════════════════════════════════════════════════════ */}
       <footer className="bg-[#140B19] text-white border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+          <div className="grid grid-cols-2 gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
             {/* Column 1: Brand & Partner CTA */}
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <VanesevLogo tono="oscuro" tamano={38} />
               <p className="mt-4 max-w-xs text-xs sm:text-sm leading-relaxed text-white/60">
                 Para estudios de belleza de autor: tu carta, tus reservas y tus clientas, con tu marca y sin comisiones.
@@ -480,112 +514,23 @@ export const VanesevLanding: React.FC = () => {
               </button>
             </div>
 
-            {/* Column 2: Productos */}
-            <nav aria-label="Productos">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Productos</p>
-              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-white/75">
-                <li>
-                  <button type="button" onClick={() => scrollToSection('un-dia')} className="hover:text-white cursor-pointer">
-                    Cómo funciona
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => scrollToSection('equipo')} className="hover:text-white cursor-pointer">
-                    Tu equipo
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => scrollToSection('personalizador')} className="hover:text-white cursor-pointer">
-                    Tu marca
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => scrollToSection('precios')} className="hover:text-white cursor-pointer">
-                    Precios
-                  </button>
-                </li>
-              </ul>
-            </nav>
-
-            {/* Column 3: Especialidades */}
-            <nav aria-label="Especialidades">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Sectores</p>
-              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-white/75">
-                <li>
-                  <button type="button" onClick={() => { setActiveSectorIdx(0); scrollToSection('sectores'); }} className="hover:text-white cursor-pointer">
-                    Cejas, Pestañas &amp; MakeUp
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => { setActiveSectorIdx(1); scrollToSection('sectores'); }} className="hover:text-white cursor-pointer">
-                    Peluquerías &amp; Color
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => { setActiveSectorIdx(2); scrollToSection('sectores'); }} className="hover:text-white cursor-pointer">
-                    Clínicas &amp; MedSpa
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => { setActiveSectorIdx(3); scrollToSection('sectores'); }} className="hover:text-white cursor-pointer">
-                    Nail Bars &amp; Barberías
-                  </button>
-                </li>
-              </ul>
-            </nav>
-
-            {/* Column 4: Recursos & Demos */}
-            <nav aria-label="Recursos">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Recursos</p>
-              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-white/75">
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection('inicio')}
-                    className="hover:text-white font-semibold text-[#D9C49B] cursor-pointer"
-                  >
-                    Inicio
-                  </button>
-                </li>
-                <li>
-                  <a href="/blog" className="hover:text-white">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <button type="button" onClick={() => scrollToSection('fundadoras')} className="hover:text-white cursor-pointer">
-                    Plan fundadora
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => scrollToSection('faq')} className="hover:text-white cursor-pointer">
-                    Preguntas Frecuentes
-                  </button>
-                </li>
-              </ul>
-            </nav>
-
-            {/* Column 5: Legal */}
-            <nav aria-label="Legal">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Legal</p>
-              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm text-white/75">
-                <li>
-                  <button type="button" onClick={() => setLegalModalTitle('Política de Privacidad y Protección de Datos')} className="hover:text-white cursor-pointer">
-                    Privacidad
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => setLegalModalTitle('Términos y Condiciones de Uso SaaS')} className="hover:text-white cursor-pointer">
-                    Términos de Servicio
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => setLegalModalTitle('Política de Cookies y Almacenamiento Seguro')} className="hover:text-white cursor-pointer">
-                    Política de Cookies
-                  </button>
-                </li>
-              </ul>
-            </nav>
+            {([
+              ['Funciones', MENU_FUNCIONES.map((m) => [m.ruta, m.texto])],
+              ['Oficios', MENU_OFICIOS.map((m) => [m.ruta, m.texto])],
+              ['VANESEV', [['/precios', 'Precios'], ['/fundadoras', 'Fundadoras'], ['/blog', 'Blog'], ['/#faq', 'Preguntas frecuentes']]],
+              ['Legal', [['/legal/aviso-legal', 'Aviso legal'], ['/legal/privacidad', 'Privacidad'], ['/legal/cookies', 'Cookies'], ['/legal/condiciones', 'Condiciones del servicio']]],
+            ] as [string, string[][]][]).map(([titulo, enlaces]) => (
+              <nav key={titulo} aria-label={titulo}>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">{titulo}</p>
+                <ul className="mt-4 space-y-2.5 text-sm text-white/75">
+                  {enlaces.map(([href, texto]) => (
+                    <li key={href}>
+                      <a href={href} className="hover:text-white">{texto}</a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
           </div>
 
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/45">
@@ -604,6 +549,8 @@ export const VanesevLanding: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      <AvisoCookies />
 
       {/* ─── FLOATING WHATSAPP COMMERCIAL BUTTON (BOTTOM-LEFT) ─── */}
       <a
