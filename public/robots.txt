@@ -1,8 +1,8 @@
-# Robots.txt for Andrea Labrador Nails Studio
-# Cordero & San Cristóbal, Estado Táchira, Venezuela
+# VANESEV · vanesev.com
 User-agent: *
 Allow: /
-Disallow: /admin
+Disallow: /central
+Disallow: /*/admin
 Disallow: /api/
 
-Sitemap: https://andrea-labrador-nails-app.vercel.app/sitemap.xml
+Sitemap: https://vanesev.com/sitemap.xml

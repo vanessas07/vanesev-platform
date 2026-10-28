@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  AnimatePresence,
   motion,
   useMotionValue,
   useMotionValueEvent,
@@ -141,40 +142,31 @@ const ESCENAS = [
     icono: QrCode,
     etiqueta: '01 · Recepción',
     titulo: 'Tu clienta escanea tu QR.',
-    texto: 'En el espejo, en la recepción o en tu Instagram: entra en tu carta con tu marca, tus fotos y tus precios. Sin descargar nada.',
+    texto: 'En el espejo, en la recepción o en tu Instagram, entra en tu mundo: tu marca, tus fotos y tus precios. Sin descargar nada.',
   },
   {
     icono: CalendarCheck,
     etiqueta: '02 · Reserva',
-    titulo: 'Elige servicio, especialista y hora.',
-    texto: 'Solo ve los huecos libres de verdad. El precio lo calcula el sistema: ofertas, cupones y tarjetas regalo incluidos.',
+    titulo: 'Reserva sola, mientras tú creas.',
+    texto: 'Elige tratamiento, especialista y hora entre tus huecos libres de verdad. La oferta del día ya viene aplicada.',
   },
   {
     icono: MessageCircle,
     etiqueta: '03 · Confirmación',
-    titulo: 'Te llega por WhatsApp, ya ordenada.',
-    texto: 'Servicio, especialista, día y hora en un mensaje. Confirmas con un toque y la cita aparece en tu agenda.',
+    titulo: 'Te llega al WhatsApp, ya ordenada.',
+    texto: 'Servicio, especialista, día, hora y precio en un solo mensaje. Confirmas con un toque y la cita queda en tu agenda.',
   },
   {
     icono: Award,
     etiqueta: '04 · Fidelidad',
     titulo: 'Y vuelve: suma su sello VIP.',
-    texto: 'Su Pasaporte VIP cuenta cada visita y le recuerda su premio. Tu clienta es tuya, no de una plataforma.',
+    texto: 'Su Pasaporte VIP cuenta cada visita y le recuerda su premio. Tu clienta es tuya, no de una app.',
   },
 ];
 
-// Puntos siempre dentro de [0, 1] y crecientes: framer-motion acelera estas transformaciones con
-// la API de animación del navegador, que rechaza posiciones fuera de rango (y tumba toda la página).
-function useOpacidadDeEscena(p: MotionValue<number>, i: number, total: number) {
-  const a = i / total;
-  const b = (i + 1) / total;
-  if (i === 0) return useTransform(p, [0, b - 0.02, b + 0.04], [1, 1, 0]);
-  if (i === total - 1) return useTransform(p, [a - 0.04, a + 0.02, 1], [0, 1, 1]);
-  return useTransform(p, [a - 0.04, a + 0.02, b - 0.02, b + 0.04], [0, 1, 1, 0]);
-}
-
 // QR real de la demo (mismo codificador que el gestor de QR del panel).
-const QR_MATRIZ = QREncoder.generateMatrix('https://vanesev.com/capra-studio');
+// Lleva a la web de VANESEV: la demo nunca apunta a un salón cliente (G-040).
+const QR_MATRIZ = QREncoder.generateMatrix('https://vanesev.com/');
 
 const QrReal: React.FC<{ tam: number }> = ({ tam }) => {
   const n = QR_MATRIZ.length;
@@ -201,7 +193,7 @@ const PantallaQr: React.FC = () => {
       <img src="/vanesev/hero-atelier.jpg" alt="" className="absolute inset-x-0 top-0 h-[52%] w-full object-cover object-[70%_center]" />
       <div className="absolute inset-x-0 top-0 h-[52%]" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.05) 0%, rgba(251,250,252,0) 50%, #FBFAFC 100%)' }} />
       <div className="absolute inset-x-3 top-[24%] rounded-[22px] bg-white/95 px-4 pb-4 pt-3.5 text-center shadow-[0_24px_50px_-24px_rgba(20,11,25,0.55)] ring-1 ring-[#C9A45C]/40 backdrop-blur">
-        <p className="font-lujo text-[17px] leading-none text-[#1A1020]">Capra Studio</p>
+        <p className="font-lujo text-[17px] leading-none text-[#1A1020]">Estudio Ámbar</p>
         <p className="mt-1 text-[8px] font-semibold uppercase tracking-[0.28em] text-[#8A6A2E]">Carta · Reservas · VIP</p>
         <div className="relative mx-auto mt-3 w-fit p-2.5">
           <EsquinasOro />
@@ -223,9 +215,9 @@ const PantallaQr: React.FC = () => {
 
 const PantallaReserva: React.FC = () => (
   <div className="flex h-full flex-col bg-[#FBFAFC]">
-    <div className="relative h-[34%] shrink-0">
-      <img src="/capra/lash-lifting.jpg" alt="" className="h-full w-full object-cover" />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0) 40%, rgba(20,11,25,0.65) 100%)' }} />
+    <div className="relative h-[34%] shrink-0 overflow-hidden" style={{ background: 'linear-gradient(135deg, #3E2050 0%, #1F1226 55%, #8A6A2E 130%)' }}>
+      <span aria-hidden="true" className="absolute -right-4 -top-10 font-lujo text-[120px] leading-none text-[#C9A45C]/25">Á</span>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0) 40%, rgba(20,11,25,0.55) 100%)' }} />
       <p className="absolute bottom-2.5 left-3.5 font-lujo text-[17px] leading-none text-white">Lifting de pestañas</p>
       <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8A6A2E]">Oferta jueves</span>
     </div>
@@ -256,10 +248,10 @@ const PantallaReserva: React.FC = () => (
 
 const PantallaWhatsapp: React.FC = () => (
   <div className="flex h-full flex-col bg-[#F3EEE8]">
-    <div className="flex items-center gap-2 bg-[#1F1226] px-3 pb-2.5 pt-7 text-white">
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A45C] font-lujo text-[11px] text-[#1F1226]">C</span>
+    <div className="flex items-center gap-2 bg-[#1F1226] px-3 pb-2.5 pt-11 text-white">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A45C] font-lujo text-[11px] text-[#1F1226]">EÁ</span>
       <div className="leading-tight">
-        <p className="text-[11px] font-semibold">Capra Studio</p>
+        <p className="text-[11px] font-semibold">Estudio Ámbar</p>
         <p className="text-[8px] text-[#EBDDB8]">en línea</p>
       </div>
     </div>
@@ -285,9 +277,9 @@ const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso 
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[8px] font-semibold uppercase tracking-[0.28em] text-[#EBDDB8]">Pasaporte VIP</p>
-            <p className="mt-1 font-lujo text-[18px] leading-none">Capra Studio</p>
+            <p className="mt-1 font-lujo text-[18px] leading-none">Estudio Ámbar</p>
           </div>
-          <span className="v-oro-texto font-lujo text-[15px]">#001</span>
+          <span className="v-cifra v-cifra-oscura font-lujo text-[15px]">#001</span>
         </div>
         <div className="mt-4 flex justify-between">
           {[0, 1, 2, 3].map((i) => (
@@ -309,84 +301,139 @@ const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso 
   );
 };
 
+const ANCHO_PANTALLA = 270;
+
+const PantallaAEscala: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [caja, setCaja] = useState({ k: 1, alto: 570 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const medir = () => {
+      const k = el.clientWidth / ANCHO_PANTALLA || 1;
+      setCaja({ k, alto: el.clientHeight / k });
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="absolute inset-0 overflow-hidden">
+      <div className="absolute left-0 top-0 origin-top-left" style={{ width: ANCHO_PANTALLA, height: caja.alto, transform: `scale(${caja.k})` }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export const UnDiaEnTuSalon: React.FC = () => {
   const reducir = useReducedMotion();
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const p = useSpring(scrollYProgress, { stiffness: 90, damping: 22, mass: 0.4 });
   const [activa, setActiva] = useState(0);
-  useMotionValueEvent(scrollYProgress, 'change', (v) => setActiva(Math.min(ESCENAS.length - 1, Math.max(0, Math.floor(v * ESCENAS.length)))));
+  const total = ESCENAS.length;
+  useMotionValueEvent(scrollYProgress, 'change', (v) => setActiva(Math.min(total - 1, Math.max(0, Math.floor(v * total)))));
 
-  const rotY = useTransform(p, [0, 1], reducir ? [0, 0] : [-26, 26]);
-  const rotX = useTransform(p, [0, 0.5, 1], reducir ? [0, 0, 0] : [10, 0, 8]);
-  const escala = useTransform(p, [0, 0.5, 1], reducir ? [1, 1, 1] : [0.9, 1.02, 0.96]);
+  // Giro suave: el teléfono se presenta de frente y apenas se inclina (antes empezaba girado 26°).
+  const rotY = useTransform(p, [0, 1], reducir ? [0, 0] : [-9, 9]);
+  const rotX = useTransform(p, [0, 0.5, 1], reducir ? [0, 0, 0] : [4, 0, 3]);
+  const escala = useTransform(p, [0, 0.5, 1], reducir ? [1, 1, 1] : [0.96, 1, 0.98]);
   const brillo = useTransform(p, [0, 1], ['-60%', '160%']);
-  const ops = ESCENAS.map((_, i) => useOpacidadDeEscena(scrollYProgress, i, ESCENAS.length));
   const pantallas = [<PantallaQr />, <PantallaReserva />, <PantallaWhatsapp />, <PantallaSellos progreso={scrollYProgress} />];
+  const escena = ESCENAS[activa];
+
+  // Los iconos llevan a su escena: el scroll nunca se siente «atascado».
+  const irAEscena = (i: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const recorrido = el.offsetHeight - window.innerHeight;
+    const arriba = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: arriba + recorrido * ((i + 0.5) / total), behavior: reducir ? 'auto' : 'smooth' });
+  };
 
   return (
-    <section ref={ref} id="un-dia" aria-label="Un día en tu salón con VANESEV" className="relative h-[340vh] text-[#1A1020]" style={{ background: '#FBFAFC' }}>
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-4 sm:px-6">
+    <section ref={ref} id="un-dia" aria-label="Un día en tu estudio con VANESEV" className="relative h-[300vh] text-[#1A1020]" style={{ background: '#FBFAFC' }}>
+      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-4 pt-20 pb-4 sm:px-6 lg:pt-16">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
           style={{ background: 'radial-gradient(60% 55% at 72% 45%, rgba(217,196,155,0.45) 0%, rgba(217,196,155,0) 70%), radial-gradient(50% 45% at 12% 85%, rgba(74,31,92,0.10) 0%, rgba(74,31,92,0) 70%)' }}
         />
-        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_1fr] lg:gap-16">
-          {/* Texto de la escena activa */}
+        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-5 lg:grid-cols-[1fr_1fr] lg:gap-16">
+          {/* Texto de la escena activa: una sola a la vez, nunca dos superpuestas */}
           <div className="order-2 lg:order-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Un día en tu salón</p>
-            <div className="relative mt-4 min-h-[190px] sm:min-h-[210px]">
-              {ESCENAS.map((e, i) => (
-                <motion.div key={e.etiqueta} style={{ opacity: ops[i] }} className="absolute inset-0" aria-hidden={i !== activa}>
-                  <p className="text-xs font-semibold text-[#6E6478]">{e.etiqueta}</p>
-                  <h2 className="mt-2 font-lujo text-[34px] sm:text-5xl font-semibold leading-[1.02] tracking-tight">{e.titulo}</h2>
-                  <p className="mt-4 max-w-md text-sm sm:text-base leading-relaxed text-[#4A4150]">{e.texto}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Un día en tu estudio</p>
+            <div className="relative mt-2 sm:mt-3 min-h-[148px] sm:min-h-[200px]" aria-live="polite">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={escena.etiqueta}
+                  initial={reducir ? { opacity: 0 } : { opacity: 0, y: 14 }}
+                  animate={reducir ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                  exit={reducir ? { opacity: 0 } : { opacity: 0, y: -10 }}
+                  transition={{ duration: 0.32, ease: CURVA }}
+                >
+                  <p className="text-xs font-semibold text-[#6E6478]">{escena.etiqueta}</p>
+                  <h2 className="mt-1.5 sm:mt-2 font-lujo text-[26px] sm:text-5xl font-semibold leading-[1.05] tracking-tight">{escena.titulo}</h2>
+                  <p className="mt-2 sm:mt-3 max-w-md text-[13px] sm:text-base leading-relaxed text-[#4A4150]">{escena.texto}</p>
                 </motion.div>
-              ))}
+              </AnimatePresence>
             </div>
-            {/* Progreso por escenas */}
-            <div className="mt-6 flex gap-2">
+            {/* Progreso por escenas: también son botones */}
+            <div className="mt-4 flex items-center gap-2">
               {ESCENAS.map((e, i) => {
                 const Icono = e.icono;
                 return (
-                  <span
+                  <button
                     key={e.etiqueta}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${i === activa ? 'bg-[#1F1226] text-[#D9C49B] ring-1 ring-[#B89B6A] scale-110 shadow-[0_10px_24px_-10px_rgba(20,11,25,0.6)]' : 'bg-white text-[#6E6478] ring-1 ring-[#E4E2EA]'}`}
+                    type="button"
+                    onClick={() => irAEscena(i)}
+                    aria-label={e.etiqueta}
+                    aria-current={i === activa ? 'step' : undefined}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 cursor-pointer ${i === activa ? 'bg-[#1F1226] text-[#D9C49B] ring-1 ring-[#B89B6A] scale-110 shadow-[0_10px_24px_-10px_rgba(20,11,25,0.6)]' : 'bg-white text-[#6E6478] ring-1 ring-[#E4E2EA] hover:text-[#1A1020]'}`}
                   >
                     <Icono className="h-4 w-4" strokeWidth={1.5} />
-                  </span>
+                  </button>
                 );
               })}
+              <span className="ml-2 font-lujo text-sm text-[#8A6A2E]">{activa + 1} / {total}</span>
             </div>
           </div>
 
           {/* Teléfono en 3D */}
           <div className="order-1 lg:order-2 flex justify-center" style={{ perspective: '1400px' }}>
             <motion.div
-              animate={reducir ? undefined : { y: [0, -10, 0] }}
+              animate={reducir ? undefined : { y: [0, -8, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
               className="relative"
             >
             <div aria-hidden="true" className="pointer-events-none absolute inset-[-22%] rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(201,164,92,0.45), rgba(74,31,92,0.12) 65%, transparent)' }} />
             <motion.div
               style={{ rotateY: rotY, rotateX: rotX, scale: escala, transformStyle: 'preserve-3d' }}
-              className="relative h-[50svh] max-h-[580px] min-h-[380px] aspect-[9/19] rounded-[44px] p-[3px] shadow-[0_60px_120px_-30px_rgba(20,11,25,0.55)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_28%,#2A1A30_60%,#140B19)]"
+              className="relative h-[48svh] min-h-[300px] max-h-[600px] lg:h-[62svh] aspect-[9/17] lg:aspect-[9/19] rounded-[36px] lg:rounded-[44px] p-[3px] shadow-[0_50px_100px_-30px_rgba(20,11,25,0.55)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_28%,#2A1A30_60%,#140B19)]"
             >
-              <div className="relative h-full w-full overflow-hidden rounded-[41px] bg-[#FBFAFC] ring-[6px] ring-[#140B19]">
-                {pantallas.map((pantalla, i) => (
-                  <motion.div key={i} style={{ opacity: ops[i] }} className="absolute inset-0">
-                    {pantalla}
+              <div className="relative h-full w-full overflow-hidden rounded-[33px] lg:rounded-[41px] bg-[#FBFAFC] ring-[5px] lg:ring-[6px] ring-[#140B19]">
+                <AnimatePresence initial={false}>
+                  <motion.div
+                    key={activa}
+                    initial={reducir ? { opacity: 0 } : { opacity: 0, scale: 1.04 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: CURVA }}
+                    className="absolute inset-0"
+                  >
+                    <PantallaAEscala>{pantallas[activa]}</PantallaAEscala>
                   </motion.div>
-                ))}
+                </AnimatePresence>
                 {/* Reflejo que barre la pantalla con el scroll */}
                 <motion.div
                   aria-hidden="true"
                   style={{ left: brillo }}
-                  className="pointer-events-none absolute top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  className="pointer-events-none absolute top-0 z-10 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
                 />
               </div>
-              <div className="absolute left-1/2 top-3.5 h-5 w-24 -translate-x-1/2 rounded-full bg-[#140B19]" />
+              <div className="absolute left-1/2 top-3 h-4 w-20 lg:h-5 lg:w-24 -translate-x-1/2 rounded-full bg-[#140B19]" />
             </motion.div>
             </motion.div>
           </div>
@@ -597,10 +644,10 @@ export const PanelDeDuena: React.FC = () => {
         <motion.div {...revelarSeccion}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Tu panel de dueña</p>
           <h2 className="mt-4 font-lujo text-[38px] sm:text-5xl font-semibold leading-[1.02] tracking-tight text-[#1A1020]">
-            Todo tu salón, <span className="italic font-normal text-[#4A1F5C]">en una sola pantalla.</span>
+            Todo tu estudio, <span className="italic font-normal text-[#4A1F5C]">en una sola pantalla.</span>
           </h2>
           <p className="mt-5 max-w-md text-sm sm:text-base leading-relaxed text-[#4A4150]">
-            Agenda por especialista, caja en dólares y bolívares, ofertas, cupones, tarjetas regalo y tu kit de lanzamiento. Lo que ves funciona hoy: no es una maqueta.
+            La agenda de todo tu equipo, tu caja en dólares y bolívares, tus ofertas, cupones y tarjetas regalo, y tu kit con QR. Lo que ves funciona hoy: no es una maqueta.
           </p>
           <dl className="mt-8 grid max-w-md grid-cols-3 gap-4 border-t border-[#1A1020]/10 pt-6">
             <div>

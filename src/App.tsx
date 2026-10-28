@@ -306,7 +306,8 @@ export const App: React.FC = () => {
     } else {
       const parts = path.split('/').filter(Boolean);
       const first = (parts[0] || '').trim();
-      if (first && !['central', 'saas', 'compartir', 'promociones', 'admin'].includes(first)) {
+      // Rutas de la web comercial que nunca son un salón (G-042, G-044).
+      if (first && !['central', 'saas', 'compartir', 'promociones', 'admin', 'blog', 'para'].includes(first)) {
         extractedSlug = first;
       }
     }
@@ -676,14 +677,7 @@ export const App: React.FC = () => {
   if (isSaasRoute) {
     return (
       <Suspense fallback={lazyFallback}>
-        <VanesevLanding
-          onOpenCapraDemo={() => switchToTenant('capra-studio', false)}
-          onOpenAndreaDemo={() => switchToTenant('andrea-nails', false)}
-          onClientLoginSuccess={(slug) => {
-            setIsAdminAuthenticated(true);
-            switchToTenant(slug, true);
-          }}
-        />
+        <VanesevLanding />
       </Suspense>
     );
   }
