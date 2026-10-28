@@ -1,6 +1,7 @@
 import { InstagramIcon } from './Icons';
 import React, { useState, useEffect } from 'react';
 import { SalonApi, PerfilSalon } from '../services/salonApi';
+import { SalonAvisosCard } from './SalonAvisosCard';
 import { 
   Building2, 
   Phone, 
@@ -161,6 +162,8 @@ export const SalonPerfilTab: React.FC<SalonPerfilTabProps> = ({ tenantSlug, onPe
 
   return (
     <div className="space-y-6">
+      <SalonAvisosCard tenantSlug={tenantSlug} />
+
       {/* Guía corta de sección */}
       <div className="p-4 rounded-2xl bg-[#FBFAFC] border border-[#1A1020]/10 flex items-start gap-3.5">
         <div className="p-2 rounded-xl bg-[#1F1226]/10 text-[#4A1F5C] shrink-0 mt-0.5">
