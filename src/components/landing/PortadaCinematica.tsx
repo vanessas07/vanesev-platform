@@ -133,17 +133,20 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2, duration: 0.8, ease: CURVA }}
-        className="absolute right-4 top-[17svh] z-10 sm:right-8 lg:right-[8%] lg:top-[24%]"
+        className="absolute z-10 hidden lg:block lg:right-[8%] lg:top-[24%]"
       >
         <AvisosEnVivo />
       </motion.div>
 
       <motion.div style={{ y: yTexto, opacity: opTexto }} className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-12 pt-28 sm:px-8 lg:justify-center lg:pb-16">
         <div className="max-w-xl">
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.7, ease: CURVA }} className="mb-6 lg:hidden">
+            <AvisosEnVivo />
+          </motion.div>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: CURVA }}>
             <Etiqueta oscuro>Para uñas, pestañas, peluquería y estética</Etiqueta>
           </motion.div>
-          <h1 className="mt-5 font-lujo text-[42px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl lg:text-[76px]">
+          <h1 className="mt-5 font-lujo text-[38px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
             {[...linea1.map((w) => ({ w, acento: false })), ...linea2.map((w) => ({ w, acento: true }))].map(({ w, acento }, i) => (
               <span key={i} className="inline-block overflow-hidden pb-[0.1em] align-bottom">
                 <motion.span
@@ -561,11 +564,11 @@ const Equipo: React.FC = () => {
 
 // ─── 6. Tu marca: la carta cambia de estilo en vivo ──────────────────────────
 const ESTILOS = [
-  { n: 'Champán', fondo: '#FBF7F0', tinta: '#2A2018', acento: '#B08A4E', suave: '#F1E7D6', foto: 'unas-nude', letra: "'Fraunces', Georgia, serif" },
-  { n: 'Rosa cashmere', fondo: '#FCF5F6', tinta: '#3A1F27', acento: '#B0607A', suave: '#F6E3E8', foto: 'unas-rosa', letra: "'Bodoni Moda', Georgia, serif" },
-  { n: 'Oliva', fondo: '#F5F6F0', tinta: '#1F2A22', acento: '#5E7A62', suave: '#E4EADF', foto: 'estetica-bodegon', letra: "'Plus Jakarta Sans', sans-serif" },
-  { n: 'Ciruela', fondo: '#F8F4FA', tinta: '#24122C', acento: '#6E2F84', suave: '#ECE0F1', foto: 'pestanas-mirada', letra: "'Fraunces', Georgia, serif" },
-  { n: 'Noir', fondo: '#151214', tinta: '#F4EEE6', acento: '#C9A45C', suave: '#262024', foto: 'salon-neon', letra: "'Bodoni Moda', Georgia, serif" },
+  { n: 'Champán', lienzo: '#F4ECDF', fondo: '#FBF7F0', tinta: '#2A2018', acento: '#B08A4E', suave: '#F1E7D6', foto: 'unas-nude', letra: "'Fraunces', Georgia, serif" },
+  { n: 'Rosa cashmere', lienzo: '#F8E9EC', fondo: '#FCF5F6', tinta: '#3A1F27', acento: '#B0607A', suave: '#F6E3E8', foto: 'unas-rosa', letra: "'Bodoni Moda', Georgia, serif" },
+  { n: 'Oliva', lienzo: '#E8EDE3', fondo: '#F5F6F0', tinta: '#1F2A22', acento: '#5E7A62', suave: '#E4EADF', foto: 'estetica-bodegon', letra: "'Plus Jakarta Sans', sans-serif" },
+  { n: 'Ciruela', lienzo: '#EFE5F3', fondo: '#F8F4FA', tinta: '#24122C', acento: '#6E2F84', suave: '#ECE0F1', foto: 'pestanas-mirada', letra: "'Fraunces', Georgia, serif" },
+  { n: 'Noir', lienzo: '#EDE6DD', fondo: '#151214', tinta: '#F4EEE6', acento: '#C9A45C', suave: '#262024', foto: 'salon-neon', letra: "'Bodoni Moda', Georgia, serif" },
 ];
 
 const TuMarca: React.FC = () => {
@@ -580,7 +583,7 @@ const TuMarca: React.FC = () => {
   const e = ESTILOS[i];
   const transicion = 'background-color .7s ease, color .7s ease, border-color .7s ease';
   return (
-    <section id="personalizador" className="relative overflow-hidden px-5 py-24 sm:px-8 sm:py-32" style={{ background: e.suave, transition: transicion }}>
+    <section id="personalizador" className="relative overflow-hidden px-5 py-24 sm:px-8 sm:py-32" style={{ background: e.lienzo, transition: transicion }}>
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
         <div>
           <Etiqueta>Tu marca</Etiqueta>
@@ -862,7 +865,7 @@ const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
             <div className="rounded-[30px] bg-white p-7 sm:p-10">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="font-lujo text-[34px] font-medium">Esencial</h3>
-                <span className="rounded-full bg-[#1F1226] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E7CF9C]">El que necesitas</span>
+                <span className="rounded-full bg-[#1F1226] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E7CF9C]">Fundadoras</span>
               </div>
               <p className="mt-2 text-[15px] text-[#6E6478]">Todo para llenar tu agenda con tu propia marca.</p>
               <div className="mt-6 flex items-end gap-2">
