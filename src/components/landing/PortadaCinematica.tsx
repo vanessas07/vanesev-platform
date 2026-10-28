@@ -23,11 +23,11 @@ const CURVA: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const F = '/vanesev/fotos/';
 const WHATSAPP = 'https://wa.me/584223794800';
 
-const Foto: React.FC<{ src: string; alt?: string; className?: string; eager?: boolean }> = ({ src, alt = '', className = '', eager }) => (
+export const Foto: React.FC<{ src: string; alt?: string; className?: string; eager?: boolean }> = ({ src, alt = '', className = '', eager }) => (
   <img src={F + src + '.webp'} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" className={className} />
 );
 
-const Etiqueta: React.FC<{ children: React.ReactNode; oscuro?: boolean }> = ({ children, oscuro }) => (
+export const Etiqueta: React.FC<{ children: React.ReactNode; oscuro?: boolean }> = ({ children, oscuro }) => (
   <p className={`flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] ${oscuro ? 'text-[#D9C49B]' : 'text-[#7D6438]'}`}>
     <span className={`h-px w-8 ${oscuro ? 'bg-[#C9A45C]' : 'bg-[#B89B6A]'}`} />
     {children}
@@ -315,13 +315,13 @@ const SeguirEnSeccion: React.FC<{ p: MotionValue<number>; hasta?: number; texto?
 
 // ─── Teléfono de gama alta: marco de titanio fino, isla dinámica y barra de estado ─
 const MarcoTelefono: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
-  <div style={style} className={`absolute inset-0 rounded-[44px] p-[2px] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.06)] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)] ${className}`}>
+  <div style={style} className={`v-tel-marco absolute inset-0 p-[2px] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.06)] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)] ${className}`}>
     {/* Botones laterales */}
     <span className="absolute -left-[3px] top-[22%] h-[7%] w-[3px] rounded-l bg-[#8E8A94]" />
     <span className="absolute -left-[3px] top-[32%] h-[11%] w-[3px] rounded-l bg-[#8E8A94]" />
     <span className="absolute -right-[3px] top-[28%] h-[14%] w-[3px] rounded-r bg-[#8E8A94]" />
-    <div className="relative h-full w-full overflow-hidden rounded-[42px] bg-black p-[5px]">
-      <div className="relative h-full w-full overflow-hidden rounded-[37px] bg-[#FBFAFC]">
+    <div className="v-tel-bisel relative h-full w-full overflow-hidden bg-black p-[4px]">
+      <div className="v-tel-pantalla relative h-full w-full overflow-hidden bg-[#FBFAFC]">
         {children}
         {/* Barra de estado e isla dinámica */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-9 items-center justify-between px-6 text-[11px] font-bold text-white mix-blend-difference">
@@ -331,7 +331,7 @@ const MarcoTelefono: React.FC<{ children: React.ReactNode; className?: string; s
             <span className="ml-1 h-[10px] w-[20px] rounded-[3px] border border-white p-[1px]"><span className="block h-full w-[70%] rounded-[1px] bg-white" /></span>
           </span>
         </div>
-        <span className="absolute left-1/2 top-[9px] z-30 h-[26px] w-[31%] -translate-x-1/2 rounded-full bg-black" />
+        <span className="absolute left-1/2 top-[1.6%] z-30 h-[4.6%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
         <div aria-hidden="true" className="v-reflejo pointer-events-none absolute inset-0 z-10" />
       </div>
     </div>
@@ -340,11 +340,11 @@ const MarcoTelefono: React.FC<{ children: React.ReactNode; className?: string; s
 
 /** Espalda del teléfono: vidrio ciruela, módulo de cámaras y monograma VANESEV grabado en oro. */
 const EspaldaTelefono: React.FC<{ style?: React.CSSProperties }> = ({ style }) => (
-  <div style={style} className="absolute inset-0 rounded-[44px] p-[2px] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)]">
-    <div className="relative h-full w-full overflow-hidden rounded-[42px]" style={{ background: 'radial-gradient(120% 80% at 20% 0%, #5A2A6E 0%, #2A1236 45%, #140B19 100%)' }}>
+  <div style={style} className="v-tel-marco absolute inset-0 p-[2px] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)]">
+    <div className="v-tel-bisel relative h-full w-full overflow-hidden" style={{ background: 'radial-gradient(120% 80% at 20% 0%, #5A2A6E 0%, #2A1236 45%, #140B19 100%)' }}>
       <span aria-hidden="true" className="absolute inset-0" style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.12) 45%, transparent 60%)' }} />
       {/* Módulo de cámaras */}
-      <div className="absolute left-[7%] top-[4%] grid h-[25%] w-[46%] grid-cols-2 gap-[6%] rounded-[30px] bg-white/[0.06] p-[6%] ring-1 ring-white/15 backdrop-blur">
+      <div className="absolute left-[7%] top-[4%] grid h-[25%] w-[46%] grid-cols-2 gap-[6%] rounded-[24%] bg-white/[0.06] p-[6%] ring-1 ring-white/15 backdrop-blur">
         {[0, 1, 2].map((i) => (
           <span key={i} className="aspect-square rounded-full ring-[3px] ring-[#3B3540]" style={{ background: 'radial-gradient(circle at 35% 35%, #4A5A7A 0%, #0B0B12 55%, #000 100%)' }} />
         ))}
@@ -688,9 +688,9 @@ const TuMarca: React.FC = () => {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 1.1, ease: CURVA }}
             style={{ transformStyle: 'preserve-3d' }}
-            className="relative h-[560px] w-[280px] rounded-[44px] p-[3px] shadow-[0_60px_120px_-40px_rgba(20,11,25,0.6)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_30%,#2A1A30_62%,#140B19)]"
+            className="v-tel-marco relative h-[560px] w-[272px] p-[2px] shadow-[0_60px_120px_-40px_rgba(20,11,25,0.6)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_30%,#2A1A30_62%,#140B19)]"
           >
-            <div className="relative h-full w-full overflow-hidden rounded-[41px] ring-[5px] ring-[#140B19]" style={{ background: e.fondo, color: e.tinta, transition: transicion }}>
+            <div className="v-tel-pantalla relative h-full w-full overflow-hidden ring-[4px] ring-black" style={{ background: e.fondo, color: e.tinta, transition: transicion }}>
               <AnimatePresence initial={false}>
                 <motion.div key={e.foto} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.7 }} className="absolute inset-x-0 top-0 h-[200px]">
                   <Foto src={e.foto} className="h-full w-full object-cover" />
@@ -774,7 +774,7 @@ const FILAS_COMPARA: { t: string; icono: React.ElementType; v: [string, string, 
   { t: 'Recordatorios de cita', icono: BellRing, v: ['Sí', 'Tú, una a una', 'Automáticos desde tu WhatsApp'], pronto: true },
 ];
 
-const Comparativa: React.FC = () => {
+export const Comparativa: React.FC = () => {
   const [ticket, setTicket] = useState(25);
   const [perdidas, setPerdidas] = useState(5);
   const mes = ticket * perdidas * 4;
@@ -910,7 +910,7 @@ const SelloVip: React.FC<{ p?: MotionValue<number>; desde: number; i: number; co
 };
 
 /** Tarjeta del Pasaporte VIP: la misma en la portada y dentro del teléfono. */
-const TarjetaVip: React.FC<{ p?: MotionValue<number>; desde?: number; paso?: number; compacta?: boolean }> = ({ p, desde = 0.2, paso = 0.12, compacta }) => {
+export const TarjetaVip: React.FC<{ p?: MotionValue<number>; desde?: number; paso?: number; compacta?: boolean }> = ({ p, desde = 0.2, paso = 0.12, compacta }) => {
   const quieto = useMotionValue(1);
   const premio = useTransform(p ?? quieto, [desde + paso * 4, desde + paso * 4 + 0.05], p ? [0, 1] : [1, 1]);
   return (
@@ -984,7 +984,7 @@ const Pasaporte: React.FC = () => {
 };
 
 // ─── 9. Precios ─────────────────────────────────────────────────────────────
-const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
+export const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
   const [anual, setAnual] = useState(false);
   const incluye = [
     'Tu carta con tu marca, tus fotos y tus precios en $ y Bs',
@@ -1110,7 +1110,7 @@ const PREGUNTAS = [
   ['¿Cuánto tarda en estar listo?', 'Nos mandas tu lista como la tengas (foto, PDF o un mensaje) y tu logo. Te devolvemos tu carta, tu Pasaporte VIP y tu panel listos, y tienes 14 días para probarlo.'],
 ];
 
-const Preguntas: React.FC = () => {
+export const Preguntas: React.FC = () => {
   const [abierta, setAbierta] = useState<number | null>(0);
   return (
     <section id="faq" className="bg-[#F4F0EA] px-5 py-24 sm:px-8 sm:py-32">
