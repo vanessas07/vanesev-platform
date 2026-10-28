@@ -248,7 +248,7 @@ const PantallaReserva: React.FC = () => (
 
 const PantallaWhatsapp: React.FC = () => (
   <div className="flex h-full flex-col bg-[#F3EEE8]">
-    <div className="flex items-center gap-2 bg-[#1F1226] px-3 pb-2.5 pt-7 text-white">
+    <div className="flex items-center gap-2 bg-[#1F1226] px-3 pb-2.5 pt-11 text-white">
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A45C] font-lujo text-[11px] text-[#1F1226]">EÁ</span>
       <div className="leading-tight">
         <p className="text-[11px] font-semibold">Estudio Ámbar</p>
