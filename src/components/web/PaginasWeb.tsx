@@ -7,10 +7,16 @@ import {
 import { Comparativa, Etiqueta, Foto, Precios, SigueBajando, TarjetaVip } from '../landing/PortadaCinematica';
 import { FUNCIONES, OFICIOS_WEB, TODAS_LAS_PAGINAS, type IconoWeb, type PaginaContenido } from './contenidoWeb';
 import { LEGALES } from './legales';
+import {
+  AgendaEquipo, AgendaSinCruces, BonoSesiones, CabinasYAparatos, ConfiguradorUnas, EscaneosPorLugar, ListaIncluye, KitImprimible,
+  NocheDeReserva, PrecioPorLargo, QrVivo, SemanaFloja, SimuladorReserva, TallerPasaporte, TecnicasMirada, TicketOferta,
+} from './FirmasPaginas';
 
 /*
  * Páginas de la web de VANESEV (T-34 a T-37): soluciones, oficios, precios, fundadoras y legales.
  * Misma línea que la portada (G-047): Fraunces + Manrope, fotos propias y movimiento ligado al scroll.
+ * Diseño de autor: cada página de funciones y oficios tiene su propia composición y su pieza interactiva
+ * (COMPOSICIONES); ninguna repite la estructura de otra.
  */
 
 const CURVA: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -155,13 +161,12 @@ const Incluye: React.FC<{ puntos: PaginaContenido['incluye'] }> = ({ puntos }) =
         {puntos.map((x, i) => {
           const Icono = ICONOS[x.icono];
           return (
-            <motion.div key={x.titulo} initial={{ opacity: 0, y: 30, scale: 0.96 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.6, delay: (i % 4) * 0.07, ease: CURVA }} className={`relative flex flex-col rounded-[24px] border p-5 ${x.pronto ? 'border-dashed border-white/15 bg-white/[0.02]' : 'border-white/10 bg-white/[0.05]'}`}>
+            <motion.div key={x.titulo} initial={{ opacity: 0, y: 30, scale: 0.96 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.6, delay: (i % 4) * 0.07, ease: CURVA }} className={`relative flex flex-col rounded-[24px] border p-5 border-white/10 bg-white/[0.05]`}>
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F3E6C4] via-[#C9A45C] to-[#9C7A3C] text-[#1F1226]">
                 <Icono className="h-5 w-5" strokeWidth={1.7} />
               </span>
               <p className="mt-5 text-[16px] font-bold leading-snug">{x.titulo}</p>
               <p className="mt-1.5 text-[14px] leading-snug text-white/60">{x.texto}</p>
-              {x.pronto && <span className="mt-3 w-fit rounded-full border border-[#E7CF9C]/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#E7CF9C]">Muy pronto</span>}
             </motion.div>
           );
         })}
@@ -265,26 +270,254 @@ const CierrePagina: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => (
   </section>
 );
 
+// ─── Botones de la cabecera (comunes) ────────────────────────────────────────
+const BotonesCabecera: React.FC<{ onPlaza: () => void; centrado?: boolean }> = ({ onPlaza, centrado }) => (
+  <div className={`mt-7 flex flex-col gap-3 sm:flex-row ${centrado ? 'sm:justify-center' : ''}`}>
+    <button type="button" onClick={onPlaza} className="v-brillo-boton relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-7 py-4 text-[15px] font-bold text-[#1F1226] cursor-pointer" style={{ background: 'linear-gradient(115deg, #F3E6C4 0%, #C9A45C 50%, #EBD9AE 100%)' }}>
+      Quiero mi plaza de fundadora <ArrowRight className="h-4 w-4" strokeWidth={2} />
+    </button>
+    <a href={`${WHATSAPP}?text=${encodeURIComponent('Hola, quiero ver una demo de VANESEV con mis servicios.')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-4 text-[15px] font-bold text-white hover:border-white/60">
+      Verla con mis servicios
+    </a>
+  </div>
+);
+
+type DatosCabecera = { c: PaginaContenido; onPlaza: () => void };
+const seccionDe = (c: PaginaContenido) => (c.ruta.startsWith('/para/') ? 'Oficios' : 'Funciones');
+
+// ─── Cabecera centrada: tipografía grande y la foto que se abre en arco con el scroll ─
+const CabeceraArco: React.FC<DatosCabecera> = ({ c, onPlaza }) => {
+  const reducir = useReducedMotion();
+  const ref = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const ancho = useTransform(scrollYProgress, [0, 0.6], reducir ? ['100%', '100%'] : ['62%', '100%']);
+  const radio = useTransform(scrollYProgress, [0, 0.6], reducir ? ['32px', '32px'] : ['999px 999px 32px 32px', '32px 32px 32px 32px']);
+  return (
+    <section ref={ref} className="relative bg-[#140B19] px-5 pb-16 pt-28 text-center text-white sm:px-8 sm:pt-36">
+      <div className="mx-auto max-w-4xl">
+        <div className="flex justify-center"><Migas seccion={seccionDe(c)} actual={c.menu} oscuro /></div>
+        <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: CURVA }} className="mt-8 font-lujo text-[44px] font-medium leading-[1] tracking-[-0.02em] sm:text-7xl">
+          {c.titulo} <span className="block italic font-light text-[#E7CF9C]">{c.acento}</span>
+        </motion.h1>
+        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8, ease: CURVA }} className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-white/75 sm:text-lg">{c.subtitulo}</motion.p>
+        <BotonesCabecera onPlaza={onPlaza} centrado />
+      </div>
+      <motion.div style={{ width: ancho, borderRadius: radio }} className="mx-auto mt-14 max-w-5xl overflow-hidden">
+        <Foto src={c.foto} eager className="aspect-[4/5] w-full object-cover sm:aspect-[16/9]" />
+      </motion.div>
+    </section>
+  );
+};
+
+// ─── Cabecera partida: texto a un lado y una pieza viva al otro ──────────────
+const CabeceraPartida: React.FC<DatosCabecera & { children: React.ReactNode }> = ({ c, onPlaza, children }) => (
+  <section className="relative overflow-hidden px-5 pb-20 pt-28 text-white sm:px-8 sm:pt-36" style={{ background: 'radial-gradient(90% 80% at 90% 10%, rgba(122,62,140,0.45) 0%, transparent 60%), #140B19' }}>
+    <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1fr]">
+      <div>
+        <Migas seccion={seccionDe(c)} actual={c.menu} oscuro />
+        <div className="mt-6"><Etiqueta oscuro>{c.etiqueta}</Etiqueta></div>
+        <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: CURVA }} className="mt-5 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl">
+          {c.titulo} <span className="italic font-light text-[#E7CF9C]">{c.acento}</span>
+        </motion.h1>
+        <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-white/75 sm:text-lg">{c.subtitulo}</p>
+        <BotonesCabecera onPlaza={onPlaza} />
+      </div>
+      <motion.div initial={{ opacity: 0, y: 40, rotateX: 18 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: 0.25, duration: 1, ease: CURVA }} style={{ perspective: 1200 }}>
+        {children}
+      </motion.div>
+    </div>
+  </section>
+);
+
+// ─── Cabecera mosaico: tres fotos que se desplazan a distinto ritmo ──────────
+const CabeceraMosaico: React.FC<DatosCabecera & { fotos: [string, string, string] }> = ({ c, onPlaza, fotos }) => {
+  const reducir = useReducedMotion();
+  const ref = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const y1 = useTransform(scrollYProgress, [0, 1], ['0%', reducir ? '0%' : '-18%']);
+  const y2 = useTransform(scrollYProgress, [0, 1], ['8%', reducir ? '8%' : '-30%']);
+  const y3 = useTransform(scrollYProgress, [0, 1], ['16%', reducir ? '16%' : '-8%']);
+  return (
+    <section ref={ref} className="relative overflow-hidden bg-[#140B19] px-5 pb-20 pt-28 text-white sm:px-8 sm:pt-36">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
+        <div>
+          <Migas seccion={seccionDe(c)} actual={c.menu} oscuro />
+          <div className="mt-6"><Etiqueta oscuro>{c.etiqueta}</Etiqueta></div>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: CURVA }} className="mt-5 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl">
+            {c.titulo} <span className="italic font-light text-[#E7CF9C]">{c.acento}</span>
+          </motion.h1>
+          <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-white/75 sm:text-lg">{c.subtitulo}</p>
+          <BotonesCabecera onPlaza={onPlaza} />
+        </div>
+        <div className="grid h-[420px] grid-cols-3 gap-3 sm:h-[560px]">
+          {[y1, y2, y3].map((y, i) => (
+            <motion.div key={fotos[i]} style={{ y }} className={`overflow-hidden ${i === 1 ? 'rounded-t-full rounded-b-[24px]' : 'rounded-[24px]'}`}>
+              <Foto src={fotos[i]} eager className="h-full w-full object-cover" />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Sección con su título: el contenedor de cada pieza propia ───────────────
+const Seccion: React.FC<{ tono: 'claro' | 'arena' | 'oscuro' | 'ciruela'; etiqueta: string; titulo: string; acento: string; intro?: string; children: React.ReactNode }> = ({ tono, etiqueta, titulo, acento, intro, children }) => {
+  const oscuro = tono === 'oscuro' || tono === 'ciruela';
+  const fondo = tono === 'claro' ? '#FBFAFC' : tono === 'arena' ? '#F4F0EA' : tono === 'oscuro' ? '#140B19' : undefined;
+  return (
+    <section className={`relative px-5 py-24 sm:px-8 sm:py-32 ${oscuro ? 'text-white' : 'text-[#1A1020]'}`} style={{ background: fondo ?? 'radial-gradient(100% 70% at 0% 0%, rgba(122,62,140,0.5) 0%, transparent 60%), #1F1226' }}>
+      <div className="mx-auto max-w-6xl">
+        <Etiqueta oscuro={oscuro}>{etiqueta}</Etiqueta>
+        <motion.h2 {...aparecer} className="mt-4 max-w-3xl font-lujo text-[38px] font-medium leading-[1.03] tracking-[-0.02em] sm:text-6xl">
+          {titulo} <span className={`italic font-light ${oscuro ? 'text-[#E7CF9C]' : 'text-[#4A1F5C]'}`}>{acento}</span>
+        </motion.h2>
+        {intro && <p className={`mt-5 max-w-xl text-[16px] leading-relaxed ${oscuro ? 'text-white/70' : 'text-[#4A4150]'}`}>{intro}</p>}
+        <div className="mt-12">{children}</div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Composición propia de cada página ───────────────────────────────────────
+const COMPOSICIONES: Record<string, React.FC<DatosCabecera>> = {
+  '/funciones/carta-y-reservas': ({ c, onPlaza }) => (
+    <>
+      <CabeceraArco c={c} onPlaza={onPlaza} />
+      <Seccion tono="ciruela" etiqueta="Pruébala tú" titulo="Reserva como lo haría" acento="tu clienta." intro="Elige servicio, especialista y hora. A la derecha, lo que te llega a ti.">
+        <SimuladorReserva />
+      </Seccion>
+      <NocheDeReserva />
+      <Seccion tono="claro" etiqueta="Qué incluye" titulo="Todo lo que tienes" acento="desde el primer día.">
+        <ListaIncluye puntos={c.incluye} claro />
+      </Seccion>
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/funciones/pasaporte-vip': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPartida c={c} onPlaza={onPlaza}>
+        <div className="mx-auto max-w-md"><TarjetaVip /></div>
+      </CabeceraPartida>
+      <Seccion tono="ciruela" etiqueta="Tu programa de fidelidad" titulo="Diséñalo en" acento="diez segundos." intro="Elige el premio y a cuántas visitas. Después, cierra citas y mira cómo se llena su pasaporte.">
+        <TallerPasaporte />
+      </Seccion>
+      <Dolores dolores={c.dolores} />
+      <Banda foto={c.fotoBanda} frase={c.frase} />
+      <Seccion tono="arena" etiqueta="Qué incluye" titulo="Todo lo que" acento="incluye.">
+        <ListaIncluye puntos={c.incluye} claro />
+      </Seccion>
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/funciones/equipo-y-agenda': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} seccion={seccionDe(c)} actual={c.menu} />
+      <Seccion tono="arena" etiqueta="Un jueves en Estudio Ámbar" titulo="Cambia de silla" acento="y mira." intro="Tú ves las tres agendas, la ocupación de cada zona y la caja. Tu especialista ve su día, y nada más.">
+        <AgendaEquipo />
+      </Seccion>
+      <Pasos pasos={c.pasos} foto={c.fotoBanda} />
+      <Seccion tono="oscuro" etiqueta="Qué incluye" titulo="Para equipos" acento="de verdad.">
+        <ListaIncluye puntos={c.incluye} />
+      </Seccion>
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/funciones/ofertas-y-tarjetas-regalo': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPartida c={c} onPlaza={onPlaza}>
+        <div className="overflow-hidden rounded-[30px]"><Foto src={c.foto} eager className="aspect-[4/5] w-full object-cover sm:aspect-[4/3]" /></div>
+      </CabeceraPartida>
+      <Seccion tono="ciruela" etiqueta="El precio exacto" titulo="Monta la cuenta" acento="y no falla." intro="Combina oferta, cupón y tarjeta regalo. El total lo calcula el sistema, nunca la clienta.">
+        <TicketOferta />
+      </Seccion>
+      <Seccion tono="arena" etiqueta="Días flojos" titulo="Una oferta bien puesta" acento="llena el jueves.">
+        <SemanaFloja />
+      </Seccion>
+      <Banda foto={c.fotoBanda} frase={c.frase} />
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/funciones/qr-y-kit': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPartida c={c} onPlaza={onPlaza}>
+        <QrVivo />
+      </CabeceraPartida>
+      <Seccion tono="arena" etiqueta="Tu kit" titulo="Con tu marca," acento="listo para imprimir." intro="Cartel de recepción, tarjeta y pegatina. Cambia la paleta y mira cómo se adapta todo.">
+        <KitImprimible />
+      </Seccion>
+      <Seccion tono="oscuro" etiqueta="Qué cartel funciona" titulo="Cada QR cuenta" acento="sus escaneos.">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1fr]">
+          <EscaneosPorLugar />
+          <ol className="space-y-6">
+            {c.pasos.map((p, i) => (
+              <li key={p.titulo} className="flex gap-4">
+                <span className="font-lujo text-[36px] leading-none text-[#C9A45C]">0{i + 1}</span>
+                <div><p className="font-lujo text-[22px] text-white">{p.titulo}</p><p className="mt-1 text-[15px] text-white/65">{p.texto}</p></div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Seccion>
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/para/unas': ({ c, onPlaza }) => (
+    <>
+      <CabeceraMosaico c={c} onPlaza={onPlaza} fotos={['unas-nude', 'unas-oscuras', 'unas-arte']} />
+      <Seccion tono="claro" etiqueta="Tu carta de uñas" titulo="Cada combinación," acento="su precio y su tiempo." intro="Así ve tu clienta tus servicios: elige técnica, largo y forma, y sabe cuánto cuesta y cuánto dura.">
+        <ConfiguradorUnas />
+      </Seccion>
+      <Dolores dolores={c.dolores} />
+      <Banda foto={c.fotoBanda} frase={c.frase} />
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/para/pestanas-y-cejas': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} seccion={seccionDe(c)} actual={c.menu} />
+      <Seccion tono="ciruela" etiqueta="Fichas de técnica" titulo="Que llegue" acento="sabiendo." intro="Cada técnica con su foto, su duración, sus cuidados y su retoque. Toca una y compáralas.">
+        <TecnicasMirada />
+      </Seccion>
+      <Pasos pasos={c.pasos} foto={c.fotoBanda} />
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/para/peluqueria': ({ c, onPlaza }) => (
+    <>
+      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} seccion={seccionDe(c)} actual={c.menu} />
+      <Seccion tono="claro" etiqueta="Precios por largo" titulo="Adiós al" acento="«depende»." intro="Elige servicio y largo: así lo ve tu clienta en tu carta.">
+        <PrecioPorLargo />
+      </Seccion>
+      <Seccion tono="oscuro" etiqueta="Una tarde cualquiera" titulo="Tres horas de balayage," acento="cero cruces.">
+        <AgendaSinCruces />
+      </Seccion>
+      <Banda foto={c.fotoBanda} frase={c.frase} />
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+  '/para/estetica': ({ c, onPlaza }) => (
+    <>
+      <CabeceraArco c={c} onPlaza={onPlaza} />
+      <Seccion tono="arena" etiqueta="Cabinas y aparatos" titulo="Cada aparato," acento="su agenda." intro="Toca un aparato y mira su jueves. Nunca dos citas en la misma cabina.">
+        <CabinasYAparatos />
+      </Seccion>
+      <Seccion tono="ciruela" etiqueta="Tratamientos completos" titulo="Que termine" acento="lo que empezó.">
+        <BonoSesiones />
+      </Seccion>
+      <Dolores dolores={c.dolores} />
+      <PreguntasPagina preguntas={c.preguntas} />
+    </>
+  ),
+};
+
 // ─── Página de solución o de oficio ──────────────────────────────────────────
 const PaginaSolucion: React.FC<{ c: PaginaContenido; onPlaza: () => void }> = ({ c, onPlaza }) => {
   useMeta(c.menu, c.meta);
+  const Composicion = COMPOSICIONES[c.ruta];
   return (
     <>
-      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} seccion={c.ruta.startsWith('/para/') ? 'Oficios' : 'Funciones'} actual={c.menu} />
-      <Dolores dolores={c.dolores} />
-      <Pasos pasos={c.pasos} foto={c.fotoBanda} />
-      <Incluye puntos={c.incluye} />
-      {c.ruta === '/funciones/pasaporte-vip' && (
-        <section className="bg-[#140B19] px-5 pb-24 sm:px-8">
-          <div className="mx-auto max-w-md" style={{ perspective: '1200px' }}>
-            <motion.div initial={{ rotateX: 30, opacity: 0 }} whileInView={{ rotateX: 0, opacity: 1 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 1, ease: CURVA }}>
-              <TarjetaVip />
-            </motion.div>
-          </div>
-        </section>
-      )}
-      <Banda foto={c.fotoBanda} frase={c.frase} />
-      <PreguntasPagina preguntas={c.preguntas} />
+      <Composicion c={c} onPlaza={onPlaza} />
       <SigueExplorando actual={c.ruta} />
       <CierrePagina onPlaza={onPlaza} />
     </>
@@ -293,7 +526,7 @@ const PaginaSolucion: React.FC<{ c: PaginaContenido; onPlaza: () => void }> = ({
 
 // ─── /precios ────────────────────────────────────────────────────────────────
 const PaginaPrecios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
-  useMeta('Precios', 'Esencial: 19 $ al mes o 171 $ al año, sin comisiones ni permanencia. Montaje de fundadora a 49 $. Plan Atelier con marketing con IA, muy pronto.');
+  useMeta('Precios', 'Esencial: 19 $ al mes o 171 $ al año, sin comisiones ni permanencia. Montaje de fundadora a 49 $. Plan Atelier a 79 $ al mes con asistente de marketing con IA.');
   return (
     <>
       <div className="bg-[#FBFAFC] px-5 pt-28 sm:px-8 sm:pt-32"><div className="mx-auto max-w-6xl"><Migas actual="Precios" /></div></div>
@@ -305,7 +538,7 @@ const PaginaPrecios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
           ['¿Cómo pago?', 'Por los medios habituales en Venezuela: Pago Móvil, Zelle o Binance (USDT). Te lo indicamos al darte de alta.'],
           ['¿Qué incluye el montaje de fundadora?', 'Te dejamos tu carta montada con tu lista de servicios, tu logo, tus colores y tus fotos, tu Pasaporte VIP configurado y tu kit con QR listo para imprimir.'],
           ['¿Y si tengo más de 3 personas en mi equipo?', 'Cada profesional más cuesta 3 $ al mes, sin cambiar de plan.'],
-          ['¿Cuándo llega Atelier?', 'Está en preparación. Si quieres que te avisemos, escríbenos y serás de las primeras.'],
+          ['¿Qué añade Atelier?', 'Todo lo de Esencial más un asistente de marketing con IA: hasta 40 piezas al mes con tus fotos y tu estilo, y campañas para tus días flojos.'],
         ]}
       />
       <CierrePagina onPlaza={onPlaza} />
@@ -405,7 +638,7 @@ const PaginaLegal: React.FC<{ id: string }> = ({ id }) => {
 /** Rutas de la web que no son la portada ni el blog. Devuelve null si la ruta no es una página. */
 export function esPaginaWeb(ruta: string): boolean {
   return (
-    TODAS_LAS_PAGINAS.some((p) => p.ruta === ruta) ||
+    (TODAS_LAS_PAGINAS.some((p) => p.ruta === ruta) && ruta in COMPOSICIONES) ||
     ruta === '/precios' ||
     ruta === '/fundadoras' ||
     ruta.startsWith('/legal/')
