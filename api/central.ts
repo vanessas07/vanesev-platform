@@ -7,7 +7,11 @@ import { getDb } from './_db.js';
 import { requireCentral } from './_session.js';
 import { applyCors } from './_cors.js';
 import { claveDeLimite, huella, ipDeLaPeticion, limiteSuperado } from './_limite.js';
-import { OFICIOS, activarCuenta, ajustesCobro, anotar, correoPagoSolicitado, correoSolicitudRecibida, crearSalonDesdeSolicitud, nuevoIdSolicitud, reenviarActivacion } from './_altas.js';
+import {
+  OFICIOS, activarCuenta, ajustesCobro, anotar, correoEnAnalisis, correoPagoSolicitado, correoSolicitudRecibida, crearSalonDesdeSolicitud,
+  enlaceSeguimiento, estadoPublico, idDesdeSeguimiento, nuevoIdSolicitud, reenviarActivacion,
+} from './_altas.js';
+import { limpiarCuestionario } from './_cuestionario.js';
 
 const CORREO = /^[^\s@]{1,64}@[^\s@]{1,120}\.[a-z]{2,24}$/i;
 const corto = (v: any, max: number) => String(v ?? '').trim().slice(0, max);
@@ -194,7 +198,31 @@ export default async function handler(req: any, res: any) {
             ${huella(ip)}, ${JSON.stringify([{ fecha: new Date().toISOString(), estado: 'nueva', nota: 'Solicitud desde la web.' }])}::jsonb);
         `;
         await Promise.race([correoSolicitudRecibida({ id, ...d }), new Promise((r) => setTimeout(r, 6000))]);
-        return res.status(201).json({ success: true });
+        // G-067: la dueña sigue su solicitud y rellena el cuestionario en /solicitud con este enlace firmado.
+        return res.status(201).json({ success: true, seguimiento: new URL(enlaceSeguimiento(id)).search });
+      }
+
+      // ─── Público: la dueña ve su solicitud y rellena «Cuéntanos tu salón» (G-067, G-068) ───
+      if (cuerpoPublico.action === 'solicitud_estado' || cuerpoPublico.action === 'solicitud_cuestionario') {
+        const ip = ipDeLaPeticion(req);
+        if (await limiteSuperado(claveDeLimite('solicitud-seguimiento-ip', ip), 60, 3600)) {
+          return res.status(429).json({ error: 'Demasiadas consultas seguidas. Inténtalo en un rato.' });
+        }
+        const idSolicitud = idDesdeSeguimiento(corto(cuerpoPublico.t, 100));
+        if (!idSolicitud) return res.status(404).json({ error: 'Este enlace no es válido. Ábrelo desde el correo que te enviamos.' });
+        const s = (await sql`SELECT * FROM public.solicitudes_alta WHERE id = ${idSolicitud} LIMIT 1;`)[0];
+        if (!s) return res.status(404).json({ error: 'No encontramos esta solicitud. Escríbenos por WhatsApp.' });
+
+        if (cuerpoPublico.action === 'solicitud_cuestionario') {
+          if (s.estado === 'rechazada') return res.status(409).json({ error: 'Esta solicitud está cerrada. Escríbenos por WhatsApp si quieres retomarla.' });
+          const respuestas = limpiarCuestionario(cuerpoPublico.respuestas);
+          if (Object.keys(respuestas).length < 3) return res.status(400).json({ error: 'Responde al menos tres preguntas para enviarlo.' });
+          await sql`UPDATE public.solicitudes_alta SET cuestionario = ${JSON.stringify(respuestas)}::jsonb, cuestionario_at = now(), updated_at = now() WHERE id = ${idSolicitud};`;
+          await anotar(sql, idSolicitud, null, s.cuestionario ? 'La dueña actualizó el cuestionario.' : 'La dueña rellenó el cuestionario «Cuéntanos tu salón».');
+          const actual = (await sql`SELECT * FROM public.solicitudes_alta WHERE id = ${idSolicitud} LIMIT 1;`)[0];
+          return res.status(200).json({ success: true, solicitud: estadoPublico(actual) });
+        }
+        return res.status(200).json({ solicitud: estadoPublico(s) });
       }
 
       // ─── Público: la dueña activa su cuenta con el enlace del correo (G-064) ───
@@ -476,6 +504,11 @@ export default async function handler(req: any, res: any) {
           if (!['en_analisis', 'rechazada', 'nueva'].includes(estado)) return res.status(400).json({ error: 'Estado no válido aquí.' });
           if (['pago_recibido', 'activa'].includes(s.estado)) return res.status(409).json({ error: 'Este salón ya está creado.' });
           await anotar(sql, id, estado as any, corto(payload.nota, 300) || `Estado: ${estado}.`);
+          // G-067: la dueña se entera de que su solicitud avanza (el rechazo lo comunica karc0 en persona).
+          if (estado === 'en_analisis' && s.estado === 'nueva') {
+            const enviado = await correoEnAnalisis(s);
+            await anotar(sql, id, null, `Aviso «estamos revisando tu solicitud»: ${enviado ? 'enviado' : 'NO enviado'}.`);
+          }
           return res.status(200).json({ success: true, solicitud: await ficha() });
         }
         if (action === 'alta_nota') {

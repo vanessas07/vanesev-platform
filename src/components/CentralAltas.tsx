@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, CircleDollarSign, Mail, RefreshCw, Store, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleDollarSign, ClipboardList, Mail, RefreshCw, Store, XCircle } from 'lucide-react';
+import { respuestasLegibles } from '../../api/_cuestionario';
 
 /*
  * Central → Altas (G-063 a G-066): solicitudes de la web y su ficha.
@@ -88,7 +89,7 @@ export const CentralAltas: React.FC<{ solicitudes: any[]; ajustesCobro: Record<s
             <li key={x.id}>
               <button type="button" onClick={() => { setSel(x.id); setMsg(null); setImporte(String(x.importe_usd ?? 49)); }} className={`w-full rounded-2xl p-4 text-left ring-1 transition-colors cursor-pointer ${sel === x.id ? 'bg-[#1F1226] text-white ring-[#1F1226]' : 'bg-white text-[#1A1020] ring-[#1A1020]/8'}`}>
                 <p className="flex items-center justify-between gap-2 text-[14px] font-bold"><span className="truncate">{x.salon_nombre}</span><span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${ESTADOS[x.estado as Estado]?.c}`}>{ESTADOS[x.estado as Estado]?.t}</span></p>
-                <p className={`mt-1 text-[12px] ${sel === x.id ? 'text-white/65' : 'text-[#6E6478]'}`}>{x.duena_nombre} · {OFICIOS[x.oficio] || x.oficio} · {new Date(x.created_at).toLocaleDateString('es-VE')}</p>
+                <p className={`mt-1 text-[12px] ${sel === x.id ? 'text-white/65' : 'text-[#6E6478]'}`}>{x.duena_nombre} · {OFICIOS[x.oficio] || x.oficio} · {new Date(x.created_at).toLocaleDateString('es-VE')}{x.cuestionario ? ' · cuestionario ✓' : ''}</p>
               </button>
             </li>
           ))}
@@ -105,6 +106,25 @@ export const CentralAltas: React.FC<{ solicitudes: any[]; ajustesCobro: Record<s
               <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${ESTADOS[s.estado as Estado]?.c}`}>{ESTADOS[s.estado as Estado]?.t}</span>
             </div>
             {s.mensaje && <p className="rounded-2xl bg-[#F4F0EA] p-3 text-[13px] text-[#1A1020]">«{s.mensaje}»</p>}
+
+            {/* G-067 y G-068: lo que contó la dueña en «Cuéntanos tu salón» */}
+            {s.cuestionario ? (
+              <div className="rounded-2xl border border-[#4A1F5C]/15 bg-[#FBFAFC] p-4">
+                <p className="flex items-center justify-between gap-2 text-[14px] font-bold text-[#1A1020]">
+                  <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#4A1F5C]" /> Cuéntanos tu salón</span>
+                  <span className="text-[11px] font-semibold text-[#6E6478]">{s.cuestionario_at ? new Date(s.cuestionario_at).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }) : ''}</span>
+                </p>
+                <dl className="mt-3 space-y-1.5">
+                  {respuestasLegibles(s.cuestionario).map(([p, v]) => (
+                    <div key={p} className="grid gap-0.5 text-[12px] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] sm:gap-3">
+                      <dt className="text-[#6E6478]">{p}</dt><dd className="font-semibold text-[#1A1020]">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : !['activa', 'rechazada'].includes(s.estado) && (
+              <p className="rounded-2xl bg-[#F4F0EA] p-3 text-[12px] text-[#4A4150]">Aún no ha rellenado «Cuéntanos tu salón». El enlace va en su acuse y en cada correo del circuito.</p>
+            )}
             {s.tenant_id && (
               <p className="flex flex-wrap gap-3 text-[13px] font-bold">
                 <a href={`/m/${s.tenant_id}`} target="_blank" rel="noopener noreferrer" className="text-[#4A1F5C]">Ver su carta</a>
@@ -115,7 +135,7 @@ export const CentralAltas: React.FC<{ solicitudes: any[]; ajustesCobro: Record<s
             {/* Paso 1: análisis */}
             {['nueva', 'en_analisis'].includes(s.estado) && (
               <div className="flex flex-wrap gap-2">
-                {s.estado === 'nueva' && <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_estado', { id: s.id, estado: 'en_analisis' }, () => 'Marcada en análisis.')} className="rounded-full bg-amber-100 px-4 py-2 text-[13px] font-bold text-amber-900 cursor-pointer">Pasar a análisis</button>}
+                {s.estado === 'nueva' && <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_estado', { id: s.id, estado: 'en_analisis' }, () => 'Marcada en análisis. Le llega el aviso «estamos revisando tu solicitud».')} className="rounded-full bg-amber-100 px-4 py-2 text-[13px] font-bold text-amber-900 cursor-pointer">Pasar a análisis (le avisa por correo)</button>}
                 <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_estado', { id: s.id, estado: 'rechazada', nota }, () => 'Solicitud rechazada.')} className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-bold text-rose-700 hover:bg-rose-50 cursor-pointer"><XCircle className="h-4 w-4" /> Rechazar</button>
               </div>
             )}

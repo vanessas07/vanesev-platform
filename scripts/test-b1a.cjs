@@ -25,6 +25,11 @@ function leerEnvLocal(nombre) {
 }
 
 const BASE = (process.env.TEST_TARGET_URL || 'https://vanesev-platform-git-feat-b1-auth-vanesevapp-4342.vercel.app').replace(/\/+$/, '');
+// G-070: la suite escribe datos de prueba; contra producción no arranca nunca.
+if (/^https?:\/\/(www\.)?vanesev\.com$/i.test(BASE) || /vanesev-platform(-vanesevapp-4342)?\.vercel\.app$/i.test(BASE)) {
+  console.error(`La suite no corre contra producción (${BASE}). Usa la vista previa de una rama.`);
+  process.exit(1);
+}
 const BYPASS = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || leerEnvLocal('VERCEL_AUTOMATION_BYPASS_SECRET');
 const DB_URL = process.env.DATABASE_URL_STAGING || leerEnvLocal('DATABASE_URL_STAGING');
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -663,6 +668,32 @@ async function main() {
   const sol = (await sql`SELECT id, estado FROM public.solicitudes_alta WHERE lower(email) = ${email('alta')} LIMIT 1`)[0];
   comprobar('X1', 'Alta: la solicitud pública valida el correo (400) y se guarda en Central como «nueva» (201)',
     altaMala.status === 400 && altaOk.status === 201 && sol?.estado === 'nueva', `mala ${altaMala.status}, válida ${altaOk.status}, ficha ${sol?.estado || 'NO'}`);
+
+  // ── X-S. Seguimiento de la solicitud y cuestionario (G-067 y G-068) ──
+  const tSeg = new URLSearchParams(String(altaOk.json?.seguimiento || '')).get('t') || '';
+  const segOk = await api('/api/central', { method: 'POST', body: { action: 'solicitud_estado', t: tSeg } });
+  const segFalso = await api('/api/central', { method: 'POST', body: { action: 'solicitud_estado', t: `${sol?.id || 'alta_0000000000000000'}.${'A'.repeat(32)}` } });
+  const sinDatosPrivados = !JSON.stringify(segOk.json || {}).includes(email('alta')) && !JSON.stringify(segOk.json || {}).includes('1234567');
+  comprobar('XS1', 'Seguimiento: el alta devuelve un enlace firmado; con él se ve el estado «nueva» sin correo ni WhatsApp; firma falsa 404',
+    tSeg.startsWith(`${sol?.id}.`) && segOk.status === 200 && segOk.json?.solicitud?.estado === 'nueva' && sinDatosPrivados && segFalso.status === 404,
+    `enlace ${tSeg ? 'sí' : 'NO'}, estado ${segOk.status} ${segOk.json?.solicitud?.estado}, privados ocultos ${sinDatosPrivados}, falso ${segFalso.status}`);
+
+  const cuesCorto = await api('/api/central', { method: 'POST', body: { action: 'solicitud_cuestionario', t: tSeg, respuestas: { soltura: 4, inventada: 'x' } } });
+  const cuesOk = await api('/api/central', { method: 'POST', body: { action: 'solicitud_cuestionario', t: tSeg, respuestas: {
+    agenda_hoy: ['whatsapp', 'libreta', 'no-existe'], soltura: 4, usadas: ['ninguna'], funciones: ['reservas', 'recordatorios', 'cobros', 'pasaporte'],
+    dolor: 'ausencias', frase: 'Que mis clientas reserven solas.', especialistas: '2_3', inyeccion: '<script>',
+  } } });
+  const filaCues = (await sql`SELECT cuestionario, historial FROM public.solicitudes_alta WHERE id = ${sol?.id || ''}`)[0];
+  const cues = filaCues?.cuestionario || {};
+  comprobar('XS2', 'Cuestionario: menos de 3 respuestas 400; se guarda solo lo conocido (opción falsa fuera, máximo 3 funciones, campo extra fuera) y queda en el historial',
+    cuesCorto.status === 400 && cuesOk.status === 200 && cues.agenda_hoy?.length === 2 && cues.funciones?.length === 3 && !('inyeccion' in cues) && cues.soltura === 4
+      && (filaCues?.historial || []).some((h) => /cuestionario/i.test(h.nota || '')),
+    `corto ${cuesCorto.status}, válido ${cuesOk.status}, agenda ${cues.agenda_hoy?.length}, funciones ${cues.funciones?.length}, extra ${'inyeccion' in cues ? 'GUARDADO' : 'fuera'}`);
+
+  const analisis = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_estado', payload: { id: sol?.id, estado: 'en_analisis' } } });
+  comprobar('XS3', 'Central pasa la solicitud a análisis y el aviso «estamos revisando» queda anotado en el historial',
+    analisis.status === 200 && analisis.json?.solicitud?.estado === 'en_analisis' && (analisis.json?.solicitud?.historial || []).some((h) => /estamos revisando/i.test(h.nota || '')),
+    `análisis ${analisis.status} ${analisis.json?.solicitud?.estado || analisis.json?.error || ''}`);
 
   const pagoDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49 } } });
   const pagoSa = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49, concepto: 'Montaje de fundadora' } } });
