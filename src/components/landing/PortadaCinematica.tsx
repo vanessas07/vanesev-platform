@@ -107,7 +107,7 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
 
       <div className="relative mx-auto grid min-h-[100svh] max-w-6xl items-center gap-8 px-5 pb-12 pt-24 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:gap-14 lg:pb-16 lg:pt-28">
         {/* El arco con la foto */}
-        <motion.div style={{ scale: escalaArco }} className="relative mx-auto w-[74vw] max-w-[440px] lg:order-2 lg:w-full">
+        <motion.div style={{ scale: escalaArco }} className="relative mx-auto mt-2 w-[52vw] max-w-[440px] sm:w-[46vw] lg:order-2 lg:mt-0 lg:w-full">
           <motion.div
             initial={reducir ? { opacity: 0 } : { clipPath: 'inset(100% 0% 0% 0% round 999px 999px 28px 28px)' }}
             animate={reducir ? { opacity: 1 } : { clipPath: 'inset(0% 0% 0% 0% round 999px 999px 28px 28px)' }}
@@ -168,18 +168,15 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
             </defs>
           </svg>
           {/* Aviso en vivo apoyado en el arco */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, x: 20 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            transition={{ delay: 1.6, duration: 0.8, ease: CURVA }}
-            className="absolute -bottom-6 left-1/2 z-10 -translate-x-1/2 lg:-left-16 lg:bottom-16 lg:translate-x-0"
-          >
-            <AvisosEnVivo />
-          </motion.div>
+          <div className="absolute -bottom-7 left-1/2 z-10 -translate-x-1/2 lg:-left-16 lg:bottom-16 lg:translate-x-0">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6, duration: 0.8, ease: CURVA }}>
+              <AvisosEnVivo />
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Texto, siempre sobre obsidiana: contraste máximo */}
-        <motion.div style={{ y: yTexto, opacity: opTexto }} className="relative z-10 pt-6 lg:order-1 lg:pt-0">
+        <motion.div style={{ y: yTexto, opacity: opTexto }} className="relative z-10 pt-8 lg:order-1 lg:pt-0">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: CURVA }}>
             <Etiqueta oscuro>Para uñas, pestañas, peluquería y estética</Etiqueta>
           </motion.div>
