@@ -41,16 +41,10 @@ const BarraProgreso: React.FC = () => {
   return <motion.div aria-hidden="true" style={{ scaleX: x }} className="fixed inset-x-0 top-0 z-[60] h-[3px] origin-left bg-gradient-to-r from-[#9C7A3C] via-[#EBD9AE] to-[#C9A45C]" />;
 };
 
-// ─── 1. Portada: mosaico de fotos en movimiento, titular y avisos en vivo ─────
-const COLUMNAS = [
-  ['unas-oscuras', 'pestanas-tecnica', 'pelo-salon'],
-  ['cejas-laminado', 'unas-rosa', 'unas-nude'],
-  ['unas-francesa', 'pestanas-mirada', 'unas-arte'],
-];
-
+// ─── 1. Portada: arco con la foto propia, titular y avisos en vivo ───────────
 const AVISOS = [
   { icono: CalendarCheck, t: 'Nueva reserva', d: 'Lifting de pestañas · jueves 10:30' },
-  { icono: Award, t: 'Sello VIP 4 de 5', d: 'Laura vuelve el sábado' },
+  { icono: Award, t: 'Sello VIP 4 de 5', d: 'Camila vuelve el sábado' },
   { icono: MessageCircle, t: 'Confirmada por WhatsApp', d: 'Manicura rusa con Valentina' },
   { icono: CalendarCheck, t: 'Reservó a las 23:48', d: 'Mientras tú dormías' },
 ];
@@ -94,87 +88,119 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
   const reducir = useReducedMotion();
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const yMosaico = useTransform(scrollYProgress, [0, 1], ['0%', reducir ? '0%' : '22%']);
-  const escalaMosaico = useTransform(scrollYProgress, [0, 1], [1, reducir ? 1 : 1.18]);
-  const rotMosaico = useTransform(scrollYProgress, [0, 1], [reducir ? 0 : -6, reducir ? 0 : 4]);
-  const yTexto = useTransform(scrollYProgress, [0, 1], ['0%', reducir ? '0%' : '-35%']);
+  // Al bajar: la foto se hunde dentro del arco y el arco se acerca un poco.
+  const yFoto = useTransform(scrollYProgress, [0, 1], ['0%', reducir ? '0%' : '18%']);
+  const escalaArco = useTransform(scrollYProgress, [0, 1], [1, reducir ? 1 : 1.08]);
+  const yTexto = useTransform(scrollYProgress, [0, 1], ['0%', reducir ? '0%' : '-30%']);
   const opTexto = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
   const linea1 = 'Tu talento merece una agenda llena.'.split(' ');
   const linea2 = 'Y una marca que no se confunda con nadie.'.split(' ');
+  // Arco (como los espejos del estudio): se abre de abajo arriba al cargar.
+  const ARCO = 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
 
   return (
     <section ref={ref} id="inicio" className="relative min-h-[100svh] overflow-hidden bg-[#140B19] text-white">
-      {/* Mosaico: tres columnas de fotos que suben y bajan sin parar */}
-      <motion.div
-        aria-hidden="true"
-        style={{ y: yMosaico, scale: escalaMosaico, rotate: rotMosaico }}
-        className="absolute -inset-x-10 -top-20 bottom-0 flex gap-3 opacity-70 lg:left-[42%] lg:-right-16 lg:gap-4"
-      >
-        {COLUMNAS.map((col, c) => (
-          <div key={c} className={`flex-1 ${c === 1 ? 'pt-24' : ''}`}>
-            <div className={`flex flex-col gap-3 lg:gap-4 ${reducir ? '' : c === 1 ? 'v-baja' : 'v-sube'}`} style={{ animationDuration: `${40 + c * 9}s` }}>
-              {[...col, ...col].map((src, k) => (
-                <div key={k} className="overflow-hidden rounded-[22px] lg:rounded-[28px]">
-                  <Foto src={src} eager={k < 2} className="aspect-[3/4] w-full object-cover" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </motion.div>
-      {/* Velos: en el móvil el texto va abajo; en escritorio, a la izquierda */}
-      <div aria-hidden="true" className="absolute inset-0 lg:hidden" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.55) 0%, rgba(20,11,25,0.25) 28%, rgba(20,11,25,0.88) 58%, #140B19 78%)' }} />
-      <div aria-hidden="true" className="absolute inset-0 hidden lg:block" style={{ background: 'linear-gradient(90deg, #140B19 0%, #140B19 38%, rgba(20,11,25,0.55) 62%, rgba(20,11,25,0.2) 100%)' }} />
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-32" style={{ background: 'linear-gradient(0deg, #140B19, rgba(20,11,25,0))' }} />
-      <div aria-hidden="true" className="pointer-events-none absolute -left-40 top-1/3 h-[520px] w-[520px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(122,62,140,0.45), transparent 70%)' }} />
+      {/* Halos de color detrás del arco */}
+      <div aria-hidden="true" className="pointer-events-none absolute -right-32 top-10 h-[620px] w-[620px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(201,164,92,0.28), transparent 68%)' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-[520px] w-[520px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(122,62,140,0.45), transparent 70%)' }} />
 
-      {/* Avisos en vivo sobre las fotos */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.8, ease: CURVA }}
-        className="absolute z-10 hidden lg:block lg:right-[8%] lg:top-[24%]"
-      >
-        <AvisosEnVivo />
-      </motion.div>
-
-      <motion.div style={{ y: yTexto, opacity: opTexto }} className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-12 pt-28 sm:px-8 lg:justify-center lg:pb-16">
-        <div className="max-w-xl">
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.7, ease: CURVA }} className="mb-6 lg:hidden">
+      <div className="relative mx-auto grid min-h-[100svh] max-w-6xl items-center gap-8 px-5 pb-12 pt-24 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:gap-14 lg:pb-16 lg:pt-28">
+        {/* El arco con la foto */}
+        <motion.div style={{ scale: escalaArco }} className="relative mx-auto w-[74vw] max-w-[440px] lg:order-2 lg:w-full">
+          <motion.div
+            initial={reducir ? { opacity: 0 } : { clipPath: 'inset(100% 0% 0% 0% round 999px 999px 28px 28px)' }}
+            animate={reducir ? { opacity: 1 } : { clipPath: 'inset(0% 0% 0% 0% round 999px 999px 28px 28px)' }}
+            transition={{ duration: 1.6, ease: CURVA, delay: 0.15 }}
+            className="relative aspect-[3/4] overflow-hidden rounded-t-full rounded-b-[28px] bg-[#2A1236] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9)] lg:aspect-[4/5]"
+            style={{ clipPath: reducir ? ARCO : undefined }}
+          >
+            <motion.div
+              style={{ y: yFoto }}
+              initial={reducir ? false : { scale: 1.35 }}
+              animate={reducir ? undefined : { scale: 1.06 }}
+              transition={{ duration: 3.2, ease: CURVA, delay: 0.15 }}
+              className="absolute -inset-y-[10%] inset-x-0"
+            >
+              <Foto src="pelo-salon" alt="Estilista peinando a una clienta frente a un espejo en arco" eager className="h-full w-full object-cover object-[50%_35%]" />
+            </motion.div>
+            {/* Viñeteado para que la foto no compita con el texto */}
+            <div aria-hidden="true" className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0) 55%, rgba(20,11,25,0.55) 100%)' }} />
+            <div aria-hidden="true" className="v-reflejo pointer-events-none absolute inset-0" />
+          </motion.div>
+          {/* Filete de oro que dibuja el arco */}
+          <svg aria-hidden="true" viewBox="0 0 300 400" preserveAspectRatio="none" className="pointer-events-none absolute -inset-3 h-[calc(100%+24px)] w-[calc(100%+24px)] lg:hidden">
+            <motion.path
+              d="M6 394 L6 150 A144 144 0 0 1 294 150 L294 394"
+              fill="none"
+              stroke="url(#oroArco)"
+              strokeWidth="1.2"
+              vectorEffect="non-scaling-stroke"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.2, ease: CURVA, delay: 0.9 }}
+            />
+            <defs>
+              <linearGradient id="oroArco" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#F3E6C4" />
+                <stop offset="0.5" stopColor="#C9A45C" />
+                <stop offset="1" stopColor="#8A6A2E" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <svg aria-hidden="true" viewBox="0 0 400 500" preserveAspectRatio="none" className="pointer-events-none absolute -inset-4 hidden h-[calc(100%+32px)] w-[calc(100%+32px)] lg:block">
+            <motion.path
+              d="M6 494 L6 200 A194 194 0 0 1 394 200 L394 494"
+              fill="none"
+              stroke="url(#oroArcoG)"
+              strokeWidth="1.2"
+              vectorEffect="non-scaling-stroke"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.2, ease: CURVA, delay: 0.9 }}
+            />
+            <defs>
+              <linearGradient id="oroArcoG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#F3E6C4" />
+                <stop offset="0.5" stopColor="#C9A45C" />
+                <stop offset="1" stopColor="#8A6A2E" />
+              </linearGradient>
+            </defs>
+          </svg>
+          {/* Aviso en vivo apoyado en el arco */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: 20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            transition={{ delay: 1.6, duration: 0.8, ease: CURVA }}
+            className="absolute -bottom-6 left-1/2 z-10 -translate-x-1/2 lg:-left-16 lg:bottom-16 lg:translate-x-0"
+          >
             <AvisosEnVivo />
           </motion.div>
+        </motion.div>
+
+        {/* Texto, siempre sobre obsidiana: contraste máximo */}
+        <motion.div style={{ y: yTexto, opacity: opTexto }} className="relative z-10 pt-6 lg:order-1 lg:pt-0">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: CURVA }}>
             <Etiqueta oscuro>Para uñas, pestañas, peluquería y estética</Etiqueta>
           </motion.div>
-          <h1 className="mt-5 font-lujo text-[38px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
+          <h1 className="mt-5 font-lujo text-[38px] font-medium leading-[1.03] tracking-[-0.02em] sm:text-6xl lg:text-[64px]">
             {[...linea1.map((w) => ({ w, acento: false })), ...linea2.map((w) => ({ w, acento: true }))].map(({ w, acento }, i) => (
               <span key={i} className="inline-block overflow-hidden pb-[0.1em] align-bottom">
                 <motion.span
                   className={`mr-[0.24em] inline-block ${acento ? 'italic font-light text-[#E7CF9C]' : ''}`}
                   initial={reducir ? { opacity: 0 } : { y: '115%', rotate: 6, opacity: 0 }}
                   animate={reducir ? { opacity: 1 } : { y: '0%', rotate: 0, opacity: 1 }}
-                  transition={{ duration: 0.9, ease: CURVA, delay: 0.15 + i * 0.055 }}
+                  transition={{ duration: 0.9, ease: CURVA, delay: 0.5 + i * 0.055 }}
                 >
                   {w}
                 </motion.span>
               </span>
             ))}
           </h1>
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8, ease: CURVA }}
-            className="mt-5 max-w-md text-[16px] leading-relaxed text-white/75 sm:text-lg"
-          >
+          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3, duration: 0.8, ease: CURVA }} className="mt-5 max-w-md text-[16px] leading-relaxed text-white/80 sm:text-lg">
             Tu carta con tu firma, reservas solas a cualquier hora y un Pasaporte VIP que las hace volver. Sin comisiones y sin contraseñas.
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.15, duration: 0.8, ease: CURVA }}
-            className="mt-7 flex flex-col gap-3 sm:flex-row"
-          >
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.45, duration: 0.8, ease: CURVA }} className="mt-7 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={onPlaza}
@@ -184,20 +210,11 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
               Quiero mi plaza de fundadora
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
             </button>
-            <a
-              href="#un-dia"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-4 text-[15px] font-bold text-white backdrop-blur hover:border-white/60"
-            >
+            <a href="#un-dia" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-4 text-[15px] font-bold text-white hover:border-white/60">
               Ver cómo funciona
             </a>
           </motion.div>
-          <SigueBajando className="mt-8 sm:hidden" />
-          <motion.ul
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4, duration: 0.8 }}
-            className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-white/65"
-          >
+          <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.7, duration: 0.8 }} className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-semibold text-white/65">
             {['0 % de comisión', 'Sin descargar nada', 'Precios en $ y Bs'].map((x) => (
               <li key={x} className="flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5 text-[#C9A45C]" strokeWidth={2.4} />
@@ -205,9 +222,9 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
               </li>
             ))}
           </motion.ul>
-        </div>
-      </motion.div>
-      <SigueBajando className="absolute bottom-5 left-1/2 z-10 hidden -translate-x-1/2 sm:flex" />
+        </motion.div>
+      </div>
+      <SigueBajando className="absolute bottom-5 left-1/2 z-10 hidden -translate-x-1/2 lg:flex" />
     </section>
   );
 };
@@ -384,7 +401,7 @@ const BarraHistoria: React.FC<{ p: MotionValue<number>; i: number; total: number
 const PantallaPasaporte: React.FC<{ p: MotionValue<number> }> = ({ p }) => (
   <div className="flex h-full flex-col bg-[#F7F2EA] px-3.5 pt-12">
     <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#8A6A2E]">Mi Pasaporte</p>
-    <p className="font-lujo text-[20px] leading-tight text-[#1A1020]">Hola, Laura</p>
+    <p className="font-lujo text-[20px] leading-tight text-[#1A1020]">Hola, Camila</p>
     <div className="mt-3">
       <TarjetaVip p={p} desde={0.78} paso={0.04} compacta />
     </div>
@@ -580,7 +597,7 @@ const Equipo: React.FC = () => {
   const especialistas = [
     { n: 'Valentina', o: 'Uñas', f: 'unas-arte' },
     { n: 'Marta', o: 'Cejas', f: 'cejas-laminado' },
-    { n: 'Ana', o: 'Peluquería', f: 'pelo-salon' },
+    { n: 'Daniela', o: 'Peluquería', f: 'pelo-salon' },
   ];
   return (
     <section id="equipo" className="relative overflow-hidden bg-[#140B19] px-5 py-24 text-white sm:px-8 sm:py-32">
@@ -935,7 +952,7 @@ export const TarjetaVip: React.FC<{ p?: MotionValue<number>; desde?: number; pas
         </div>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className={`${compacta ? 'text-[9px]' : 'text-[13px]'} font-bold`}>Laura Pérez</p>
+            <p className={`${compacta ? 'text-[9px]' : 'text-[13px]'} font-bold`}>Camila Rojas</p>
             <p className={`${compacta ? 'text-[7px]' : 'text-[11px]'} text-white/60`}>Premio a la 5.ª visita: diseño de cejas</p>
           </div>
           <motion.span style={{ opacity: premio }} className={`shrink-0 rounded-full bg-gradient-to-r from-[#F3E6C4] via-[#C9A45C] to-[#EBD9AE] ${compacta ? 'px-2 py-0.5 text-[7px]' : 'px-3 py-1 text-[11px]'} font-bold text-[#1F1226]`}>

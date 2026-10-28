@@ -224,7 +224,7 @@ export const PantallaReserva: React.FC = () => (
     <div className="flex flex-1 flex-col gap-2.5 px-3.5 pt-3">
       <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#6E6478]">Especialista</p>
       <div className="flex gap-2">
-        {['Valentina', 'Marta', 'Ana'].map((x, i) => (
+        {['Valentina', 'Marta', 'Daniela'].map((x, i) => (
           <span key={x} className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2.5 text-[9px] font-semibold ${i === 0 ? 'bg-[#1F1226] text-white ring-1 ring-[#C9A45C]' : 'bg-white text-[#4A4150] ring-1 ring-[#E4E2EA]'}`}>
             <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[8px] ${i === 0 ? 'bg-[#C9A45C] text-[#1F1226]' : 'bg-[#F4F2F7]'}`}>{x[0]}</span>
             {x}
@@ -538,15 +538,15 @@ const CifraAnimada: React.FC<{ valor: number; prefijo?: string; sufijo?: string 
 const CITAS = [
   { dia: 0, ini: 0, dur: 2, t: 'Manicura rusa', q: 'Valentina', tono: 'ciruela' },
   { dia: 0, ini: 3, dur: 1, t: 'Cejas', q: 'Marta', tono: 'oro' },
-  { dia: 0, ini: 6, dur: 2, t: 'Mechas', q: 'Ana', tono: 'obsidiana' },
-  { dia: 1, ini: 1, dur: 2, t: 'Lifting', q: 'Ana', tono: 'oro' },
-  { dia: 1, ini: 5, dur: 1, t: 'Pedicura', q: 'Laura', tono: 'ciruela' },
+  { dia: 0, ini: 6, dur: 2, t: 'Mechas', q: 'Daniela', tono: 'obsidiana' },
+  { dia: 1, ini: 1, dur: 2, t: 'Lifting', q: 'Daniela', tono: 'oro' },
+  { dia: 1, ini: 5, dur: 1, t: 'Pedicura', q: 'Camila', tono: 'ciruela' },
   { dia: 2, ini: 0, dur: 1, t: 'Cejas', q: 'Marta', tono: 'oro' },
   { dia: 2, ini: 2, dur: 3, t: 'Alisado', q: 'Sofía', tono: 'obsidiana' },
   { dia: 2, ini: 6, dur: 1, t: 'Diseño', q: 'Valentina', tono: 'ciruela' },
   { dia: 3, ini: 1, dur: 1, t: 'Diseño', q: 'Valentina', tono: 'ciruela' },
-  { dia: 3, ini: 4, dur: 2, t: 'Maquillaje', q: 'Ana', tono: 'oro' },
-  { dia: 4, ini: 0, dur: 2, t: 'Novias', q: 'Laura', tono: 'obsidiana' },
+  { dia: 3, ini: 4, dur: 2, t: 'Maquillaje', q: 'Daniela', tono: 'oro' },
+  { dia: 4, ini: 0, dur: 2, t: 'Novias', q: 'Camila', tono: 'obsidiana' },
   { dia: 4, ini: 3, dur: 1, t: 'Cejas', q: 'Marta', tono: 'oro' },
   { dia: 4, ini: 5, dur: 2, t: 'Keratina', q: 'Sofía', tono: 'ciruela' },
 ];
