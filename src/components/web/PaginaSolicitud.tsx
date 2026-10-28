@@ -210,7 +210,7 @@ const Cuestionario: React.FC<{ t: string; inicial: Record<string, any>; onEnviad
                       <button
                         key={k} type="button" aria-pressed={marcada}
                         onClick={() => (p.tipo === 'una' ? setR({ ...r, [p.id]: marcada ? '' : k }) : alternar(p.id, k, p.max))}
-                        className={`rounded-full px-4 py-2.5 text-[14px] font-semibold transition-all cursor-pointer ${marcada ? 'bg-[#1F1226] text-white shadow-[0_10px_24px_-12px_rgba(31,18,38,0.8)]' : 'bg-white text-[#1A1020] ring-1 ring-[#1A1020]/12 hover:ring-[#4A1F5C]/50'}`}
+                        className={`rounded-full px-4 py-2.5 text-[14px] font-semibold transition-all cursor-pointer ${marcada ? 'bg-[#1F1226] text-white shadow-[0_10px_24px_-12px_rgba(31,18,38,0.8)]' : 'bg-white text-[#1A1020] ring-1 ring-[#1A1020]/15 hover:ring-[#4A1F5C]/50'}`}
                       >
                         {marcada && <Check className="-ml-1 mr-1.5 inline h-3.5 w-3.5 text-[#E7CF9C]" />}{texto}
                       </button>
@@ -222,7 +222,7 @@ const Cuestionario: React.FC<{ t: string; inicial: Record<string, any>; onEnviad
                 <div className="mt-4 flex gap-2.5">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button key={n} type="button" aria-pressed={r[p.id] === n} aria-label={`${n} de 5`} onClick={() => setR({ ...r, [p.id]: n })}
-                      className={`h-14 w-14 rounded-2xl font-lujo text-2xl transition-all cursor-pointer ${r[p.id] === n ? 'bg-[#4A1F5C] text-white' : r[p.id] > n ? 'bg-[#4A1F5C]/15 text-[#4A1F5C]' : 'bg-white text-[#1A1020] ring-1 ring-[#1A1020]/12'}`}>
+                      className={`h-14 w-14 rounded-2xl font-lujo text-2xl transition-all cursor-pointer ${r[p.id] === n ? 'bg-[#4A1F5C] text-white' : r[p.id] > n ? 'bg-[#4A1F5C]/15 text-[#4A1F5C]' : 'bg-white text-[#1A1020] ring-1 ring-[#1A1020]/15'}`}>
                       {n}
                     </button>
                   ))}
@@ -230,8 +230,8 @@ const Cuestionario: React.FC<{ t: string; inicial: Record<string, any>; onEnviad
               )}
               {p.tipo === 'texto' && (
                 p.max && p.max > 100
-                  ? <textarea value={r[p.id] || ''} maxLength={p.max} rows={3} onChange={(e) => setR({ ...r, [p.id]: e.target.value })} placeholder="…que mis clientas reserven solas y yo solo tenga que atenderlas." className="mt-4 w-full rounded-2xl border border-[#1A1020]/12 bg-white px-4 py-3.5 font-lujo text-[18px] italic text-[#1A1020] placeholder:text-[#1A1020]/30 focus:border-[#4A1F5C] focus:outline-none" />
-                  : <input value={r[p.id] || ''} maxLength={p.max} onChange={(e) => setR({ ...r, [p.id]: e.target.value })} placeholder="@tusalon" className="mt-4 w-full max-w-xs rounded-2xl border border-[#1A1020]/12 bg-white px-4 py-3 text-[15px] text-[#1A1020] focus:border-[#4A1F5C] focus:outline-none" />
+                  ? <textarea value={r[p.id] || ''} maxLength={p.max} rows={3} onChange={(e) => setR({ ...r, [p.id]: e.target.value })} placeholder="…que mis clientas reserven solas y yo solo tenga que atenderlas." className="mt-4 w-full rounded-2xl border border-[#1A1020]/15 bg-white px-4 py-3.5 font-lujo text-[18px] italic text-[#1A1020] placeholder:text-[#1A1020]/30 focus:border-[#4A1F5C] focus:outline-none" />
+                  : <input value={r[p.id] || ''} maxLength={p.max} onChange={(e) => setR({ ...r, [p.id]: e.target.value })} placeholder="@tusalon" className="mt-4 w-full max-w-xs rounded-2xl border border-[#1A1020]/15 bg-white px-4 py-3 text-[15px] text-[#1A1020] focus:border-[#4A1F5C] focus:outline-none" />
               )}
             </fieldset>
           ))}
