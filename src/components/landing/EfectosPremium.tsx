@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AnimatePresence,
   motion,
@@ -141,8 +141,8 @@ const ESCENAS = [
   {
     icono: QrCode,
     etiqueta: '01 · Recepción',
-    titulo: 'Escanea tu QR y entra en tu mundo.',
-    texto: 'En el espejo, en la recepción o en tu Instagram: ve tu carta con tu marca, tus fotos y tus precios. Sin descargar nada.',
+    titulo: 'Tu clienta escanea tu QR.',
+    texto: 'En el espejo, en la recepción o en tu Instagram, entra en tu mundo: tu marca, tus fotos y tus precios. Sin descargar nada.',
   },
   {
     icono: CalendarCheck,
@@ -301,6 +301,32 @@ const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso 
   );
 };
 
+const ANCHO_PANTALLA = 270;
+
+const PantallaAEscala: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [caja, setCaja] = useState({ k: 1, alto: 570 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const medir = () => {
+      const k = el.clientWidth / ANCHO_PANTALLA || 1;
+      setCaja({ k, alto: el.clientHeight / k });
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="absolute inset-0 overflow-hidden">
+      <div className="absolute left-0 top-0 origin-top-left" style={{ width: ANCHO_PANTALLA, height: caja.alto, transform: `scale(${caja.k})` }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export const UnDiaEnTuSalon: React.FC = () => {
   const reducir = useReducedMotion();
   const ref = useRef<HTMLElement | null>(null);
@@ -339,7 +365,7 @@ export const UnDiaEnTuSalon: React.FC = () => {
           {/* Texto de la escena activa: una sola a la vez, nunca dos superpuestas */}
           <div className="order-2 lg:order-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7D6438]">Un día en tu estudio</p>
-            <div className="relative mt-3 min-h-[150px] sm:min-h-[200px]" aria-live="polite">
+            <div className="relative mt-2 sm:mt-3 min-h-[148px] sm:min-h-[200px]" aria-live="polite">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={escena.etiqueta}
@@ -349,8 +375,8 @@ export const UnDiaEnTuSalon: React.FC = () => {
                   transition={{ duration: 0.32, ease: CURVA }}
                 >
                   <p className="text-xs font-semibold text-[#6E6478]">{escena.etiqueta}</p>
-                  <h2 className="mt-2 font-lujo text-[30px] sm:text-5xl font-semibold leading-[1.04] tracking-tight">{escena.titulo}</h2>
-                  <p className="mt-3 max-w-md text-sm sm:text-base leading-relaxed text-[#4A4150]">{escena.texto}</p>
+                  <h2 className="mt-1.5 sm:mt-2 font-lujo text-[26px] sm:text-5xl font-semibold leading-[1.05] tracking-tight">{escena.titulo}</h2>
+                  <p className="mt-2 sm:mt-3 max-w-md text-[13px] sm:text-base leading-relaxed text-[#4A4150]">{escena.texto}</p>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -385,9 +411,9 @@ export const UnDiaEnTuSalon: React.FC = () => {
             <div aria-hidden="true" className="pointer-events-none absolute inset-[-22%] rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(201,164,92,0.45), rgba(74,31,92,0.12) 65%, transparent)' }} />
             <motion.div
               style={{ rotateY: rotY, rotateX: rotX, scale: escala, transformStyle: 'preserve-3d' }}
-              className="relative h-[40svh] min-h-[290px] max-h-[600px] lg:h-[62svh] aspect-[9/19] rounded-[40px] lg:rounded-[44px] p-[3px] shadow-[0_50px_100px_-30px_rgba(20,11,25,0.55)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_28%,#2A1A30_60%,#140B19)]"
+              className="relative h-[48svh] min-h-[300px] max-h-[600px] lg:h-[62svh] aspect-[9/17] lg:aspect-[9/19] rounded-[36px] lg:rounded-[44px] p-[3px] shadow-[0_50px_100px_-30px_rgba(20,11,25,0.55)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_28%,#2A1A30_60%,#140B19)]"
             >
-              <div className="relative h-full w-full overflow-hidden rounded-[37px] lg:rounded-[41px] bg-[#FBFAFC] ring-[5px] lg:ring-[6px] ring-[#140B19]">
+              <div className="relative h-full w-full overflow-hidden rounded-[33px] lg:rounded-[41px] bg-[#FBFAFC] ring-[5px] lg:ring-[6px] ring-[#140B19]">
                 <AnimatePresence initial={false}>
                   <motion.div
                     key={activa}
@@ -397,7 +423,7 @@ export const UnDiaEnTuSalon: React.FC = () => {
                     transition={{ duration: 0.4, ease: CURVA }}
                     className="absolute inset-0"
                   >
-                    {pantallas[activa]}
+                    <PantallaAEscala>{pantallas[activa]}</PantallaAEscala>
                   </motion.div>
                 </AnimatePresence>
                 {/* Reflejo que barre la pantalla con el scroll */}
