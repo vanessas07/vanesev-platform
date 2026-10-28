@@ -96,7 +96,7 @@ function enlaceWhatsappSalon(c: CitaAviso, texto: string): string | null {
 }
 
 // ─── Plantilla de correo: tablas y estilos en línea (Gmail, Outlook y Apple Mail) ─
-function plantilla(o: { previa: string; etiqueta: string; titulo: string; intro: string; filas: [string, string][]; botones: { texto: string; url: string; principal?: boolean }[]; nota?: string; salon: string }): string {
+export function plantilla(o: { previa: string; etiqueta: string; titulo: string; intro: string; filas: [string, string][]; botones: { texto: string; url: string; principal?: boolean }[]; nota?: string; salon: string; pie?: string }): string {
   const filas = o.filas
     .map(([k, v]) => `<tr><td style="padding:10px 0;border-bottom:1px solid #EFE9E1;font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8A6A2E;width:38%">${esc(k)}</td><td style="padding:10px 0;border-bottom:1px solid #EFE9E1;font:600 15px Arial,sans-serif;color:#1A1020">${esc(v)}</td></tr>`)
     .join('');
@@ -120,7 +120,7 @@ function plantilla(o: { previa: string; etiqueta: string; titulo: string; intro:
 <div style="margin-top:20px">${botones}</div>
 ${o.nota ? `<p style="margin:20px 0 0;font:400 13px/1.6 Arial,sans-serif;color:#6E6478">${esc(o.nota)}</p>` : ''}
 </td></tr>
-<tr><td style="padding:24px 32px 28px;font:400 12px/1.6 Arial,sans-serif;color:#9A92A3">Reserva gestionada con <a href="${WEB}" style="color:#7D6438;text-decoration:none;font-weight:700">VANESEV</a>. Si no reservaste esta cita, ignora este correo.</td></tr>
+<tr><td style="padding:24px 32px 28px;font:400 12px/1.6 Arial,sans-serif;color:#9A92A3">${o.pie ? esc(o.pie) : `Reserva gestionada con <a href="${WEB}" style="color:#7D6438;text-decoration:none;font-weight:700">VANESEV</a>. Si no reservaste esta cita, ignora este correo.`}</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

@@ -151,6 +151,17 @@ async function crearUsuario(rol, { platformRole = null, org = null, memberRole =
 }
 
 async function limpiar() {
+  if (creados.altaSlug) {
+    const sl = creados.altaSlug;
+    await sql`DELETE FROM public.activaciones_cuenta WHERE tenant_id = ${sl}`;
+    await sql`DELETE FROM public.qr_codes WHERE tenant_id = ${sl}`;
+    await sql`DELETE FROM public.services WHERE tenant_id = ${sl}`;
+    await sql`DELETE FROM "member" WHERE "organizationId" IN (SELECT id FROM "organization" WHERE slug = ${sl})`;
+    await sql`DELETE FROM "organization" WHERE slug = ${sl}`;
+    await sql`UPDATE public.solicitudes_alta SET tenant_id = NULL WHERE tenant_id = ${sl}`;
+    await sql`DELETE FROM public.tenants WHERE id = ${sl}`;
+  }
+  await sql`DELETE FROM public.solicitudes_alta WHERE lower(email) LIKE ${'ci-' + RUN + '-%@' + DOMINIO}`;
   await sql`DELETE FROM "session" WHERE "userId" IN (SELECT id FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO})`;
   await sql`DELETE FROM "twoFactor" WHERE "userId" IN (SELECT id FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO})`;
   await sql`DELETE FROM "member" WHERE "userId" IN (SELECT id FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO})`;
@@ -644,6 +655,55 @@ async function main() {
       && resTarj.status === 201 && resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago === pago && sinSaldo.status === 400 && borraRes.status === 200 && saldoDevuelto === 5,
     `staff ${tarjStaff.status}, emite ${tarj.status}, lista ${enLista ? enLista.codigoFinal : 'NO'} (código oculto ${sinCodigo ? 'sí' : 'NO'}), reserva ${resTarj.status} pago ${resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago}, sin saldo ${sinSaldo.status}, borrar ${borraRes.status}, saldo ${saldoDevuelto}`);
 
+  // ── X. Alta de salones con cobro manual (G-063 a G-066) ──
+  const altaBody = { action: 'solicitud_alta', salon: `CI ${RUN} Estudio`, nombre: 'CI Dueña Alta', email: email('alta'), whatsapp: '+58 414 1234567', oficio: 'pestanas_cejas', ciudad: 'Caracas' };
+  await limpiarRateLimitRunner();
+  const altaMala = await api('/api/central', { method: 'POST', body: { ...altaBody, email: 'no-es-correo' } });
+  const altaOk = await api('/api/central', { method: 'POST', body: altaBody });
+  const sol = (await sql`SELECT id, estado FROM public.solicitudes_alta WHERE lower(email) = ${email('alta')} LIMIT 1`)[0];
+  comprobar('X1', 'Alta: la solicitud pública valida el correo (400) y se guarda en Central como «nueva» (201)',
+    altaMala.status === 400 && altaOk.status === 201 && sol?.estado === 'nueva', `mala ${altaMala.status}, válida ${altaOk.status}, ficha ${sol?.estado || 'NO'}`);
+
+  const pagoDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49 } } });
+  const pagoSa = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49, concepto: 'Montaje de fundadora' } } });
+  comprobar('X2', 'Alta: solo Central pide el pago (dueña 403) y la ficha pasa a «pago pedido» con su importe',
+    pagoDueña.status === 403 && pagoSa.status === 200 && pagoSa.json?.solicitud?.estado === 'pago_solicitado' && Number(pagoSa.json?.solicitud?.importe_usd) === 49,
+    `dueña ${pagoDueña.status}, central ${pagoSa.status}, estado ${pagoSa.json?.solicitud?.estado}, importe ${pagoSa.json?.solicitud?.importe_usd}`);
+
+  const recibido = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_pago_recibido', payload: { id: sol?.id, metodo: 'pago_movil', importeUSD: 49, referencia: `CI${RUN}` } } });
+  const slugAlta = recibido.json?.slug || '';
+  creados.altaSlug = slugAlta;
+  const repetido = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_pago_recibido', payload: { id: sol?.id, metodo: 'pago_movil', importeUSD: 49 } } });
+  const tAlta = (await sql`SELECT en_prueba, owner_email FROM public.tenants WHERE id = ${slugAlta}`)[0];
+  const srvAlta = (await sql`SELECT count(*)::int n, count(*) FILTER (WHERE is_available = false AND price_usd = 0)::int ocultos FROM public.services WHERE tenant_id = ${slugAlta}`)[0];
+  const qrAlta = (await sql`SELECT count(*)::int n FROM public.qr_codes WHERE tenant_id = ${slugAlta}`)[0].n;
+  const duenaAlta = (await sql`SELECT m.role FROM "member" m JOIN "organization" o ON o.id = m."organizationId" JOIN "user" u ON u.id = m."userId" WHERE o.slug = ${slugAlta} AND lower(u.email) = ${email('alta')}`)[0];
+  const actAlta = (await sql`SELECT count(*)::int n FROM public.activaciones_cuenta WHERE tenant_id = ${slugAlta} AND usado_at IS NULL`)[0].n;
+  comprobar('X3', 'Alta: «pago recibido» crea solo el salón en puesta a punto, su carta por oficio oculta y sin precio, su QR, la dueña (owner) y su enlace de activación; repetido 409',
+    recibido.status === 200 && !!slugAlta && tAlta?.en_prueba === true && srvAlta.n >= 6 && srvAlta.ocultos === srvAlta.n && qrAlta === 1 && duenaAlta?.role === 'owner' && actAlta === 1 && repetido.status === 409,
+    `recibido ${recibido.status} (${slugAlta || 'sin slug'}), prueba ${tAlta?.en_prueba}, servicios ${srvAlta.n}/${srvAlta.ocultos} ocultos, qr ${qrAlta}, dueña ${duenaAlta?.role || 'NO'}, enlaces ${actAlta}, repetido ${repetido.status}`);
+
+  // El enlace real solo viaja por correo: la prueba crea uno propio con el mismo formato.
+  const tokenAlta = crypto.randomBytes(32).toString('base64url');
+  const uAlta = (await sql`SELECT id FROM "user" WHERE lower(email) = ${email('alta')}`)[0];
+  if (uAlta && slugAlta) await sql`INSERT INTO public.activaciones_cuenta (token_hash, user_id, tenant_id, expira_at) VALUES (${crypto.createHash('sha256').update(tokenAlta).digest('hex')}, ${uAlta.id}, ${slugAlta}, now() + interval '1 hour')`;
+  const claveAlta = `Ci-${RUN}-Clave-Larga!`;
+  const actCorta = await api('/api/central', { method: 'POST', body: { action: 'activar_cuenta', token: tokenAlta, password: 'corta' } });
+  const actFalsa = await api('/api/central', { method: 'POST', body: { action: 'activar_cuenta', token: crypto.randomBytes(32).toString('base64url'), password: claveAlta } });
+  const actOk = await api('/api/central', { method: 'POST', body: { action: 'activar_cuenta', token: tokenAlta, password: claveAlta } });
+  const actOtra = await api('/api/central', { method: 'POST', body: { action: 'activar_cuenta', token: tokenAlta, password: claveAlta } });
+  const loginAlta = await api('/api/auth/sign-in/email', { method: 'POST', body: { email: email('alta'), password: claveAlta } });
+  const estadoFinal = (await sql`SELECT estado FROM public.solicitudes_alta WHERE id = ${sol?.id}`)[0]?.estado;
+  comprobar('X4', 'Activación: contraseña corta 400, enlace falso 400, válido 200 y de un solo uso (400 al repetir); la dueña entra con su correo y la ficha queda «activa»',
+    actCorta.status === 400 && actFalsa.status === 400 && actOk.status === 200 && actOtra.status === 400 && loginAlta.status === 200 && estadoFinal === 'activa',
+    `corta ${actCorta.status}, falsa ${actFalsa.status}, válida ${actOk.status}, repetida ${actOtra.status}, login ${loginAlta.status}, ficha ${estadoFinal}`);
+
+  const abrir = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_abrir_salon', payload: { id: sol?.id } } });
+  const abrirDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_abrir_salon', payload: { id: sol?.id } } });
+  const abierto = (await sql`SELECT en_prueba FROM public.tenants WHERE id = ${slugAlta}`)[0]?.en_prueba;
+  comprobar('X5', 'Alta: solo Central abre el salón al público (dueña 403) y sale de puesta a punto', abrir.status === 200 && abrirDueña.status === 403 && abierto === false,
+    `central ${abrir.status}, dueña ${abrirDueña.status}, en_prueba ${abierto}`);
+
   // ── W. WhatsApp del salón con la API de Meta (C-01) ──
   const waDatos = { phoneNumberId: '100000000000001', wabaId: '200000000000002', token: `EAAci${RUN.replace(/\W/g, '')}`.padEnd(60, 'x'), appSecret: 'a1b2c3d4e5f60718293a4b5c6d7e8f90' };
   const waSin = await api('/api/salon', { method: 'POST', body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos } });
@@ -729,7 +789,8 @@ async function main() {
       + (await sql`SELECT count(*)::int n FROM public.bookings WHERE client_name LIKE ${'CI ' + RUN + '%'}`)[0].n
       + (await sql`SELECT count(*)::int n FROM public.ofertas WHERE titulo LIKE ${'CI ' + RUN + '%'}`)[0].n
       + (await sql`SELECT count(*)::int n FROM public.cupones WHERE descripcion LIKE ${'CI ' + RUN + '%'}`)[0].n
-      + (await sql`SELECT count(*)::int n FROM public.tarjetas_regalo WHERE nota LIKE ${'CI ' + RUN + '%'}`)[0].n;
+      + (await sql`SELECT count(*)::int n FROM public.tarjetas_regalo WHERE nota LIKE ${'CI ' + RUN + '%'}`)[0].n
+      + (await sql`SELECT count(*)::int n FROM public.tenants WHERE business_name LIKE ${'CI ' + RUN + '%'}`)[0].n;
     comprobar('Z1', 'Limpieza: 0 filas de esta ejecución en staging', restos === 0, `${restos} filas restantes`);
   } catch (err) {
     comprobar('Z1', 'Limpieza', false, err?.message || String(err));

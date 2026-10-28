@@ -28,12 +28,14 @@ export const ServiceCatalog: React.FC<ServiceCatalogProps> = ({
   ];
 
   const filteredServices = services.filter((service) => {
+    // Borradores de la carta inicial por oficio (G-065): ocultos y sin precio hasta que la dueña los publique.
+    if (!service.isAvailable && !(Number(service.priceUSD) > 0)) return false;
     const matchesCategory =
       selectedCategory === 'all' || service.category === selectedCategory;
     const matchesSearch =
       service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      (service.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
