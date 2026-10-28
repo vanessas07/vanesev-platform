@@ -568,6 +568,33 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ success: true, ajustesCobro: await ajustesCobro(sql) });
       }
 
+      // G-072: karc0 responde a una tarea suya desde «Para ti»; la respuesta pasa al Buzón de Claude y la tarea sale de su lista.
+      if (action === 'karc0_responde') {
+        const id = corto(payload.id, 40);
+        const respuesta = String(payload.respuesta || '');
+        const notas = corto(payload.notas, 2000);
+        if (!['hecho', 'no_pude', 'notas'].includes(respuesta)) return res.status(400).json({ error: 'Respuesta no válida.' });
+        if (respuesta !== 'hecho' && !notas) return res.status(400).json({ error: 'Escribe una nota para Claude.' });
+        const t = (await sql`SELECT id, title, priority, assigned_to FROM public.central_tasks WHERE id = ${id} LIMIT 1;`)[0];
+        if (!t || t.assigned_to !== 'karc0') return res.status(404).json({ error: 'Tarea no encontrada.' });
+        const etiqueta = respuesta === 'hecho' ? 'Ya lo hice' : respuesta === 'no_pude' ? 'No pude' : 'Te paso notas';
+        const sello = `${new Date().toISOString().slice(0, 16).replace('T', ' ')} · ${etiqueta}${notas ? `: ${notas}` : ''}`;
+        await sql.transaction([
+          sql`
+            UPDATE public.central_tasks
+            SET status = ${respuesta === 'hecho' ? 'completed' : 'respondida'},
+                karc0_notes = left(coalesce(karc0_notes || ' | ', '') || ${sello}, 4000), updated_at = now()
+            WHERE id = ${id};
+          `,
+          sql`
+            INSERT INTO public.central_mailbox (id, sender, recipient, subject, body, category, priority, is_read, estado, created_at)
+            VALUES (${`msg-${crypto.randomUUID()}`}, 'karc0', 'claude', ${`[${id}] ${etiqueta} · ${String(t.title).slice(0, 140)}`},
+              ${notas || 'Hecho, sin notas.'}, 'respuesta_tarea', ${t.priority || 'medium'}, false, 'recibida', now());
+          `,
+        ]);
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'upsert_task') {
         const { id, title, description, zone, priority, status, assignedTo, karc0Notes, dueLabel } = payload || {};
         const taskId = id || `tsk-${Date.now()}`;
