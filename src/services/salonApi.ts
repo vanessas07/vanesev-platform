@@ -100,8 +100,26 @@ export interface SalonAdmin extends SalonPublico {
   enPrueba: boolean;
   /** Interruptor «Avisos por correo» (G-059). */
   avisosCorreo?: boolean;
+  /** WhatsApp del salón con la API de Meta (C-01). Nunca trae el token ni el secreto. */
+  whatsapp?: EstadoWhatsapp;
   cupones: CuponSalon[];
   tarjetas: TarjetaRegalo[];
+}
+
+export interface EstadoWhatsapp {
+  conectado: boolean;
+  webhookUrl: string;
+  estado?: 'pendiente' | 'verificada' | 'error';
+  phoneNumberId?: string;
+  wabaId?: string | null;
+  numero?: string | null;
+  nombre?: string | null;
+  verifyToken?: string;
+  webhookVisto?: string | null;
+  agente?: boolean;
+  avisosClienta?: boolean;
+  avisosEquipo?: boolean;
+  ultimoError?: string | null;
 }
 
 export type Respuesta<T> = { ok: true; data: T } | { ok: false; error: string; status: number };
@@ -134,6 +152,12 @@ export const SalonApi = {
 
   guardarPerfil: (slug: string, perfil: PerfilSalon) => accion<{ success: true }>(slug, 'perfil_guardar', { perfil }),
   guardarAvisos: (slug: string, activos: boolean) => accion<{ success: true; avisosCorreo: boolean }>(slug, 'avisos_guardar', { activos }),
+  conectarWhatsapp: (slug: string, datos: { phoneNumberId: string; wabaId: string; token: string; appSecret: string }) =>
+    accion<{ success: true; whatsapp: EstadoWhatsapp }>(slug, 'whatsapp_conectar', datos),
+  opcionesWhatsapp: (slug: string, o: { agente: boolean; avisosClienta: boolean; avisosEquipo: boolean }) =>
+    accion<{ success: true; whatsapp: EstadoWhatsapp }>(slug, 'whatsapp_opciones', o),
+  probarWhatsapp: (slug: string, telefono: string) => accion<{ success: true }>(slug, 'whatsapp_probar', { telefono }),
+  desconectarWhatsapp: (slug: string) => accion<{ success: true; whatsapp: EstadoWhatsapp }>(slug, 'whatsapp_desconectar', {}),
   guardarLanding: (slug: string, landing: LandingSalon) => accion<{ success: true; landing: LandingSalon }>(slug, 'landing_guardar', { landing }),
   guardarTema: (slug: string, tema: Record<string, any>) => accion<{ success: true; tema: Record<string, any> }>(slug, 'tema_guardar', { tema }),
 

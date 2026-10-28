@@ -20,6 +20,7 @@ jobs:
     permissions:
       contents: read
       statuses: read
+      deployments: read
     # shell: bash explícito = «bash --noprofile --norc -eo pipefail». Sin él, Actions usa «bash -e»
     # y un «node prueba | tee archivo» sale en verde aunque la prueba falle (corregido el 27/10).
     defaults:
@@ -66,7 +67,16 @@ jobs:
           for i in $(seq 1 48); do
             estado=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/status" --jq '[.statuses[] | select(.context == "Vercel")][0].state // "pendiente"')
             echo "Intento $i: Vercel = $estado"
-            if [ "$estado" = "success" ]; then exit 0; fi
+            if [ "$estado" = "success" ]; then
+              # La suite prueba la vista previa de ESTE commit (antes iba siempre a la de feat/b1-auth).
+              dep=$(gh api "repos/${GITHUB_REPOSITORY}/deployments?sha=${GITHUB_SHA}" --jq '.[0].id // empty')
+              url=""
+              if [ -n "$dep" ]; then url=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${dep}/statuses" --jq '[.[] | select(.state == "success")][0].environment_url // empty'); fi
+              if [ -z "$url" ]; then echo "No encuentro la URL de la vista previa de este commit"; exit 1; fi
+              echo "Vista previa de este commit: $url"
+              echo "TEST_TARGET_URL=$url" >> "$GITHUB_ENV"
+              exit 0
+            fi
             if [ "$estado" = "failure" ] || [ "$estado" = "error" ]; then echo "El despliegue de Vercel ha fallado"; exit 1; fi
             sleep 15
           done

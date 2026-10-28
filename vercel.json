@@ -30,6 +30,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/whatsapp/:tenant",
+      "destination": "/api/salon?whatsapp=:tenant"
+    },
+    {
       "source": "/api/auth",
       "destination": "/api/auth/[...all]"
     },

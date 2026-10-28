@@ -4,12 +4,14 @@
 //   GET  ?tenant=<slug>               → todo, para owner/admin
 //   POST {action:'presupuesto', …}    → precio final que calcularía la reserva (público, con freno)
 //   POST {action:…, tenantId, …}      → altas y cambios, owner/admin
+//   GET/POST ?whatsapp=<slug>         → webhook de Meta del WhatsApp del salón (C-01; ruta /api/whatsapp/<slug>)
 import { randomInt, randomUUID } from 'node:crypto';
 import { getDb } from './_db.js';
 import { requireSession, requireTenantRole } from './_session.js';
 import { applyCors } from './_cors.js';
 import { claveDeLimite, ipDeLaPeticion, limiteSuperado } from './_limite.js';
 import { CUPON_VALIDO, calcularPrecio, hashTarjeta, hoyEnCaracas } from './_precios.js';
+import { cargarConexion, cifrar, enviarPlantilla, errorDeMeta, hayClave, manejarWebhook, normalizarTelefono, nuevoVerifyToken, verificarNumero } from './_whatsapp.js';
 
 const IMAGEN_VALIDA = /^(\/[A-Za-z0-9/_.-]{1,200}|https:\/\/[^\s"'<>]{1,500}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/;
 const IMAGEN_MAX_CARACTERES = 2_000_000;
@@ -149,7 +151,34 @@ const mapaOferta = (o: any) => ({
   activa: o.activa, orden: o.orden,
 });
 
+/** Estado del WhatsApp del salón para su panel: nunca incluye el token ni el secreto de la app. */
+async function estadoWhatsapp(sql: any, tenant: string) {
+  const f = (await sql`
+    SELECT phone_number_id, waba_id, numero_visible, nombre_verificado, verify_token, estado, agente_activo,
+           avisos_clienta, avisos_equipo, ultimo_error, webhook_visto_at
+    FROM public.whatsapp_conexiones WHERE tenant_id = ${tenant} LIMIT 1;
+  `)[0];
+  const webhookUrl = `https://vanesev.com/api/whatsapp/${tenant}`;
+  if (!f) return { conectado: false, webhookUrl };
+  return {
+    conectado: true, estado: f.estado, phoneNumberId: f.phone_number_id, wabaId: f.waba_id, numero: f.numero_visible,
+    nombre: f.nombre_verificado, verifyToken: f.verify_token, webhookUrl, webhookVisto: f.webhook_visto_at,
+    agente: f.agente_activo, avisosClienta: f.avisos_clienta, avisosEquipo: f.avisos_equipo, ultimoError: f.ultimo_error,
+  };
+}
+
 export default async function handler(req: any, res: any) {
+  // Webhook de Meta (servidor a servidor, sin CORS): /api/whatsapp/<slug> → ?whatsapp=<slug>.
+  if (req.query?.whatsapp) {
+    const sqlWa = getDb();
+    if (!sqlWa) return res.status(503).json({ error: 'Base de datos no disponible.' });
+    try {
+      return await manejarWebhook(req, res, sqlWa, String(req.query.whatsapp));
+    } catch (err: any) {
+      console.error('[WhatsApp webhook]', err?.message || err);
+      return res.status(500).json({ error: 'Error al atender el webhook.' });
+    }
+  }
   if (applyCors(req, res)) return;
   const sql = getDb();
   if (!sql) return res.status(503).json({ error: 'Base de datos no disponible.' });
@@ -221,7 +250,9 @@ export default async function handler(req: any, res: any) {
           FROM public.tarjetas_regalo WHERE tenant_id = ${tenant} ORDER BY created_at DESC;
         `,
       ]);
+      const whatsapp = await estadoWhatsapp(sql, tenant);
       return res.status(200).json({
+        whatsapp,
         perfil: { ...perfil, propietaria: t.owner_name },
         landing: t.landing || {},
         tema: t.tema || {},
@@ -341,6 +372,62 @@ export default async function handler(req: any, res: any) {
       const activos = body.activos === true;
       await sql`UPDATE public.tenants SET avisos_correo = ${activos}, updated_at = NOW() WHERE id = ${tenant};`;
       return res.status(200).json({ success: true, avisosCorreo: activos });
+    }
+
+    // ─── WhatsApp del salón con la API de Meta (C-01, G-054) ───
+    if (action === 'whatsapp_conectar') {
+      if (!hayClave()) return res.status(503).json({ error: 'El cifrado de WhatsApp no está configurado en el servidor.' });
+      const phoneNumberId = String(body.phoneNumberId || '').trim();
+      const wabaId = String(body.wabaId || '').trim() || null;
+      const token = String(body.token || '').trim();
+      const appSecret = String(body.appSecret || '').trim();
+      if (!/^\d{5,40}$/.test(phoneNumberId)) return res.status(400).json({ error: 'El identificador del número son solo cifras (lo ves en WhatsApp → Configuración de la API).' });
+      if (wabaId && !/^\d{5,40}$/.test(wabaId)) return res.status(400).json({ error: 'El identificador de la cuenta de WhatsApp Business son solo cifras.' });
+      if (token.length < 40 || token.length > 1000 || /\s/.test(token)) return res.status(400).json({ error: 'El token de acceso no parece válido. Cópialo entero, sin espacios.' });
+      if (!/^[a-f0-9]{32}$/i.test(appSecret)) return res.status(400).json({ error: 'La clave secreta de la app tiene 32 letras y cifras (Configuración de la app → Básica).' });
+      const v = await verificarNumero(phoneNumberId, token);
+      const previo = (await sql`SELECT verify_token FROM public.whatsapp_conexiones WHERE tenant_id = ${tenant} LIMIT 1;`)[0];
+      const verifyToken = previo?.verify_token || nuevoVerifyToken();
+      await sql`
+        INSERT INTO public.whatsapp_conexiones (tenant_id, phone_number_id, waba_id, numero_visible, nombre_verificado, token_cifrado,
+          app_secret_cifrado, verify_token, estado, ultimo_error, updated_at)
+        VALUES (${tenant}, ${phoneNumberId}, ${wabaId}, ${v.ok ? v.numero : null}, ${v.ok ? v.nombre : null}, ${cifrar(token)},
+          ${cifrar(appSecret)}, ${verifyToken}, ${v.ok ? 'verificada' : 'error'}, ${v.ok ? null : v.error}, now())
+        ON CONFLICT (tenant_id) DO UPDATE SET phone_number_id = EXCLUDED.phone_number_id, waba_id = EXCLUDED.waba_id,
+          numero_visible = EXCLUDED.numero_visible, nombre_verificado = EXCLUDED.nombre_verificado,
+          token_cifrado = EXCLUDED.token_cifrado, app_secret_cifrado = EXCLUDED.app_secret_cifrado,
+          estado = EXCLUDED.estado, ultimo_error = EXCLUDED.ultimo_error, updated_at = now();
+      `;
+      const whatsapp = await estadoWhatsapp(sql, tenant);
+      if (!v.ok) return res.status(400).json({ error: `Meta no acepta estos datos: ${v.error}`, whatsapp });
+      return res.status(200).json({ success: true, whatsapp });
+    }
+
+    if (action === 'whatsapp_opciones') {
+      const r = await sql`
+        UPDATE public.whatsapp_conexiones
+        SET agente_activo = ${body.agente !== false}, avisos_clienta = ${body.avisosClienta !== false},
+            avisos_equipo = ${body.avisosEquipo !== false}, updated_at = now()
+        WHERE tenant_id = ${tenant} RETURNING tenant_id;
+      `;
+      if (!r.length) return res.status(404).json({ error: 'Primero conecta tu WhatsApp.' });
+      return res.status(200).json({ success: true, whatsapp: await estadoWhatsapp(sql, tenant) });
+    }
+
+    if (action === 'whatsapp_probar') {
+      const para = normalizarTelefono(body.telefono);
+      if (!para) return res.status(400).json({ error: 'Escribe un móvil con su código de país, por ejemplo 58 414 1234567.' });
+      const c = await cargarConexion(sql, tenant);
+      if (!c) return res.status(404).json({ error: 'Tu WhatsApp aún no está verificado.' });
+      // «hello_world» viene aprobada en todas las cuentas nuevas de WhatsApp Business.
+      const r = await enviarPlantilla(c, para, 'hello_world', [], 'en_US');
+      if (!r.ok) return res.status(400).json({ error: `No salió el mensaje de prueba: ${errorDeMeta(r.json)}` });
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'whatsapp_desconectar') {
+      await sql`DELETE FROM public.whatsapp_conexiones WHERE tenant_id = ${tenant};`;
+      return res.status(200).json({ success: true, whatsapp: await estadoWhatsapp(sql, tenant) });
     }
 
     if (action === 'landing_guardar') {
