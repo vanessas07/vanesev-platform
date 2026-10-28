@@ -1,0 +1,28 @@
+name: VANESEV Recordatorios de citas (cada 15 min)
+
+# T-38 / G-056: el plan Hobby de Vercel solo permite un cron al día; el aviso de «2 horas antes»
+# lo dispara este workflow. Solo devuelve recuentos, nunca datos de clientas.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: recordatorios-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  lanzar:
+    name: Lanzar los recordatorios de producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Llamar a /api/cron-reminders
+        env:
+          CLAVE: ${{ secrets.CRON_SECRET_PRODUCCION }}
+        run: |
+          if [ -z "$CLAVE" ]; then echo "Falta el secreto CRON_SECRET_PRODUCCION"; exit 1; fi
+          curl -fsS --max-time 70 -H "Authorization: Bearer $CLAVE" https://vanesev.com/api/cron-reminders | head -c 400
