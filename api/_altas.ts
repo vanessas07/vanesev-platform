@@ -156,6 +156,7 @@ export async function correoEnAnalisis(s: any) {
     intro: s.cuestionario
       ? `Ya estamos revisando la solicitud de ${s.salon_nombre} con lo que nos contaste. Si hace falta algo, te escribimos por WhatsApp; si todo encaja, el siguiente correo trae los datos del pago.`
       : `Ya estamos revisando la solicitud de ${s.salon_nombre}. Si aún no nos has contado cómo es tu salón, hazlo ahora (3 minutos): preparamos tu montaje con tus respuestas.`,
+    filas: [['Estudio', s.salon_nombre], ['Estado', 'En análisis'], ['Siguiente paso', 'Correo con el pago del montaje']],
     botones: [{ texto: s.cuestionario ? 'Ver mi solicitud' : 'Cuéntanos tu salón', url: enlaceSeguimiento(s.id), principal: true }],
   });
   return correo(s.email, `Estamos revisando tu solicitud · VANESEV`, html, `Estamos revisando la solicitud de ${s.salon_nombre}: ${enlaceSeguimiento(s.id)}`);

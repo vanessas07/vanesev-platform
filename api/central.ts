@@ -12,6 +12,7 @@ import {
   enlaceSeguimiento, estadoPublico, idDesdeSeguimiento, nuevoIdSolicitud, reenviarActivacion, resumirCuestionario,
 } from './_altas.js';
 import { limpiarCuestionario } from './_cuestionario.js';
+import { ultimoFalloIA } from './_ia.js';
 
 const CORREO = /^[^\s@]{1,64}@[^\s@]{1,120}\.[a-z]{2,24}$/i;
 const corto = (v: any, max: number) => String(v ?? '').trim().slice(0, max);
@@ -515,7 +516,7 @@ export default async function handler(req: any, res: any) {
         if (action === 'alta_resumen_ia') {
           if (!s.cuestionario) return res.status(409).json({ error: 'La dueña aún no ha rellenado el cuestionario.' });
           const resumen = await resumirCuestionario(req, sql, s);
-          if (!resumen) return res.status(502).json({ error: 'La IA no respondió (crédito agotado o Gateway caído). Las respuestas siguen ahí.' });
+          if (!resumen) return res.status(502).json({ error: `La IA no respondió (${ultimoFalloIA || 'sin motivo'}). Las respuestas siguen ahí.` });
           return res.status(200).json({ success: true, solicitud: await ficha() });
         }
         if (action === 'alta_nota') {

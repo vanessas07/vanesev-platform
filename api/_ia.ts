@@ -6,6 +6,9 @@
 const GATEWAY = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 export const MODELO_IA = 'anthropic/claude-haiku-5.5';
 
+/** Motivo del último fallo (sin secretos), para que Central diga por qué no hubo respuesta. */
+export let ultimoFalloIA = '';
+
 function credencial(req?: any): string | null {
   const cabecera = req?.headers?.['x-vercel-oidc-token'];
   return process.env.AI_GATEWAY_API_KEY || (typeof cabecera === 'string' ? cabecera : null) || process.env.VERCEL_OIDC_TOKEN || null;
@@ -19,6 +22,7 @@ export async function preguntarIA(
 ): Promise<string | null> {
   const token = credencial(req);
   if (!token) {
+    ultimoFalloIA = 'sin credencial OIDC en la petición';
     console.error('[ia] Sin credencial del Gateway (OIDC desactivado en el proyecto).');
     return null;
   }
@@ -37,14 +41,17 @@ export async function preguntarIA(
       }),
     });
     if (!res.ok) {
-      console.error('[ia] Gateway', res.status, (await res.text().catch(() => '')).slice(0, 160));
+      const detalle = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
+      ultimoFalloIA = `Gateway ${res.status}: ${detalle}`;
+      console.error('[ia] Gateway', res.status, detalle);
       return null;
     }
     const json: any = await res.json();
     const texto = json?.choices?.[0]?.message?.content;
     return typeof texto === 'string' && texto.trim() ? texto.trim() : null;
   } catch (e: any) {
-    console.error('[ia] Gateway', e?.name === 'AbortError' ? 'tiempo agotado' : e?.message || 'error');
+    ultimoFalloIA = e?.name === 'AbortError' ? 'tiempo agotado' : String(e?.message || 'error').slice(0, 120);
+    console.error('[ia] Gateway', ultimoFalloIA);
     return null;
   } finally {
     clearTimeout(reloj);
