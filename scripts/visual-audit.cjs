@@ -22,6 +22,13 @@ const ROUTES = [
   { slug: 'web-fundadoras', path: '/fundadoras', name: 'Zona 1: Fundadoras' },
   { slug: 'web-carta', path: '/funciones/carta-y-reservas', name: 'Zona 1: Carta y reservas' },
   { slug: 'web-unas', path: '/para/unas', name: 'Zona 1: Para uñas' },
+  { slug: 'web-pasaporte', path: '/funciones/pasaporte-vip', name: 'Zona 1: Pasaporte VIP' },
+  { slug: 'web-equipo', path: '/funciones/equipo-y-agenda', name: 'Zona 1: Equipo y agenda' },
+  { slug: 'web-ofertas', path: '/funciones/ofertas-y-tarjetas-regalo', name: 'Zona 1: Ofertas y regalos' },
+  { slug: 'web-qr', path: '/funciones/qr-y-kit', name: 'Zona 1: QR y kit' },
+  { slug: 'web-mirada', path: '/para/pestanas-y-cejas', name: 'Zona 1: Pestañas y cejas' },
+  { slug: 'web-pelo', path: '/para/peluqueria', name: 'Zona 1: Peluquería' },
+  { slug: 'web-estetica', path: '/para/estetica', name: 'Zona 1: Estética' },
   { slug: 'web-legal', path: '/legal/privacidad', name: 'Zona 1: Privacidad' },
   { slug: 'central-gate', path: '/central', name: 'Zona 2: Central Superadmin (Login Gate)' },
   { slug: 'pwa-capra', path: '/m/capra-studio', name: 'Zona 4: PWA Catálogo Capra Studio' },
@@ -149,7 +156,7 @@ async function runAudit() {
 
         // En la web, además, capturas de las secciones de mitad de página (scroll 3D, panel, tarjetas).
         if (route.slug === 'landing') {
-          for (const [ancla, avance] of [['manifiesto', 0], ['un-dia', 0.1], ['un-dia', 0.6], ['sectores', 0.5], ['equipo', 0], ['personalizador', 0], ['comparativa', 0], ['pasaporte', 0.75], ['precios', 0], ['fundadoras', 0]]) {
+          for (const [ancla, avance] of [['manifiesto', 0], ['un-dia', 0.1], ['un-dia', 0.6], ['sectores', 0.5], ['equipo', 0], ['personalizador', 0], ['comparativa', 0], ['comparativa', 0.6], ['pasaporte', 0.75], ['precios', 0], ['fundadoras', 0]]) {
             const ok = await page.evaluate(([id, k]) => {
               const el = document.getElementById(id);
               if (!el) return false;
@@ -164,8 +171,18 @@ async function runAudit() {
           await page.evaluate(() => window.scrollTo(0, 0));
         }
 
+        // Páginas de funciones y oficios (diseño de autor): capturas a lo largo de toda la página.
+        if (/^web-(carta|unas|pasaporte|equipo|ofertas|qr|mirada|pelo|estetica)$/.test(route.slug)) {
+          for (const k of [0.12, 0.24, 0.36, 0.48, 0.6, 0.72]) {
+            await page.evaluate((f) => window.scrollTo(0, (document.documentElement.scrollHeight - window.innerHeight) * f), k);
+            await page.waitForTimeout(1400);
+            await page.screenshot({ path: path.join(OUTPUT_DIR, `${route.slug}-${Math.round(k * 100)}-${vp.width}px.png`), fullPage: false });
+          }
+          await page.evaluate(() => window.scrollTo(0, 0));
+        }
+
         // Una página que cae en la pantalla de error de React NO está bien, aunque no desborde.
-        const pantallaDeError = await page.evaluate(() => document.body.innerText.includes('Estamos actualizando la plataforma'));
+        const pantallaDeError = await page.evaluate(() => (document.body.innerText.includes('Estamos actualizando la plataforma') || document.body.innerText.includes('Esta página no ha cargado bien')));
         if (pantallaDeError) globalHasViolations = true;
 
         let statusStr = '✅ OK (0px)';

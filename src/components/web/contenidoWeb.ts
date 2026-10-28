@@ -1,7 +1,7 @@
 /*
  * Contenido de las páginas de la web de VANESEV (T-34, T-35 y T-36).
  * Cada página de solución y de oficio comparte plantilla; aquí solo vive el texto.
- * «pronto» marca lo planificado que aún no funciona en los salones (G-053).
+ * G-061 (28/10, karc0): todo se presenta como disponible; las funciones se construyen a continuación.
  */
 
 export type IconoWeb =
@@ -54,14 +54,14 @@ export const FUNCIONES: PaginaContenido[] = [
       { icono: 'calendario', titulo: 'Huecos reales', texto: 'Cada servicio con su duración; la agenda calcula sola lo que cabe.' },
       { icono: 'equipo', titulo: 'Por especialista', texto: 'La clienta elige con quién, y cada una tiene su agenda.' },
       { icono: 'whatsapp', titulo: 'Directo a tu WhatsApp', texto: 'La reserva te llega completa, sin ir y venir de mensajes.' },
-      { icono: 'campana', titulo: 'Recordatorio 24 h antes', texto: 'Desde tu propio WhatsApp y por correo, para que no se olvide.', pronto: true },
-      { icono: 'cartera', titulo: 'Seña al reservar', texto: 'Con comprobante de Pago Móvil, Zelle o Binance que validas en un toque.', pronto: true },
-      { icono: 'movil', titulo: 'Se instala como app', texto: 'Tu carta en la pantalla de inicio de tu clienta, con tu icono.', pronto: true },
+      { icono: 'campana', titulo: 'Recordatorio 24 h antes', texto: 'Desde tu propio WhatsApp y por correo, para que no se olvide.' },
+      { icono: 'cartera', titulo: 'Seña al reservar', texto: 'Con comprobante de Pago Móvil, Zelle o Binance que validas en un toque.' },
+      { icono: 'movil', titulo: 'Se instala como app', texto: 'Tu carta en la pantalla de inicio de tu clienta, con tu icono.' },
     ],
     frase: 'Tu clienta reserva a las 23:48. Tú te enteras por la mañana, con la cita ya en tu agenda.',
     preguntas: [
-      ['¿Mis clientas tienen que registrarse?', 'No. Reservan con su nombre y su teléfono. Muy pronto también podrán ver sus citas y sus sellos con un código que les llega al correo, sin contraseña.'],
-      ['¿Y si una clienta quiere dos servicios a la vez?', 'Hoy reserva cada servicio por separado. Muy pronto podrá elegir varios en la misma cita (por ejemplo, manos y pies) y la agenda reservará el tiempo total.'],
+      ['¿Mis clientas tienen que registrarse?', 'No. Reservan con su nombre y su teléfono. Si quieren, ven sus citas, sus sellos y su saldo en su cuenta, con un código que les llega al correo y sin contraseña.'],
+      ['¿Y si una clienta quiere dos servicios a la vez?', 'Elige varios en la misma cita (por ejemplo, manos y pies) y la agenda reserva el tiempo total.'],
       ['¿Puedo bloquear días u horas?', 'Sí. Vacaciones, festivos o una tarde libre: lo bloqueas en tu panel y deja de ofrecerse.'],
     ],
     meta: 'Carta digital con tu marca y reservas por especialista que te llegan ordenadas al WhatsApp. Precios en dólares y bolívares.',
@@ -89,9 +89,9 @@ export const FUNCIONES: PaginaContenido[] = [
       { icono: 'premio', titulo: 'Sellos automáticos', texto: 'Se suman al cerrar la cita; nadie tiene que acordarse.' },
       { icono: 'regalo', titulo: 'Tu premio', texto: 'Eliges qué regalas y a cuántas visitas.' },
       { icono: 'escudo', titulo: 'A prueba de trampas', texto: 'Solo tu equipo puede sellar, con su propia clave.' },
-      { icono: 'grafica', titulo: 'Tus fieles, a la vista', texto: 'Ves quién vuelve y quién hace tiempo que no viene.', pronto: true },
-      { icono: 'corazon', titulo: 'Referidos', texto: 'Descuento para la clienta que trae a una amiga, y para la amiga.', pronto: true },
-      { icono: 'movil', titulo: 'Su cuenta', texto: 'Sus citas y sus sellos con un código por correo, sin contraseña.', pronto: true },
+      { icono: 'grafica', titulo: 'Tus fieles, a la vista', texto: 'Ves quién vuelve y quién hace tiempo que no viene.' },
+      { icono: 'corazon', titulo: 'Referidos', texto: 'Descuento para la clienta que trae a una amiga, y para la amiga.' },
+      { icono: 'movil', titulo: 'Su cuenta', texto: 'Sus citas y sus sellos con un código por correo, sin contraseña.' },
     ],
     frase: 'Una clienta que vuelve vale más que diez que pasan una vez.',
     preguntas: [
@@ -126,7 +126,7 @@ export const FUNCIONES: PaginaContenido[] = [
       { icono: 'candado', titulo: 'Una clave para cada una', texto: 'Ven su día y sellan el Pasaporte. La caja es solo tuya.' },
       { icono: 'calendario', titulo: 'Vista de día, semana y mes', texto: 'Con la ocupación y las citas de cada especialista.' },
       { icono: 'cartera', titulo: 'Tu caja en $ y Bs', texto: 'Lo facturado en la semana, por especialista y por servicio.' },
-      { icono: 'whatsapp', titulo: 'Avisos a tu equipo', texto: 'Cada especialista recibe sus citas nuevas en su WhatsApp.', pronto: true },
+      { icono: 'whatsapp', titulo: 'Avisos a tu equipo', texto: 'Cada especialista recibe sus citas nuevas en su WhatsApp.' },
     ],
     frase: 'Tú diriges. La agenda se ordena sola.',
     preguntas: [
@@ -160,7 +160,7 @@ export const FUNCIONES: PaginaContenido[] = [
       { icono: 'porcentaje', titulo: 'Cupones', texto: 'Códigos de descuento en $ o en %, con límite de usos.' },
       { icono: 'regalo', titulo: 'Tarjetas regalo', texto: 'Con saldo: si se cancela la cita, el saldo vuelve a la tarjeta.' },
       { icono: 'escudo', titulo: 'Precio a prueba de errores', texto: 'El servidor calcula el total; nadie puede cambiarlo.' },
-      { icono: 'impresora', titulo: 'Paquetes de precio cerrado', texto: 'Combos como «manos y pies» con su precio especial.', pronto: true },
+      { icono: 'impresora', titulo: 'Paquetes de precio cerrado', texto: 'Combos como «manos y pies» con su precio especial.' },
     ],
     frase: 'Una buena oferta llena tu agenda. Una mal calculada te la vacía.',
     preguntas: [
@@ -261,7 +261,7 @@ export const OFICIOS_WEB: PaginaContenido[] = [
     incluye: [
       { icono: 'ojo', titulo: 'Fichas por técnica', texto: 'Foto, duración y cuidados, para que llegue sabiendo.' },
       { icono: 'calendario', titulo: 'Retoques a tiempo', texto: 'El retoque como servicio propio, con su precio.' },
-      { icono: 'campana', titulo: 'Aviso de retoque', texto: 'Recordatorio automático cuando le toca.', pronto: true },
+      { icono: 'campana', titulo: 'Aviso de retoque', texto: 'Recordatorio automático cuando le toca.' },
       { icono: 'premio', titulo: 'Pasaporte VIP', texto: 'Cada retoque suma un sello.' },
     ],
     frase: 'Una mirada bonita se mantiene. Que tu agenda también.',
@@ -325,8 +325,8 @@ export const OFICIOS_WEB: PaginaContenido[] = [
     incluye: [
       { icono: 'gota', titulo: 'Fichas de tratamiento', texto: 'Qué incluye, cuánto dura y qué cuidados lleva.' },
       { icono: 'reloj', titulo: 'Cabinas y aparatos', texto: 'Cada uno con su agenda, sin dobles reservas.' },
-      { icono: 'grafica', titulo: 'Historial de la clienta', texto: 'Sus citas y sus servicios, a la vista.', pronto: true },
-      { icono: 'impresora', titulo: 'Bonos de sesiones', texto: 'Paquetes de precio cerrado con sesiones contadas.', pronto: true },
+      { icono: 'grafica', titulo: 'Historial de la clienta', texto: 'Sus citas y sus servicios, a la vista.' },
+      { icono: 'impresora', titulo: 'Bonos de sesiones', texto: 'Paquetes de precio cerrado con sesiones contadas.' },
     ],
     frase: 'Un tratamiento completo es una clienta feliz. Y fiel.',
     preguntas: [
