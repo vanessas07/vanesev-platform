@@ -6,6 +6,7 @@ import { requireSession, requireTenantRole } from './_session.js';
 import { claveDeLimite, ipDeLaPeticion, limiteSuperado } from './_limite.js';
 import { applyCors } from './_cors.js';
 import { calcularPrecio, escriturasDeDescuentos, escriturasDeDevolucion, esLimiteDeDescuento } from './_precios.js';
+import { cargarCita, conLimite, enviarAviso } from './_avisos.js';
 
 // Reserva pública: límites contados en la base (migración 0006).
 const RESERVAS_POR_IP_HORA = 5;
@@ -258,6 +259,12 @@ export default async function handler(req: any, res: any) {
         throw errTx;
       }
 
+      // Avisos (G-057, G-058): «solicitud recibida» a la clienta y «nueva reserva» a la dueña. Nunca rompen la reserva.
+      const citaNueva = await cargarCita(sql, bookingId, cleanTenant).catch(() => null);
+      if (citaNueva) {
+        await conLimite(Promise.all([enviarAviso(sql, 'solicitud', citaNueva), enviarAviso(sql, 'nueva_reserva', citaNueva)]));
+      }
+
       return res.status(201).json({
         success: true,
         booking: {
@@ -465,6 +472,8 @@ export default async function handler(req: any, res: any) {
           SET date = ${cleanDate}::date, time_slot = ${cleanTime}, status = 'confirmada'
           WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
         `;
+        const citaCambiada = await cargarCita(sql, cleanId, bookingTenant).catch(() => null);
+        if (citaCambiada) await conLimite(enviarAviso(sql, 'cambio', citaCambiada, `${cleanDate} ${cleanTime}`));
 
         return res.status(200).json({ 
           success: true, 
@@ -522,6 +531,14 @@ export default async function handler(req: any, res: any) {
           SET status = ${cleanStatus}
           WHERE id = ${cleanId} AND tenant_id = ${bookingTenant};
         `;
+      }
+
+      // Avisos a la clienta al confirmar o cancelar (G-057).
+      if (cleanStatus === 'confirmada' || cleanStatus === 'cancelada') {
+        const citaEstado = await cargarCita(sql, cleanId, bookingTenant).catch(() => null);
+        if (citaEstado) {
+          await conLimite(enviarAviso(sql, cleanStatus, citaEstado, cleanStatus === 'confirmada' ? `${citaEstado.fecha} ${citaEstado.turno}` : ''));
+        }
       }
 
       // Orden B1-a v2 §4.3 (C8 en bookings.ts): recuento y fidelización con tenant_id

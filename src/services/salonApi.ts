@@ -98,6 +98,8 @@ export interface SalonPublico {
 export interface SalonAdmin extends SalonPublico {
   landing: LandingSalon;
   enPrueba: boolean;
+  /** Interruptor «Avisos por correo» (G-059). */
+  avisosCorreo?: boolean;
   cupones: CuponSalon[];
   tarjetas: TarjetaRegalo[];
 }
@@ -131,6 +133,7 @@ export const SalonApi = {
   admin: (slug: string) => llamar<SalonAdmin>(`/api/salon?tenant=${t(slug)}`),
 
   guardarPerfil: (slug: string, perfil: PerfilSalon) => accion<{ success: true }>(slug, 'perfil_guardar', { perfil }),
+  guardarAvisos: (slug: string, activos: boolean) => accion<{ success: true; avisosCorreo: boolean }>(slug, 'avisos_guardar', { activos }),
   guardarLanding: (slug: string, landing: LandingSalon) => accion<{ success: true; landing: LandingSalon }>(slug, 'landing_guardar', { landing }),
   guardarTema: (slug: string, tema: Record<string, any>) => accion<{ success: true; tema: Record<string, any> }>(slug, 'tema_guardar', { tema }),
 

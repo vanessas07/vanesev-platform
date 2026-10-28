@@ -171,7 +171,8 @@ export default async function handler(req: any, res: any) {
         sql`
           SELECT id, business_name, slogan, owner_name, whatsapp_phone, instagram_handle, city, address, business_hours,
                  logo_url, hero_badge, hero_title, hero_subtitle, exchange_rate_bs, loyalty_stamps_target,
-                 loyalty_reward_title, first_visit_discount_usd, payment_methods_config, landing, tema, en_prueba
+                 loyalty_reward_title, first_visit_discount_usd, payment_methods_config, landing, tema, en_prueba,
+                 COALESCE(avisos_correo, true) AS avisos_correo
           FROM public.tenants WHERE id = ${tenant} LIMIT 1;
         `,
         publica
@@ -225,6 +226,7 @@ export default async function handler(req: any, res: any) {
         landing: t.landing || {},
         tema: t.tema || {},
         enPrueba: Boolean(t.en_prueba),
+        avisosCorreo: t.avisos_correo !== false,
         ofertas: ofertas.map(mapaOferta),
         cupones: cupones.map((c: any) => ({
           id: c.id, codigo: c.codigo, descripcion: c.descripcion, tipo: c.tipo, valor: Number(c.valor),
@@ -332,6 +334,13 @@ export default async function handler(req: any, res: any) {
         WHERE id = ${tenant};
       `;
       return res.status(200).json({ success: true });
+    }
+
+    // Interruptor «Avisos por correo» del salón (G-059).
+    if (action === 'avisos_guardar') {
+      const activos = body.activos === true;
+      await sql`UPDATE public.tenants SET avisos_correo = ${activos}, updated_at = NOW() WHERE id = ${tenant};`;
+      return res.status(200).json({ success: true, avisosCorreo: activos });
     }
 
     if (action === 'landing_guardar') {
