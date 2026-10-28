@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, CircleDollarSign, ClipboardList, Mail, RefreshCw, Sparkles, Store, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleDollarSign, ClipboardList, Mail, RefreshCw, Store, XCircle } from 'lucide-react';
 import { respuestasLegibles } from '../../api/_cuestionario';
 
 /*
@@ -107,21 +107,13 @@ export const CentralAltas: React.FC<{ solicitudes: any[]; ajustesCobro: Record<s
             </div>
             {s.mensaje && <p className="rounded-2xl bg-[#F4F0EA] p-3 text-[13px] text-[#1A1020]">«{s.mensaje}»</p>}
 
-            {/* G-067 a G-069: lo que contó la dueña en «Cuéntanos tu salón» y su resumen de IA */}
+            {/* G-067 y G-068: lo que contó la dueña en «Cuéntanos tu salón» */}
             {s.cuestionario ? (
               <div className="rounded-2xl border border-[#4A1F5C]/15 bg-[#FBFAFC] p-4">
                 <p className="flex items-center justify-between gap-2 text-[14px] font-bold text-[#1A1020]">
                   <span className="flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#4A1F5C]" /> Cuéntanos tu salón</span>
                   <span className="text-[11px] font-semibold text-[#6E6478]">{s.cuestionario_at ? new Date(s.cuestionario_at).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }) : ''}</span>
                 </p>
-                {s.resumen_ia ? (
-                  <div className="mt-3 rounded-xl bg-[#1F1226] p-3.5 text-[13px] leading-relaxed text-white/85">
-                    <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7CF9C]"><Sparkles className="h-3 w-3" /> Resumen con IA</p>
-                    {String(s.resumen_ia).split('\n').filter(Boolean).map((l: string, i: number) => <p key={i}>{l}</p>)}
-                  </div>
-                ) : (
-                  <button type="button" disabled={ocupado} onClick={() => ejecutar('alta_resumen_ia', { id: s.id }, () => 'Resumen listo.')} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1F1226] px-4 py-2 text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer"><Sparkles className="h-3.5 w-3.5" /> Resumir con IA</button>
-                )}
                 <dl className="mt-3 space-y-1.5">
                   {respuestasLegibles(s.cuestionario).map(([p, v]) => (
                     <div key={p} className="grid gap-0.5 text-[12px] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] sm:gap-3">

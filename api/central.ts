@@ -9,10 +9,9 @@ import { applyCors } from './_cors.js';
 import { claveDeLimite, huella, ipDeLaPeticion, limiteSuperado } from './_limite.js';
 import {
   OFICIOS, activarCuenta, ajustesCobro, anotar, correoEnAnalisis, correoPagoSolicitado, correoSolicitudRecibida, crearSalonDesdeSolicitud,
-  enlaceSeguimiento, estadoPublico, idDesdeSeguimiento, nuevoIdSolicitud, reenviarActivacion, resumirCuestionario,
+  enlaceSeguimiento, estadoPublico, idDesdeSeguimiento, nuevoIdSolicitud, reenviarActivacion,
 } from './_altas.js';
 import { limpiarCuestionario } from './_cuestionario.js';
-import { ultimoFalloIA } from './_ia.js';
 
 const CORREO = /^[^\s@]{1,64}@[^\s@]{1,120}\.[a-z]{2,24}$/i;
 const corto = (v: any, max: number) => String(v ?? '').trim().slice(0, max);
@@ -221,7 +220,6 @@ export default async function handler(req: any, res: any) {
           await sql`UPDATE public.solicitudes_alta SET cuestionario = ${JSON.stringify(respuestas)}::jsonb, cuestionario_at = now(), updated_at = now() WHERE id = ${idSolicitud};`;
           await anotar(sql, idSolicitud, null, s.cuestionario ? 'La dueña actualizó el cuestionario.' : 'La dueña rellenó el cuestionario «Cuéntanos tu salón».');
           const actual = (await sql`SELECT * FROM public.solicitudes_alta WHERE id = ${idSolicitud} LIMIT 1;`)[0];
-          await resumirCuestionario(req, sql, actual); // G-069: si la IA no responde, el resumen se pide luego desde Central
           return res.status(200).json({ success: true, solicitud: estadoPublico(actual) });
         }
         return res.status(200).json({ solicitud: estadoPublico(s) });
@@ -511,12 +509,6 @@ export default async function handler(req: any, res: any) {
             const enviado = await correoEnAnalisis(s);
             await anotar(sql, id, null, `Aviso «estamos revisando tu solicitud»: ${enviado ? 'enviado' : 'NO enviado'}.`);
           }
-          return res.status(200).json({ success: true, solicitud: await ficha() });
-        }
-        if (action === 'alta_resumen_ia') {
-          if (!s.cuestionario) return res.status(409).json({ error: 'La dueña aún no ha rellenado el cuestionario.' });
-          const resumen = await resumirCuestionario(req, sql, s);
-          if (!resumen) return res.status(502).json({ error: `La IA no respondió (${ultimoFalloIA || 'sin motivo'}). Las respuestas siguen ahí.` });
           return res.status(200).json({ success: true, solicitud: await ficha() });
         }
         if (action === 'alta_nota') {

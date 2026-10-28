@@ -669,7 +669,7 @@ async function main() {
   comprobar('X1', 'Alta: la solicitud pública valida el correo (400) y se guarda en Central como «nueva» (201)',
     altaMala.status === 400 && altaOk.status === 201 && sol?.estado === 'nueva', `mala ${altaMala.status}, válida ${altaOk.status}, ficha ${sol?.estado || 'NO'}`);
 
-  // ── X-S. Seguimiento de la solicitud y cuestionario (G-067 a G-069) ──
+  // ── X-S. Seguimiento de la solicitud y cuestionario (G-067 y G-068) ──
   const tSeg = new URLSearchParams(String(altaOk.json?.seguimiento || '')).get('t') || '';
   const segOk = await api('/api/central', { method: 'POST', body: { action: 'solicitud_estado', t: tSeg } });
   const segFalso = await api('/api/central', { method: 'POST', body: { action: 'solicitud_estado', t: `${sol?.id || 'alta_0000000000000000'}.${'A'.repeat(32)}` } });
@@ -694,15 +694,6 @@ async function main() {
   comprobar('XS3', 'Central pasa la solicitud a análisis y el aviso «estamos revisando» queda anotado en el historial',
     analisis.status === 200 && analisis.json?.solicitud?.estado === 'en_analisis' && (analisis.json?.solicitud?.historial || []).some((h) => /estamos revisando/i.test(h.nota || '')),
     `análisis ${analisis.status} ${analisis.json?.solicitud?.estado || analisis.json?.error || ''}`);
-
-  // G-069: el resumen de IA por Vercel AI Gateway (OIDC). Si al enviar no salió, Central lo pide de nuevo y dice el motivo.
-  let resumenIa = (await sql`SELECT resumen_ia FROM public.solicitudes_alta WHERE id = ${sol?.id || ''}`)[0]?.resumen_ia;
-  const iaDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_resumen_ia', payload: { id: sol?.id } } });
-  const iaCentral = resumenIa ? null : await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_resumen_ia', payload: { id: sol?.id } } });
-  if (!resumenIa) resumenIa = iaCentral?.json?.solicitud?.resumen_ia;
-  comprobar('XS4', 'IA: solo Central pide el resumen (dueña 403) y el Gateway devuelve el resumen con «Perfil:» y «Montaje:»',
-    iaDueña.status === 403 && !!resumenIa && /Perfil:/i.test(resumenIa) && /Montaje:/i.test(resumenIa),
-    `dueña ${iaDueña.status}, resumen ${resumenIa ? `sí (${String(resumenIa).length} car.)` : `NO · ${iaCentral?.status} ${iaCentral?.json?.error || ''}`}`);
 
   const pagoDueña = await api('/api/central', { method: 'POST', token: owToken, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49 } } });
   const pagoSa = await api('/api/central', { method: 'POST', token: saToken2fa, body: { action: 'alta_pedir_pago', payload: { id: sol?.id, importeUSD: 49, concepto: 'Montaje de fundadora' } } });

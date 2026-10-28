@@ -1,5 +1,5 @@
 // Cuestionario «Cuéntanos tu salón» (G-068). Módulo puro, sin imports: lo usan la web (/solicitud),
-// la API (validación y resumen de IA) y Central (lectura). Una sola fuente para preguntas y opciones.
+// la API (validación) y Central (lectura). Una sola fuente para preguntas y opciones.
 
 export type Pregunta = {
   id: string;
@@ -86,7 +86,7 @@ export function limpiarCuestionario(entrada: any): Record<string, string | numbe
   return fuera;
 }
 
-/** Respuestas en texto legible (para Central y para la IA). */
+/** Respuestas en texto legible (para Central y para la página de la dueña). */
 export function respuestasLegibles(r: Record<string, any> | null | undefined): [string, string][] {
   if (!r) return [];
   const filas: [string, string][] = [];
