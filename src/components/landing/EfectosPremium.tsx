@@ -168,7 +168,7 @@ const ESCENAS = [
 // Lleva a la web de VANESEV: la demo nunca apunta a un salón cliente (G-040).
 const QR_MATRIZ = QREncoder.generateMatrix('https://vanesev.com/');
 
-const QrReal: React.FC<{ tam: number }> = ({ tam }) => {
+export const QrReal: React.FC<{ tam: number }> = ({ tam }) => {
   const n = QR_MATRIZ.length;
   return (
     <svg viewBox={`0 0 ${n} ${n}`} width={tam} height={tam} shapeRendering="crispEdges" aria-hidden="true">
@@ -186,7 +186,7 @@ const EsquinasOro: React.FC = () => (
   </>
 );
 
-const PantallaQr: React.FC = () => {
+export const PantallaQr: React.FC = () => {
   const reducir = useReducedMotion();
   return (
     <div className="relative h-full overflow-hidden bg-[#FBFAFC]">
@@ -213,7 +213,7 @@ const PantallaQr: React.FC = () => {
   );
 };
 
-const PantallaReserva: React.FC = () => (
+export const PantallaReserva: React.FC = () => (
   <div className="flex h-full flex-col bg-[#FBFAFC]">
     <div className="relative h-[34%] shrink-0 overflow-hidden" style={{ background: 'linear-gradient(135deg, #3E2050 0%, #1F1226 55%, #8A6A2E 130%)' }}>
       <span aria-hidden="true" className="absolute -right-4 -top-10 font-lujo text-[120px] leading-none text-[#C9A45C]/25">Á</span>
@@ -246,7 +246,7 @@ const PantallaReserva: React.FC = () => (
   </div>
 );
 
-const PantallaWhatsapp: React.FC = () => (
+export const PantallaWhatsapp: React.FC = () => (
   <div className="flex h-full flex-col bg-[#F3EEE8]">
     <div className="flex items-center gap-2 bg-[#1F1226] px-3 pb-2.5 pt-11 text-white">
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A45C] font-lujo text-[11px] text-[#1F1226]">EÁ</span>
@@ -269,7 +269,7 @@ const PantallaWhatsapp: React.FC = () => (
   </div>
 );
 
-const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso }) => {
+export const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso }) => {
   const quinto = useTransform(progreso, [0.8, 0.94], [0, 1]);
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#FBFAFC] px-3.5">
@@ -303,7 +303,7 @@ const PantallaSellos: React.FC<{ progreso: MotionValue<number> }> = ({ progreso 
 
 const ANCHO_PANTALLA = 270;
 
-const PantallaAEscala: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PantallaAEscala: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [caja, setCaja] = useState({ k: 1, alto: 570 });
   useEffect(() => {
@@ -557,7 +557,7 @@ const TONOS: Record<string, { fondo: string; borde: string; texto: string }> = {
 };
 const HORAS = ['9', '10', '11', '12', '13', '14', '15', '16', '17'];
 
-const AgendaSemanal: React.FC = () => {
+export const AgendaSemanal: React.FC = () => {
   const reducir = useReducedMotion();
   const FILAS = 9;
   return (

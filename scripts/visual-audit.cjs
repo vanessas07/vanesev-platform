@@ -144,7 +144,7 @@ async function runAudit() {
 
         // En la web, además, capturas de las secciones de mitad de página (scroll 3D, panel, tarjetas).
         if (route.slug === 'landing') {
-          for (const [ancla, avance] of [['un-dia', 0.12], ['un-dia', 0.55], ['panel-duena', 0], ['signature', 0], ['precios', 0]]) {
+          for (const [ancla, avance] of [['manifiesto', 0], ['un-dia', 0.1], ['un-dia', 0.6], ['sectores', 0.5], ['equipo', 0], ['personalizador', 0], ['comparativa', 0], ['pasaporte', 0.75], ['precios', 0], ['fundadoras', 0]]) {
             const ok = await page.evaluate(([id, k]) => {
               const el = document.getElementById(id);
               if (!el) return false;
