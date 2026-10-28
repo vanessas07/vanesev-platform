@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AnimatePresence,
   motion,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -9,8 +10,8 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Award, CalendarCheck, Check, Lock, MessageCircle, Minus, Plus, QrCode, Users } from 'lucide-react';
-import { AgendaSemanal, PantallaAEscala, PantallaQr, PantallaReserva, PantallaSellos, PantallaWhatsapp } from './EfectosPremium';
+import { ArrowRight, ArrowUpRight, Award, BellRing, CalendarCheck, Check, ChevronDown, Gift, Lock, MessageCircle, Minus, Percent, Plus, QrCode, Palette, Users, Wallet, X } from 'lucide-react';
+import { AgendaSemanal, PantallaAEscala, PantallaQr, PantallaReserva, PantallaWhatsapp } from './EfectosPremium';
 
 /*
  * Portada cinematográfica de vanesev.com (G-047: Fraunces + Manrope; G-048: fotos de banco libre).
@@ -43,8 +44,8 @@ const BarraProgreso: React.FC = () => {
 // ─── 1. Portada: mosaico de fotos en movimiento, titular y avisos en vivo ─────
 const COLUMNAS = [
   ['unas-oscuras', 'pestanas-tecnica', 'pelo-salon'],
-  ['maquillaje-novia', 'unas-rosa', 'salon-neon'],
-  ['unas-francesa', 'clienta-movil', 'unas-arte'],
+  ['cejas-laminado', 'unas-rosa', 'unas-nude'],
+  ['unas-francesa', 'pestanas-mirada', 'unas-arte'],
 ];
 
 const AVISOS = [
@@ -190,6 +191,7 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
               Ver cómo funciona
             </a>
           </motion.div>
+          <SigueBajando className="mt-8 sm:hidden" />
           <motion.ul
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -205,6 +207,7 @@ const Portada: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
           </motion.ul>
         </div>
       </motion.div>
+      <SigueBajando className="absolute bottom-5 left-1/2 z-10 hidden -translate-x-1/2 sm:flex" />
     </section>
   );
 };
@@ -264,6 +267,101 @@ const Manifiesto: React.FC = () => {
   );
 };
 
+// ─── Indicador «sigue bajando»: se apaga en cuanto la persona empieza a bajar ─
+export const SigueBajando: React.FC<{ oscuro?: boolean; texto?: string; className?: string }> = ({ oscuro = true, texto = 'Desliza hacia abajo', className = '' }) => {
+  const reducir = useReducedMotion();
+  const { scrollY } = useScroll();
+  const [visible, setVisible] = useState(true);
+  useMotionValueEvent(scrollY, 'change', (v) => setVisible(v < 60));
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ delay: 1.8, duration: 0.6 }}
+          className={`pointer-events-none flex flex-col items-center gap-2 ${oscuro ? 'text-white/80' : 'text-[#1A1020]/70'} ${className}`}
+          aria-hidden="true"
+        >
+          <span className={`relative flex h-11 w-7 justify-center rounded-full border-2 ${oscuro ? 'border-white/60' : 'border-[#1A1020]/40'}`}>
+            <motion.span
+              className={`mt-2 h-2.5 w-1 rounded-full ${oscuro ? 'bg-[#E7CF9C]' : 'bg-[#7D6438]'}`}
+              animate={reducir ? undefined : { y: [0, 14, 0], opacity: [1, 0.2, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.28em]">{texto}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+/** Aviso dentro de una sección fijada: invita a seguir bajando mientras quede recorrido. */
+const SeguirEnSeccion: React.FC<{ p: MotionValue<number>; hasta?: number; texto?: string }> = ({ p, hasta = 0.9, texto = 'Sigue bajando' }) => {
+  const reducir = useReducedMotion();
+  const o = useTransform(p, [0, 0.04, hasta - 0.06, hasta], [0.9, 1, 1, 0]);
+  return (
+    <motion.p style={{ opacity: o }} aria-hidden="true" className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.28em] text-[#E7CF9C]">
+      <motion.span animate={reducir ? undefined : { y: [0, 5, 0] }} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }} className="flex flex-col leading-none">
+        <ChevronDown className="h-4 w-4" strokeWidth={2.2} />
+        <ChevronDown className="-mt-2.5 h-4 w-4 opacity-50" strokeWidth={2.2} />
+      </motion.span>
+      {texto}
+    </motion.p>
+  );
+};
+
+// ─── Teléfono de gama alta: marco de titanio fino, isla dinámica y barra de estado ─
+const MarcoTelefono: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className = '', style }) => (
+  <div style={style} className={`absolute inset-0 rounded-[44px] p-[2px] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.06)] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)] ${className}`}>
+    {/* Botones laterales */}
+    <span className="absolute -left-[3px] top-[22%] h-[7%] w-[3px] rounded-l bg-[#8E8A94]" />
+    <span className="absolute -left-[3px] top-[32%] h-[11%] w-[3px] rounded-l bg-[#8E8A94]" />
+    <span className="absolute -right-[3px] top-[28%] h-[14%] w-[3px] rounded-r bg-[#8E8A94]" />
+    <div className="relative h-full w-full overflow-hidden rounded-[42px] bg-black p-[5px]">
+      <div className="relative h-full w-full overflow-hidden rounded-[37px] bg-[#FBFAFC]">
+        {children}
+        {/* Barra de estado e isla dinámica */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-9 items-center justify-between px-6 text-[11px] font-bold text-white mix-blend-difference">
+          <span>9:41</span>
+          <span className="flex items-center gap-1">
+            <span className="flex items-end gap-[2px]">{[4, 6, 8, 10].map((h) => <span key={h} className="w-[3px] rounded-sm bg-white" style={{ height: h }} />)}</span>
+            <span className="ml-1 h-[10px] w-[20px] rounded-[3px] border border-white p-[1px]"><span className="block h-full w-[70%] rounded-[1px] bg-white" /></span>
+          </span>
+        </div>
+        <span className="absolute left-1/2 top-[9px] z-30 h-[26px] w-[31%] -translate-x-1/2 rounded-full bg-black" />
+        <div aria-hidden="true" className="v-reflejo pointer-events-none absolute inset-0 z-10" />
+      </div>
+    </div>
+  </div>
+);
+
+/** Espalda del teléfono: vidrio ciruela, módulo de cámaras y monograma VANESEV grabado en oro. */
+const EspaldaTelefono: React.FC<{ style?: React.CSSProperties }> = ({ style }) => (
+  <div style={style} className="absolute inset-0 rounded-[44px] p-[2px] [background:linear-gradient(150deg,#D9D6DC_0%,#8E8A94_18%,#3B3540_45%,#9D98A3_70%,#E9E6EC_100%)]">
+    <div className="relative h-full w-full overflow-hidden rounded-[42px]" style={{ background: 'radial-gradient(120% 80% at 20% 0%, #5A2A6E 0%, #2A1236 45%, #140B19 100%)' }}>
+      <span aria-hidden="true" className="absolute inset-0" style={{ background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.12) 45%, transparent 60%)' }} />
+      {/* Módulo de cámaras */}
+      <div className="absolute left-[7%] top-[4%] grid h-[25%] w-[46%] grid-cols-2 gap-[6%] rounded-[30px] bg-white/[0.06] p-[6%] ring-1 ring-white/15 backdrop-blur">
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="aspect-square rounded-full ring-[3px] ring-[#3B3540]" style={{ background: 'radial-gradient(circle at 35% 35%, #4A5A7A 0%, #0B0B12 55%, #000 100%)' }} />
+        ))}
+        <span className="m-auto h-[30%] w-[30%] rounded-full bg-[#F3E6C4]/80" />
+      </div>
+      {/* Monograma */}
+      <div className="absolute inset-x-0 top-[48%] flex -translate-y-1/2 flex-col items-center">
+        <span className="flex h-24 w-24 items-center justify-center rounded-full ring-1 ring-[#C9A45C]/70" style={{ boxShadow: 'inset 0 0 30px rgba(201,164,92,0.25)' }}>
+          <span className="v-oro-texto font-lujo text-[58px] italic font-light leading-none">V</span>
+        </span>
+        <span className="mt-4 text-[12px] font-bold tracking-[0.55em] text-[#E7CF9C]">VANESEV</span>
+        <span className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/45">Tu marca · Tu agenda</span>
+      </div>
+    </div>
+  </div>
+);
+
 // ─── 3. Un día en tu estudio: teléfono 3D que gira entre escenas ─────────────
 const ESCENAS = [
   { icono: QrCode, foto: 'pelo-salon', titulo: 'Tu clienta escanea tu QR.', texto: 'En el espejo, en la recepción o en tu Instagram. Entra en tu mundo sin descargar nada.' },
@@ -282,6 +380,22 @@ const BarraHistoria: React.FC<{ p: MotionValue<number>; i: number; total: number
   );
 };
 
+/** Pantalla del Pasaporte dentro del teléfono: la misma tarjeta que en su sección. */
+const PantallaPasaporte: React.FC<{ p: MotionValue<number> }> = ({ p }) => (
+  <div className="flex h-full flex-col bg-[#F7F2EA] px-3.5 pt-12">
+    <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#8A6A2E]">Mi Pasaporte</p>
+    <p className="font-lujo text-[20px] leading-tight text-[#1A1020]">Hola, Laura</p>
+    <div className="mt-3">
+      <TarjetaVip p={p} desde={0.78} paso={0.04} compacta />
+    </div>
+    <div className="mt-3 rounded-2xl bg-white p-3 ring-1 ring-[#C9A45C]/30">
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#6E6478]">Tu próxima cita</p>
+      <p className="mt-1 text-[12px] font-bold text-[#1A1020]">Manicura rusa · sáb 11:00</p>
+      <p className="text-[10px] text-[#6E6478]">Con Valentina · Estudio Ámbar</p>
+    </div>
+  </div>
+);
+
 const UnDia: React.FC = () => {
   const reducir = useReducedMotion();
   const ref = useRef<HTMLElement | null>(null);
@@ -297,7 +411,7 @@ const UnDia: React.FC = () => {
   const escala = useTransform(p, [0, 0.1, 0.9, 1], reducir ? [1, 1, 1, 1] : [0.86, 1, 1, 0.94]);
   const xFondo = useTransform(p, [0, 1], ['10%', '-60%']);
 
-  const pantallas = [<PantallaQr key="qr" />, <PantallaReserva key="re" />, <PantallaWhatsapp key="wa" />, <PantallaSellos key="vip" progreso={scrollYProgress} />];
+  const pantallas = [<PantallaQr key="qr" />, <PantallaReserva key="re" />, <PantallaWhatsapp key="wa" />, <PantallaPasaporte key="vip" p={scrollYProgress} />];
   const escena = ESCENAS[activa];
 
   const irAEscena = (i: number) => {
@@ -313,7 +427,6 @@ const UnDia: React.FC = () => {
   return (
     <section ref={ref} id="un-dia" aria-label="Un día en tu estudio con VANESEV" className="relative h-[460vh] bg-[#140B19] text-white">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        {/* Foto de la escena, con zoom lento */}
         <AnimatePresence initial={false}>
           <motion.div
             key={escena.foto}
@@ -327,32 +440,20 @@ const UnDia: React.FC = () => {
           </motion.div>
         </AnimatePresence>
         <div aria-hidden="true" className="absolute inset-0" style={{ background: 'radial-gradient(70% 55% at 50% 42%, rgba(20,11,25,0.55) 0%, rgba(20,11,25,0.88) 70%), linear-gradient(180deg, rgba(20,11,25,0.6) 0%, rgba(20,11,25,0.3) 40%, #140B19 92%)' }} />
-        {/* Palabra gigante que cruza el fondo */}
-        <motion.p aria-hidden="true" style={{ x: xFondo }} className="pointer-events-none absolute top-[30%] whitespace-nowrap font-lujo text-[34vw] font-semibold italic leading-none text-transparent lg:top-[18%] lg:text-[22vw]" >
+        <motion.p aria-hidden="true" style={{ x: xFondo }} className="pointer-events-none absolute top-[30%] whitespace-nowrap font-lujo text-[34vw] font-semibold italic leading-none text-transparent lg:top-[18%] lg:text-[22vw]">
           <span style={{ WebkitTextStroke: '1px rgba(231,207,156,0.28)' }}>{PALABRAS_FONDO.join(' · ')}</span>
         </motion.p>
 
-        <div className="relative mx-auto flex h-full max-w-6xl flex-col px-5 pb-8 pt-24 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:pb-0 lg:pt-16">
-          {/* Teléfono con cara y espalda */}
+        <div className="relative mx-auto flex h-full max-w-6xl flex-col px-5 pb-7 pt-24 sm:px-8 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:pb-0 lg:pt-16">
           <div className="flex flex-1 items-center justify-center lg:order-2" style={{ perspective: '1600px' }}>
-            <motion.div style={{ rotateY: rotY, rotateX: rotX, scale: escala, transformStyle: 'preserve-3d' }} className="relative h-[44svh] max-h-[620px] min-h-[300px] aspect-[9/18.5] lg:h-[66svh]">
-              <div style={cara} className="absolute inset-0 rounded-[38px] p-[3px] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)] [background:linear-gradient(145deg,#F3E6C4,#9C7A3C_30%,#2A1A30_62%,#140B19)] lg:rounded-[46px]">
-                <div className="relative h-full w-full overflow-hidden rounded-[35px] bg-[#FBFAFC] ring-[5px] ring-[#140B19] lg:rounded-[43px]">
-                  <PantallaAEscala>{pantallas[activa]}</PantallaAEscala>
-                  <div aria-hidden="true" className="v-reflejo pointer-events-none absolute inset-0 z-10" />
-                </div>
-                <div className="absolute left-1/2 top-3 h-4 w-20 -translate-x-1/2 rounded-full bg-[#140B19] lg:h-5 lg:w-24" />
-              </div>
-              {/* Espalda: obsidiana con la V de oro */}
-              <div style={{ ...cara, transform: 'rotateY(180deg)' }} className="v-tarjeta-lujo absolute inset-0 flex flex-col items-center justify-center rounded-[38px] lg:rounded-[46px]">
-                <span className="v-oro-texto font-lujo text-[96px] font-medium leading-none">V</span>
-                <span className="mt-3 text-[10px] font-bold uppercase tracking-[0.5em] text-[#E7CF9C]">Vanesev</span>
-                <span className="absolute left-5 top-5 h-12 w-12 rounded-2xl bg-black/40 ring-1 ring-white/10" />
-              </div>
+            <motion.div style={{ rotateY: rotY, rotateX: rotX, scale: escala, transformStyle: 'preserve-3d' }} className="relative h-[45svh] max-h-[640px] min-h-[300px] aspect-[9/19.3] lg:h-[68svh]">
+              <MarcoTelefono style={cara}>
+                <PantallaAEscala>{pantallas[activa]}</PantallaAEscala>
+              </MarcoTelefono>
+              <EspaldaTelefono style={{ ...cara, transform: 'rotateY(180deg)' }} />
             </motion.div>
           </div>
 
-          {/* Texto de la escena + barras tipo historia */}
           <div className="relative lg:order-1">
             <div className="flex gap-1.5">
               {ESCENAS.map((_, i) => (
@@ -377,7 +478,7 @@ const UnDia: React.FC = () => {
               })}
               <span className="ml-2 text-[12px] font-bold tracking-[0.2em] text-[#E7CF9C]">0{activa + 1} / 0{total}</span>
             </div>
-            <div className="relative mt-4 min-h-[120px] sm:min-h-[170px]" aria-live="polite">
+            <div className="relative mt-4 min-h-[118px] sm:min-h-[170px]" aria-live="polite">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={activa}
@@ -391,6 +492,9 @@ const UnDia: React.FC = () => {
                 </motion.div>
               </AnimatePresence>
             </div>
+            <div className="mt-3">
+              <SeguirEnSeccion p={p} hasta={0.9} texto="Sigue bajando para ver el siguiente paso" />
+            </div>
           </div>
         </div>
       </div>
@@ -398,108 +502,73 @@ const UnDia: React.FC = () => {
   );
 };
 
-// ─── 4. Galería horizontal por oficio (el scroll vertical la desplaza) ───────
+// ─── 4. Oficios: tarjetas que se apilan con el scroll (G-051) ────────────────
 const OFICIOS = [
-  { foto: 'unas-oscuras', nombre: 'Uñas', frase: 'Que elija diseño, largo y extras antes de llegar.', servicios: [['Manicura rusa', '18 $'], ['Esculpidas en gel', '25 $'], ['Pedicura spa', '20 $']] },
-  { foto: 'pestanas-tecnica', nombre: 'Pestañas y cejas', frase: 'Cada técnica explicada antes de que pregunten.', servicios: [['Lifting + keratina', '22 $'], ['Laminado de cejas', '20 $'], ['Extensiones pelo a pelo', '35 $']] },
-  { foto: 'pelo-salon', nombre: 'Peluquería', frase: 'Servicios de tres horas sin cruces en la agenda.', servicios: [['Balayage + gloss', '85 $'], ['Alisado orgánico', '45 $'], ['Peinado de evento', '25 $']] },
-  { foto: 'estetica-facial', nombre: 'Estética', frase: 'Cada cabina y cada aparato con su propia agenda.', servicios: [['Limpieza facial profunda', '35 $'], ['Hidrafacial + LED', '55 $'], ['Depilación láser', '30 $']] },
-  { foto: 'maquillaje-novia', nombre: 'Maquillaje', frase: 'Novias y eventos con fecha y seña reservadas.', servicios: [['Maquillaje social', '35 $'], ['Novia con prueba', '120 $'], ['Clase de automaquillaje', '40 $']] },
-  { foto: 'salon-lujo', nombre: 'Barbería', frase: 'Que elija a su barbero de confianza en segundos.', servicios: [['Corte de autor', '15 $'], ['Ritual de barba', '12 $'], ['Corte + barba', '25 $']] },
+  { foto: 'unas-oscuras', nombre: 'Uñas', frase: 'Que elija diseño, largo y extras antes de llegar, y que tu mesa no se quede vacía.', servicios: [['Manicura rusa', '60 min', '18 $'], ['Esculpidas en gel', '90 min', '25 $'], ['Pedicura spa', '60 min', '20 $']] },
+  { foto: 'pestanas-tecnica', nombre: 'Pestañas', frase: 'Cada técnica explicada antes de que pregunten: lifting, pelo a pelo o volumen.', servicios: [['Lifting + keratina', '60 min', '22 $'], ['Pelo a pelo', '120 min', '35 $'], ['Retoque de 15 días', '60 min', '18 $']] },
+  { foto: 'cejas-laminado', nombre: 'Cejas', frase: 'Laminado, diseño y henna con su tiempo justo, sin huecos muertos en tu agenda.', servicios: [['Laminado de cejas', '50 min', '20 $'], ['Diseño con henna', '40 min', '15 $'], ['Depilación con hilo', '20 min', '8 $']] },
+  { foto: 'pelo-salon', nombre: 'Peluquería', frase: 'Servicios de tres horas, sillón y lavacabezas reservados, sin cruces en la agenda.', servicios: [['Balayage + gloss', '180 min', '85 $'], ['Alisado orgánico', '150 min', '45 $'], ['Recogido de evento', '60 min', '25 $']] },
+  { foto: 'estetica-facial', nombre: 'Estética', frase: 'Cada cabina y cada aparato con su propia agenda, y el historial de cada clienta.', servicios: [['Limpieza facial profunda', '60 min', '35 $'], ['Hidrafacial + LED', '60 min', '55 $'], ['Depilación láser', '30 min', '30 $']] },
+  { foto: 'maquillaje-novia', nombre: 'Maquillaje', frase: 'Novias y eventos con la fecha reservada y la prueba incluida en la cita.', servicios: [['Maquillaje social', '75 min', '35 $'], ['Novia con prueba', '180 min', '120 $'], ['Clase de automaquillaje', '90 min', '40 $']] },
 ];
 
-const Oficios: React.FC = () => {
+const TarjetaApilada: React.FC<{ o: (typeof OFICIOS)[number]; i: number; total: number; p: MotionValue<number> }> = ({ o, i, total, p }) => {
   const reducir = useReducedMotion();
-  const ref = useRef<HTMLElement | null>(null);
-  const pista = useRef<HTMLDivElement | null>(null);
-  const [dist, setDist] = useState(0);
-  useEffect(() => {
-    const el = pista.current;
-    if (!el) return;
-    const medir = () => setDist(Math.max(0, el.scrollWidth - window.innerWidth));
-    medir();
-    window.addEventListener('resize', medir);
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : null;
-    ro?.observe(el);
-    return () => {
-      window.removeEventListener('resize', medir);
-      ro?.disconnect();
-    };
-  }, []);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-  const p = useSpring(scrollYProgress, { stiffness: 110, damping: 26, mass: 0.4 });
-  const distRef = useRef(0);
-  distRef.current = dist;
-  const x = useTransform(p, (v) => -v * distRef.current);
-  const [actual, setActual] = useState(0);
-  useMotionValueEvent(scrollYProgress, 'change', (v) => setActual(Math.min(OFICIOS.length, Math.round(v * OFICIOS.length))));
-
-  // Sin movimiento: carrusel normal deslizable con el dedo.
-  if (reducir) {
-    return (
-      <section id="sectores" className="bg-[#F4F0EA] py-20">
-        <div className="mx-auto max-w-6xl px-5">
-          <Etiqueta>Tu oficio</Etiqueta>
-          <h2 className="mt-4 font-lujo text-4xl font-medium text-[#1A1020]">Hecho para cómo trabajas tú.</h2>
-        </div>
-        <div className="mt-8 flex snap-x gap-4 overflow-x-auto px-5 pb-4">
-          {OFICIOS.map((o) => (
-            <TarjetaOficio key={o.nombre} o={o} />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
+  const escala = useTransform(p, [i / total, 1], [1, reducir ? 1 : 1 - (total - i) * 0.035]);
+  const brillo = useTransform(p, [i / total, Math.min(1, (i + 1) / total)], [1, reducir ? 1 : 0.55]);
+  const imagen = useTransform(p, [i / total, Math.min(1, (i + 1) / total)], [1.12, 1]);
   return (
-    <section ref={ref} id="sectores" className="relative bg-[#F4F0EA]" style={{ height: `calc(${dist}px + 100svh)` }}>
-      <div className="sticky top-0 flex h-[100svh] flex-col justify-center overflow-hidden pt-20">
-        <motion.div ref={pista} style={{ x }} className="flex w-max items-stretch gap-4 px-5 sm:gap-6 sm:px-8 lg:px-[max(2rem,calc((100vw-72rem)/2))]">
-          {/* Primer panel: el titular */}
-          <div className="flex w-[78vw] max-w-[440px] shrink-0 flex-col justify-center pr-4">
-            <Etiqueta>Tu oficio</Etiqueta>
-            <h2 className="mt-4 font-lujo text-[44px] font-medium leading-[1] tracking-[-0.02em] text-[#1A1020] sm:text-6xl">
-              Hecho para cómo <span className="italic font-light text-[#4A1F5C]">trabajas tú.</span>
-            </h2>
-            <p className="mt-5 max-w-sm text-[16px] leading-relaxed text-[#4A4150]">Desliza: tu carta se adapta a tu especialidad, tus tiempos y tus precios.</p>
-            <p className="mt-8 flex items-center gap-3 text-[13px] font-bold text-[#7D6438]">
-              <ArrowRight className="h-4 w-4 v-empuja" strokeWidth={2} /> Sigue bajando
-            </p>
-          </div>
-          {OFICIOS.map((o) => (
-            <TarjetaOficio key={o.nombre} o={o} />
-          ))}
-          <div className="w-[8vw] shrink-0" />
-        </motion.div>
-        <div className="mx-auto mt-6 flex w-full max-w-6xl items-center gap-4 px-5 sm:px-8">
-          <span className="text-[12px] font-bold tracking-[0.2em] text-[#7D6438]">0{Math.max(1, actual)} / 0{OFICIOS.length}</span>
-          <span className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-[#1A1020]/10">
-            <motion.span style={{ scaleX: p }} className="absolute inset-0 origin-left bg-[#1F1226]" />
-          </span>
+    <div className="sticky top-0 flex h-[100svh] items-center justify-center px-4 sm:px-8">
+      <motion.article
+        style={{ scale: escala, top: `calc(${i * 14}px - 2svh)` }}
+        className="relative h-[70svh] max-h-[640px] w-full max-w-5xl origin-top overflow-hidden rounded-[32px] bg-[#1F1226] shadow-[0_-20px_60px_-20px_rgba(20,11,25,0.55)] lg:grid lg:grid-cols-[1.1fr_1fr]"
+      >
+        <div className="absolute inset-0 overflow-hidden lg:relative">
+          <motion.div style={{ scale: imagen, filter: useTransform(brillo, (b) => `brightness(${b})`) }} className="h-full w-full">
+            <Foto src={o.foto} alt={o.nombre} className="h-full w-full object-cover" />
+          </motion.div>
         </div>
+        <div className="absolute inset-0 lg:hidden" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0) 30%, rgba(20,11,25,0.7) 58%, rgba(20,11,25,0.97) 100%)' }} />
+        <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8 lg:relative lg:flex lg:flex-col lg:justify-center lg:p-12">
+          <p className="text-[12px] font-bold tracking-[0.3em] text-[#E7CF9C]">0{i + 1} / 0{total}</p>
+          <h3 className="mt-2 font-lujo text-[44px] font-medium leading-none tracking-[-0.02em] sm:text-6xl">{o.nombre}</h3>
+          <p className="mt-3 max-w-md text-[15px] leading-snug text-white/75">{o.frase}</p>
+          <ul className="mt-5 space-y-2 border-t border-white/15 pt-4">
+            {o.servicios.map(([s, d, pr]) => (
+              <li key={s} className="flex items-baseline justify-between gap-3 text-[15px]">
+                <span className="text-white/90">
+                  {s} <span className="text-[12px] text-white/45">· {d}</span>
+                </span>
+                <span className="font-lujo text-[18px] text-[#E7CF9C]">{pr}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </motion.article>
+    </div>
+  );
+};
+
+const Oficios: React.FC = () => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
+  return (
+    <section id="sectores" className="relative bg-[#F4F0EA]">
+      <div className="mx-auto max-w-6xl px-5 pt-24 sm:px-8 sm:pt-32">
+        <Etiqueta>Tu oficio</Etiqueta>
+        <h2 className="mt-4 max-w-3xl font-lujo text-[42px] font-medium leading-[1] tracking-[-0.02em] text-[#1A1020] sm:text-6xl">
+          Hecho para cómo <span className="italic font-light text-[#4A1F5C]">trabajas tú.</span>
+        </h2>
+        <p className="mt-5 max-w-md text-[16px] leading-relaxed text-[#4A4150]">Tu carta se adapta a tu especialidad, tus tiempos y tus precios. Baja y mira cada oficio.</p>
+      </div>
+      <div ref={ref} className="relative pb-[6svh]">
+        {OFICIOS.map((o, i) => (
+          <TarjetaApilada key={o.nombre} o={o} i={i} total={OFICIOS.length} p={scrollYProgress} />
+        ))}
       </div>
     </section>
   );
 };
-
-const TarjetaOficio: React.FC<{ o: (typeof OFICIOS)[number] }> = ({ o }) => (
-  <article className="group relative h-[64svh] max-h-[620px] w-[78vw] max-w-[420px] shrink-0 snap-center overflow-hidden rounded-[30px] bg-[#1F1226] shadow-[0_40px_80px_-40px_rgba(20,11,25,0.7)]">
-    <Foto src={o.foto} alt={o.nombre} className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-110" />
-    <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.05) 25%, rgba(20,11,25,0.55) 55%, rgba(20,11,25,0.95) 100%)' }} />
-    <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-      <h3 className="font-lujo text-[36px] font-medium leading-none tracking-[-0.02em]">{o.nombre}</h3>
-      <p className="mt-2 text-[14px] leading-snug text-white/75">{o.frase}</p>
-      <ul className="mt-4 space-y-1.5 border-t border-white/15 pt-3">
-        {o.servicios.map(([s, pr]) => (
-          <li key={s} className="flex items-baseline justify-between gap-3 text-[14px]">
-            <span className="text-white/90">{s}</span>
-            <span className="font-lujo text-[17px] text-[#E7CF9C]">{pr}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </article>
-);
 
 // ─── 5. Tu equipo: rejilla viva (bento) ───────────────────────────────────────
 const Equipo: React.FC = () => {
@@ -509,9 +578,9 @@ const Equipo: React.FC = () => {
   const rotX = useTransform(scrollYProgress, [0, 1], [reducir ? 0 : 32, 0]);
   const y = useTransform(scrollYProgress, [0, 1], [reducir ? 0 : 60, 0]);
   const especialistas = [
-    { n: 'Valentina', o: 'Uñas', f: 'unas-francesa' },
-    { n: 'Marta', o: 'Cejas', f: 'pestanas-mirada' },
-    { n: 'Ana', o: 'Color', f: 'pelo-secado' },
+    { n: 'Valentina', o: 'Uñas', f: 'unas-arte' },
+    { n: 'Marta', o: 'Cejas', f: 'cejas-laminado' },
+    { n: 'Ana', o: 'Peluquería', f: 'pelo-salon' },
   ];
   return (
     <section id="equipo" className="relative overflow-hidden bg-[#140B19] px-5 py-24 text-white sm:px-8 sm:py-32">
@@ -568,7 +637,7 @@ const ESTILOS = [
   { n: 'Rosa cashmere', lienzo: '#F8E9EC', fondo: '#FCF5F6', tinta: '#3A1F27', acento: '#B0607A', suave: '#F6E3E8', foto: 'unas-rosa', letra: "'Bodoni Moda', Georgia, serif" },
   { n: 'Oliva', lienzo: '#E8EDE3', fondo: '#F5F6F0', tinta: '#1F2A22', acento: '#5E7A62', suave: '#E4EADF', foto: 'estetica-bodegon', letra: "'Plus Jakarta Sans', sans-serif" },
   { n: 'Ciruela', lienzo: '#EFE5F3', fondo: '#F8F4FA', tinta: '#24122C', acento: '#6E2F84', suave: '#ECE0F1', foto: 'pestanas-mirada', letra: "'Fraunces', Georgia, serif" },
-  { n: 'Noir', lienzo: '#EDE6DD', fondo: '#151214', tinta: '#F4EEE6', acento: '#C9A45C', suave: '#262024', foto: 'salon-neon', letra: "'Bodoni Moda', Georgia, serif" },
+  { n: 'Noir', lienzo: '#EDE6DD', fondo: '#151214', tinta: '#F4EEE6', acento: '#C9A45C', suave: '#262024', foto: 'unas-oscuras', letra: "'Bodoni Moda', Georgia, serif" },
 ];
 
 const TuMarca: React.FC = () => {
@@ -692,25 +761,35 @@ const Deslizador: React.FC<{ etiqueta: string; valor: number; min: number; max: 
   </label>
 );
 
+const COLUMNAS_COMPARA = ['Apps de reservas', 'Instagram y WhatsApp a mano', 'VANESEV'];
+const FILAS_COMPARA: { t: string; icono: React.ElementType; v: [string, string, string]; pronto?: boolean }[] = [
+  { t: 'Comisión por tus clientas', icono: Percent, v: ['Por cada clienta nueva', 'Ninguna', 'Nunca. Cuota fija'] },
+  { t: 'De quién son tus clientas', icono: Users, v: ['Del directorio, junto a tu competencia', 'Tuyas, perdidas entre chats', 'Tuyas, con su historial y sus sellos'] },
+  { t: 'Tu marca', icono: Palette, v: ['Plantilla igual para todas', 'Tu perfil, sin carta', 'Carta con tus colores, letras y fotos'] },
+  { t: 'Reservas a cualquier hora', icono: CalendarCheck, v: ['Sí', 'Solo cuando contestas', 'Sí, con tus huecos reales y sin cruces'] },
+  { t: 'Precios en $ y Bs', icono: Wallet, v: ['No', 'Rehaces el PDF cada día', 'Al día y al instante'] },
+  { t: 'Tu equipo', icono: Lock, v: ['Pagas por cada una', 'Un solo móvil para todas', 'Agenda y clave por especialista'] },
+  { t: 'Ofertas y tarjetas regalo', icono: Gift, v: ['Limitadas', 'A mano, con errores', 'Precio exacto y saldo automático'] },
+  { t: 'Motivo para volver', icono: Award, v: ['Ninguno', 'Tarjeta de cartulina', 'Pasaporte VIP en su móvil'] },
+  { t: 'Recordatorios de cita', icono: BellRing, v: ['Sí', 'Tú, una a una', 'Automáticos desde tu WhatsApp'], pronto: true },
+];
+
 const Comparativa: React.FC = () => {
   const [ticket, setTicket] = useState(25);
   const [perdidas, setPerdidas] = useState(5);
   const mes = ticket * perdidas * 4;
-  const filas = [
-    ['Comisión por tus clientas', 'Por cada clienta nueva', 'Nunca'],
-    ['Tus clientas', 'Junto a tu competencia', 'Solo tuyas, con su historial'],
-    ['Tu marca', 'Plantilla igual para todas', 'Carta con tu firma'],
-    ['Motivo para volver', 'Ninguno', 'Pasaporte VIP en su móvil'],
-  ];
   return (
     <section id="comparativa" className="relative overflow-hidden px-5 py-24 text-white sm:px-8 sm:py-32" style={{ background: 'radial-gradient(90% 70% at 100% 0%, rgba(122,62,140,0.5) 0%, transparent 60%), #1F1226' }}>
-      <div className="relative mx-auto grid max-w-6xl gap-14 lg:grid-cols-2 lg:gap-20">
-        <div>
-          <Etiqueta oscuro>Haz la cuenta</Etiqueta>
-          <h2 className="mt-4 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl">
-            Deja de regalar tus clientas <span className="italic font-light text-[#E7CF9C]">a las apps.</span>
-          </h2>
-          <div className="mt-10 space-y-7 rounded-[28px] border border-white/10 bg-white/[0.05] p-6 backdrop-blur">
+      <div className="relative mx-auto max-w-6xl">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-end lg:gap-20">
+          <div>
+            <Etiqueta oscuro>Haz la cuenta</Etiqueta>
+            <h2 className="mt-4 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl">
+              Deja de regalar tus clientas <span className="italic font-light text-[#E7CF9C]">a las apps.</span>
+            </h2>
+            <p className="mt-5 max-w-md text-[16px] leading-relaxed text-white/70">Cada mensaje que contestas tarde es una cita que se va a otro sitio. Mueve los valores y mira cuánto es en tu caso.</p>
+          </div>
+          <div className="space-y-7 rounded-[28px] border border-white/10 bg-white/[0.05] p-6 backdrop-blur sm:p-8">
             <Deslizador etiqueta="Precio medio de tu servicio" valor={ticket} min={8} max={120} sufijo=" $" onChange={setTicket} />
             <Deslizador etiqueta="Clientas que se te escapan a la semana" valor={perdidas} min={1} max={20} sufijo="" onChange={setPerdidas} />
             <div className="border-t border-white/10 pt-6">
@@ -724,48 +803,147 @@ const Comparativa: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="self-end">
-          <div className="grid grid-cols-[1fr_1fr] gap-x-4 border-b border-white/15 pb-3 text-[12px] font-bold uppercase tracking-[0.18em]">
-            <span className="text-white/50">Apps de reservas</span>
-            <span className="text-[#E7CF9C]">VANESEV</span>
+
+        {/* Comparativa: tabla en escritorio, fichas en el móvil */}
+        <div className="mt-20">
+          <h3 className="font-lujo text-[30px] font-medium leading-tight sm:text-4xl">Lo mismo que ya haces, comparado sin rodeos.</h3>
+          <div className="mt-8 hidden overflow-hidden rounded-[28px] border border-white/10 lg:block">
+            <div className="grid grid-cols-[1.1fr_1fr_1fr_1.2fr] bg-white/[0.04] text-[12px] font-bold uppercase tracking-[0.18em]">
+              <span className="p-5 text-white/40" />
+              {COLUMNAS_COMPARA.map((c, k) => (
+                <span key={c} className={`p-5 ${k === 2 ? 'bg-gradient-to-b from-[#C9A45C]/25 to-[#C9A45C]/10 text-[#E7CF9C]' : 'text-white/55'}`}>{c}</span>
+              ))}
+            </div>
+            {FILAS_COMPARA.map((f, k) => {
+              const Icono = f.icono;
+              return (
+                <motion.div key={f.t} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.6 }} transition={{ duration: 0.5, delay: k * 0.04, ease: CURVA }} className="grid grid-cols-[1.1fr_1fr_1fr_1.2fr] border-t border-white/[0.07] text-[15px]">
+                  <span className="flex items-center gap-3 p-5 font-bold">
+                    <Icono className="h-5 w-5 shrink-0 text-[#C9A45C]" strokeWidth={1.6} />
+                    {f.t}
+                  </span>
+                  <span className="flex items-start gap-2 p-5 text-white/50"><X className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A7A]" strokeWidth={2.2} />{f.v[0]}</span>
+                  <span className="flex items-start gap-2 p-5 text-white/50"><Minus className="mt-0.5 h-4 w-4 shrink-0 text-white/40" strokeWidth={2.2} />{f.v[1]}</span>
+                  <span className="flex items-start gap-2 bg-[#C9A45C]/[0.08] p-5 font-bold text-white">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
+                    <span>
+                      {f.v[2]}
+                      {f.pronto && <span className="ml-2 rounded-full border border-[#E7CF9C]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">Muy pronto</span>}
+                    </span>
+                  </span>
+                </motion.div>
+              );
+            })}
           </div>
-          {filas.map(([l, a, b], k) => (
-            <motion.div key={l} initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.6 }} transition={{ duration: 0.6, delay: k * 0.08, ease: CURVA }} className="border-b border-white/10 py-5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-white/45">{l}</p>
-              <div className="mt-2 grid grid-cols-[1fr_1fr] gap-x-4 text-[15px]">
-                <span className="relative w-fit text-white/50">
-                  {a}
-                  <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ delay: 0.5 + k * 0.08, duration: 0.5 }} className="absolute left-0 top-1/2 h-px w-full origin-left bg-[#E06A6A]" />
-                </span>
-                <span className="flex items-start gap-1.5 font-bold text-white">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A45C]" strokeWidth={2.4} />
-                  {b}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:hidden">
+            {FILAS_COMPARA.map((f, k) => {
+              const Icono = f.icono;
+              return (
+                <motion.div key={f.t} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.5, delay: (k % 2) * 0.06, ease: CURVA }} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
+                  <p className="flex items-center gap-2.5 text-[15px] font-bold">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C9A45C]/15"><Icono className="h-[18px] w-[18px] text-[#E7CF9C]" strokeWidth={1.7} /></span>
+                    {f.t}
+                  </p>
+                  <div className="mt-4 space-y-2 text-[14px]">
+                    <p className="flex gap-2 text-white/45"><X className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A7A]" strokeWidth={2.2} /><span><b className="font-semibold text-white/60">Apps:</b> {f.v[0]}</span></p>
+                    <p className="flex gap-2 text-white/45"><Minus className="mt-0.5 h-4 w-4 shrink-0 text-white/40" strokeWidth={2.2} /><span><b className="font-semibold text-white/60">A mano:</b> {f.v[1]}</span></p>
+                    <p className="flex gap-2 rounded-xl bg-[#C9A45C]/[0.12] px-3 py-2 font-bold text-white">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
+                      <span>
+                        {f.v[2]}
+                        {f.pronto && <span className="ml-1.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">· muy pronto</span>}
+                      </span>
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-// ─── 8. Pasaporte VIP en 3D: los sellos caen con el scroll ───────────────────
-const Sello: React.FC<{ p: MotionValue<number>; i: number }> = ({ p, i }) => {
+// ─── 8. Pasaporte VIP: tarjeta de lujo con sellos que caen con el scroll ─────
+/** Roseta de sello: forma propia de VANESEV (doce puntas suaves) con la V grabada. */
+const Roseta: React.FC<{ llena: boolean; ultima?: boolean }> = ({ llena, ultima }) => (
+  <svg viewBox="0 0 48 48" className="h-full w-full" aria-hidden="true">
+    <defs>
+      <linearGradient id={ultima ? 'oroUltimo' : 'oroSello'} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#F3E6C4" />
+        <stop offset="0.5" stopColor="#C9A45C" />
+        <stop offset="1" stopColor="#8A6A2E" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M24.00 2.00 L28.81 6.03 L35.00 4.95 L37.15 10.85 L43.05 13.00 L41.97 19.19 L46.00 24.00 L41.97 28.81 L43.05 35.00 L37.15 37.15 L35.00 43.05 L28.81 41.97 L24.00 46.00 L19.19 41.97 L13.00 43.05 L10.85 37.15 L4.95 35.00 L6.03 28.81 L2.00 24.00 L6.03 19.19 L4.95 13.00 L10.85 10.85 L13.00 4.95 L19.19 6.03Z"
+      fill={llena ? `url(#${ultima ? 'oroUltimo' : 'oroSello'})` : 'none'}
+      stroke={llena ? 'none' : 'rgba(231,207,156,0.45)'}
+      strokeWidth="1"
+      strokeDasharray={llena ? undefined : '2 2'}
+    />
+    {llena && (
+      <text x="24" y="31" textAnchor="middle" fontFamily="Fraunces, Georgia, serif" fontStyle="italic" fontSize="16" fill="#2A1236">
+        V
+      </text>
+    )}
+  </svg>
+);
+
+const SelloVip: React.FC<{ p?: MotionValue<number>; desde: number; i: number; compacta?: boolean }> = ({ p, desde, i, compacta }) => {
   const reducir = useReducedMotion();
-  const desde = 0.18 + i * 0.12;
-  const s = useTransform(p, [desde, desde + 0.08], reducir ? [1, 1] : [2.4, 1]);
-  const o = useTransform(p, [desde, desde + 0.05], [0, 1]);
-  const r = useTransform(p, [desde, desde + 0.08], reducir ? [0, 0] : [-40, 0]);
-  const ultimo = i === 4;
+  const quieto = useMotionValue(1);
+  const fuente = p ?? quieto;
+  const a = p ? desde : -1;
+  const s = useTransform(fuente, [a, a + 0.06], reducir || !p ? [1, 1] : [2.6, 1]);
+  const o = useTransform(fuente, [a, a + 0.04], p ? [0, 1] : [1, 1]);
+  const r = useTransform(fuente, [a, a + 0.06], reducir || !p ? [0, 0] : [-50, 0]);
   return (
-    <span className="relative flex h-11 w-11 items-center justify-center rounded-full ring-1 ring-[#C9A45C]/50 sm:h-14 sm:w-14">
-      <motion.span style={{ scale: s, opacity: o, rotate: r }} className="absolute inset-0 flex items-center justify-center rounded-full text-[#1F1226]" >
-        <span className="flex h-full w-full items-center justify-center rounded-full" style={{ background: ultimo ? 'linear-gradient(135deg,#F3E6C4,#C9A45C 55%,#9C7A3C)' : 'rgba(201,164,92,0.25)', color: ultimo ? '#1F1226' : '#E7CF9C' }}>
-          <Award className="h-5 w-5" strokeWidth={1.6} />
-        </span>
+    <span className={`relative block ${compacta ? 'h-9 w-9' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
+      <span className="absolute inset-0"><Roseta llena={false} /></span>
+      <motion.span style={{ scale: s, opacity: o, rotate: r }} className="absolute inset-0 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]">
+        <Roseta llena ultima={i === 4} />
       </motion.span>
     </span>
+  );
+};
+
+/** Tarjeta del Pasaporte VIP: la misma en la portada y dentro del teléfono. */
+const TarjetaVip: React.FC<{ p?: MotionValue<number>; desde?: number; paso?: number; compacta?: boolean }> = ({ p, desde = 0.2, paso = 0.12, compacta }) => {
+  const quieto = useMotionValue(1);
+  const premio = useTransform(p ?? quieto, [desde + paso * 4, desde + paso * 4 + 0.05], p ? [0, 1] : [1, 1]);
+  return (
+    <div className={`relative aspect-[1.586] w-full overflow-hidden ${compacta ? 'rounded-[16px]' : 'rounded-[26px]'} text-white shadow-[0_40px_80px_-30px_rgba(0,0,0,0.8)]`}>
+      <Foto src="unas-oscuras" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg, rgba(42,18,54,0.96) 0%, rgba(42,18,54,0.82) 45%, rgba(20,11,25,0.6) 100%)' }} />
+      {/* Grano y filete de oro */}
+      <div className="absolute inset-0 opacity-[0.18]" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.5) 0.6px, transparent 0.6px)', backgroundSize: '4px 4px' }} />
+      <div className={`absolute ${compacta ? 'inset-[5px] rounded-[12px]' : 'inset-[10px] rounded-[18px]'} border border-[#C9A45C]/45`} />
+      <div className={`relative flex h-full flex-col justify-between ${compacta ? 'p-3' : 'p-6 sm:p-7'}`}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className={`${compacta ? 'text-[7px]' : 'text-[10px]'} font-bold uppercase tracking-[0.34em] text-[#E7CF9C]`}>Pasaporte VIP</p>
+            <p className={`${compacta ? 'mt-0.5 text-[15px]' : 'mt-1.5 text-[26px] sm:text-[30px]'} font-lujo leading-none`}>Estudio Ámbar</p>
+          </div>
+          <span className={`v-oro-texto font-lujo ${compacta ? 'text-[14px]' : 'text-[24px]'} font-medium italic`}>#001</span>
+        </div>
+        <div className="flex items-center justify-between">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <SelloVip key={i} p={p} desde={desde + i * paso} i={i} compacta={compacta} />
+          ))}
+        </div>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className={`${compacta ? 'text-[9px]' : 'text-[13px]'} font-bold`}>Laura Pérez</p>
+            <p className={`${compacta ? 'text-[7px]' : 'text-[11px]'} text-white/60`}>Premio a la 5.ª visita: diseño de cejas</p>
+          </div>
+          <motion.span style={{ opacity: premio }} className={`shrink-0 rounded-full bg-gradient-to-r from-[#F3E6C4] via-[#C9A45C] to-[#EBD9AE] ${compacta ? 'px-2 py-0.5 text-[7px]' : 'px-3 py-1 text-[11px]'} font-bold text-[#1F1226]`}>
+            ¡Premio listo!
+          </motion.span>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -774,14 +952,13 @@ const Pasaporte: React.FC = () => {
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const p = useSpring(scrollYProgress, { stiffness: 90, damping: 22, mass: 0.4 });
-  const rotY = useTransform(p, [0, 0.4, 1], reducir ? [0, 0, 0] : [-38, -6, 8]);
-  const rotX = useTransform(p, [0, 0.4, 1], reducir ? [0, 0, 0] : [24, 6, -4]);
-  const premio = useTransform(p, [0.8, 0.9], [0, 1]);
+  const rotY = useTransform(p, [0, 0.35, 1], reducir ? [0, 0, 0] : [-38, -6, 6]);
+  const rotX = useTransform(p, [0, 0.35, 1], reducir ? [0, 0, 0] : [26, 6, -3]);
   const brillo = useTransform(p, [0, 1], ['-80%', '180%']);
   return (
     <section ref={ref} id="pasaporte" className="relative h-[260vh] bg-[#140B19]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
-        <Foto src="unas-francesa" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <Foto src="unas-francesa" className="absolute inset-0 h-full w-full object-cover opacity-25" />
         <div aria-hidden="true" className="absolute inset-0" style={{ background: 'radial-gradient(60% 50% at 50% 50%, rgba(20,11,25,0.4), #140B19 85%)' }} />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-5 pt-16 text-white sm:px-8 lg:grid-cols-2">
           <div>
@@ -789,27 +966,15 @@ const Pasaporte: React.FC = () => {
             <h2 className="mt-4 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl">
               Cinco visitas, un premio. <span className="italic font-light text-[#E7CF9C]">Y vuelve contigo.</span>
             </h2>
-            <p className="mt-5 max-w-md text-[16px] leading-relaxed text-white/70">Sin cartulinas que se pierden: su pasaporte vive en su móvil y el sello se suma solo cuando cierras la cita.</p>
+            <p className="mt-5 max-w-md text-[16px] leading-relaxed text-white/70">Sin cartulinas que se pierden: su pasaporte vive en su móvil y el sello se suma solo cuando cierras la cita. Tú eliges el premio.</p>
+            <div className="mt-5">
+              <SeguirEnSeccion p={p} hasta={0.85} texto="Baja y mira cómo se sellan" />
+            </div>
           </div>
           <div className="flex justify-center" style={{ perspective: '1400px' }}>
-            <motion.div style={{ rotateY: rotY, rotateX: rotX, transformStyle: 'preserve-3d' }} className="v-tarjeta-lujo relative w-full max-w-[420px] overflow-hidden rounded-[28px] p-6 sm:p-8">
-              <motion.span aria-hidden="true" style={{ left: brillo }} className="pointer-events-none absolute top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#E7CF9C]">Pasaporte VIP</p>
-                  <p className="mt-2 font-lujo text-[28px] leading-none">Estudio Ámbar</p>
-                </div>
-                <span className="v-oro-texto font-lujo text-[26px] font-medium">#001</span>
-              </div>
-              <div className="mt-8 flex justify-between">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Sello key={i} p={p} i={i} />
-                ))}
-              </div>
-              <div className="mt-6 flex items-end justify-between">
-                <p className="text-[13px] text-white/60">Laura · clienta desde 2026</p>
-                <motion.p style={{ opacity: premio }} className="rounded-full bg-[#C9A45C] px-3 py-1 text-[12px] font-bold text-[#1F1226]">¡Premio listo!</motion.p>
-              </div>
+            <motion.div style={{ rotateY: rotY, rotateX: rotX, transformStyle: 'preserve-3d' }} className="relative w-full max-w-[460px]">
+              <TarjetaVip p={p} desde={0.18} paso={0.12} />
+              <motion.span aria-hidden="true" style={{ left: brillo }} className="pointer-events-none absolute top-0 h-full w-1/3 -skew-x-12 rounded-[26px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             </motion.div>
           </div>
         </div>
@@ -898,26 +1063,34 @@ const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
             </div>
           </motion.div>
 
-          {/* Grande, muy pronto */}
+          {/* Atelier, muy pronto (G-052) */}
           <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.8, delay: 0.1, ease: CURVA }} className="relative overflow-hidden rounded-[32px] text-white">
-            <Foto src="maquillaje-novia" className="absolute inset-0 h-full w-full object-cover" />
+            <Foto src="pestanas-mirada" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.55), rgba(20,11,25,0.95) 60%)' }} />
             <div className="relative p-7 sm:p-10">
               <span className="rounded-full border border-[#E7CF9C]/60 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E7CF9C]">Muy pronto</span>
-              <h3 className="mt-5 font-lujo text-[34px] font-medium">Grande</h3>
-              <p className="mt-1 text-[15px] text-white/70">Para crecer sin pasarte las noches creando contenido.</p>
+              <h3 className="mt-5 font-lujo text-[34px] font-medium">Atelier</h3>
+              <p className="mt-1 text-[15px] text-white/70">Tu marca crece sola: contenido listo cada semana, sin pasarte las noches creándolo.</p>
               <p className="mt-5 font-lujo text-[56px] font-medium leading-none">
                 79 $ <span className="font-texto text-[15px] font-bold text-white/60">al mes</span>
               </p>
               <ul className="mt-6 space-y-2.5 text-[15px]">
-                {['Todo lo de Esencial', 'Asistente de marketing con IA: hasta 40 piezas al mes', 'Historias y ofertas con tu estilo, listas para subir'].map((x) => (
+                {[
+                  'Todo lo de Esencial',
+                  'Asistente de marketing con IA: hasta 40 piezas al mes con tus fotos y tu estilo',
+                  'Historias, publicaciones y guiones de reels listos para subir',
+                  'Calendario de contenido según tus huecos libres de la semana',
+                  'Campañas para llenar los días flojos, con la oferta ya creada',
+                  'Informe mensual: qué servicios venden más y qué clientas no han vuelto',
+                  'Atención prioritaria por WhatsApp',
+                ].map((x) => (
                   <li key={x} className="flex gap-2.5">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A45C]" strokeWidth={2.4} />
                     {x}
                   </li>
                 ))}
               </ul>
-              <a href={`${WHATSAPP}?text=${encodeURIComponent('Hola, avisadme cuando esté el plan Grande de VANESEV.')}`} target="_blank" rel="noopener noreferrer" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-white/30 py-4 text-[15px] font-bold hover:border-white/70">
+              <a href={`${WHATSAPP}?text=${encodeURIComponent('Hola, avisadme cuando esté el plan Atelier de VANESEV.')}`} target="_blank" rel="noopener noreferrer" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-white/30 py-4 text-[15px] font-bold hover:border-white/70">
                 Avísame cuando esté <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
               </a>
             </div>
