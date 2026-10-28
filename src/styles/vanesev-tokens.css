@@ -151,9 +151,9 @@
   background: linear-gradient(90deg, rgba(201, 164, 92, 0), rgba(201, 164, 92, 0.8), rgba(201, 164, 92, 0));
 }
 
-/* Bodoni Moda (G-039): peso medio y tracking fino en titulares; la seminegrita de Bodoni pesa demasiado. */
-.font-lujo { font-optical-sizing: auto; letter-spacing: -0.012em; }
-.font-lujo.font-semibold, .font-lujo.font-bold { font-weight: 500; }
+/* Fraunces (G-047): tamaño óptico automático y peso medio; legible en el móvil. */
+.font-lujo { font-optical-sizing: auto; letter-spacing: -0.012em; font-variation-settings: 'SOFT' 30; }
+.font-lujo.font-semibold, .font-lujo.font-bold { font-weight: 560; }
 
 /* ─── Paneles de lujo (Central y admin del salón, G-039) ─── */
 .v-panel {
@@ -163,9 +163,9 @@
     #FBFAFC;
 }
 .v-panel h1, .v-panel h2, .v-panel h3 {
-  font-family: 'Bodoni Moda', Didot, Georgia, serif;
+  font-family: 'Fraunces', Georgia, serif;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 /* Tarjetas blancas del panel: borde de oro y elevación al pasar. */
 .v-panel .bg-white[class*='rounded'] {
@@ -177,8 +177,8 @@
 }
 /* Cifras: números tabulares en la tipografía de lujo. */
 .v-panel .tabular-nums {
-  font-family: 'Bodoni Moda', Didot, Georgia, serif;
-  font-weight: 500;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 560;
 }
 /* Filete de oro bajo la cabecera. */
 .v-panel header {
@@ -196,4 +196,40 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .v-panel .bg-white[class*='rounded'] { transition: none; }
+}
+
+/* ─── Movimiento de la portada cinematográfica (G-047) ─── */
+@keyframes v-sube { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes v-baja { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+@keyframes v-lateral { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes v-empuja { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
+.v-sube { animation: v-sube 40s linear infinite; will-change: transform; }
+.v-baja { animation: v-baja 48s linear infinite; will-change: transform; }
+.v-lateral { animation: v-lateral 38s linear infinite; }
+.v-empuja { animation: v-empuja 1.4s ease-in-out infinite; }
+/* Destello que cruza los botones de oro */
+.v-brillo-boton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: v-destello 3.6s ease-in-out infinite;
+}
+@keyframes v-destello { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+/* Borde de oro que gira alrededor del plan Esencial */
+@property --v-angulo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.v-borde-vivo {
+  background: conic-gradient(from var(--v-angulo), #9C7A3C, #F3E6C4, #C9A45C, #4A1F5C, #9C7A3C);
+  animation: v-giro 6s linear infinite;
+  box-shadow: 0 40px 90px -40px rgba(74, 31, 92, 0.45);
+}
+@keyframes v-giro { to { --v-angulo: 360deg; } }
+/* Deslizador de la calculadora */
+.v-rango { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); outline: none; }
+.v-rango::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #F3E6C4, #C9A45C 55%, #9C7A3C); box-shadow: 0 0 0 6px rgba(201, 164, 92, 0.2); cursor: pointer; }
+.v-rango::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: linear-gradient(135deg, #F3E6C4, #C9A45C 55%, #9C7A3C); cursor: pointer; }
+.v-rango:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(201, 164, 92, 0.55); }
+@media (prefers-reduced-motion: reduce) {
+  .v-sube, .v-baja, .v-lateral, .v-empuja, .v-borde-vivo, .v-brillo-boton::after { animation: none; }
 }
