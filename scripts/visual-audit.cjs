@@ -18,6 +18,11 @@ const VIEWPORTS = [
 
 const ROUTES = [
   { slug: 'landing', path: '/', name: 'Zona 1: Web Comercial SaaS' },
+  { slug: 'web-precios', path: '/precios', name: 'Zona 1: Precios' },
+  { slug: 'web-fundadoras', path: '/fundadoras', name: 'Zona 1: Fundadoras' },
+  { slug: 'web-carta', path: '/funciones/carta-y-reservas', name: 'Zona 1: Carta y reservas' },
+  { slug: 'web-unas', path: '/para/unas', name: 'Zona 1: Para uñas' },
+  { slug: 'web-legal', path: '/legal/privacidad', name: 'Zona 1: Privacidad' },
   { slug: 'central-gate', path: '/central', name: 'Zona 2: Central Superadmin (Login Gate)' },
   { slug: 'pwa-capra', path: '/m/capra-studio', name: 'Zona 4: PWA Catálogo Capra Studio' },
   { slug: 'admin-andrea', path: '/andrea-nails/admin', name: 'Zona 3: Admin Salón Andrea Nails' },

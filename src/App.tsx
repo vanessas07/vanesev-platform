@@ -307,7 +307,7 @@ export const App: React.FC = () => {
       const parts = path.split('/').filter(Boolean);
       const first = (parts[0] || '').trim();
       // Rutas de la web comercial que nunca son un salón (G-042, G-044).
-      if (first && !['central', 'saas', 'compartir', 'promociones', 'admin', 'blog', 'para'].includes(first)) {
+      if (first && !['central', 'saas', 'compartir', 'promociones', 'admin', 'blog', 'para', 'funciones', 'precios', 'fundadoras', 'legal'].includes(first)) {
         extractedSlug = first;
       }
     }

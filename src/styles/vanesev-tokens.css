@@ -233,3 +233,8 @@
 @media (prefers-reduced-motion: reduce) {
   .v-sube, .v-baja, .v-lateral, .v-empuja, .v-borde-vivo, .v-brillo-boton::after { animation: none; }
 }
+
+/* Teléfono moderno: esquinas proporcionales al tamaño (unos 14 % del ancho), nunca una cápsula. */
+.v-tel-marco { border-radius: 14% / 6.6%; }
+.v-tel-bisel { border-radius: 13.2% / 6.2%; }
+.v-tel-pantalla { border-radius: 11.6% / 5.5%; }
