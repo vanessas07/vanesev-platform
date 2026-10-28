@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import {
-  ArrowRight, ArrowUpRight, Award, BellRing, CalendarCheck, Check, Clock, Droplets, Eye, Gift, Hand, Heart, Lock, MessageCircle,
+  ArrowLeft, ArrowRight, ArrowUpRight, Award, BellRing, CalendarCheck, Check, Clock, Droplets, Eye, Gift, Hand, Heart, Lock, MessageCircle,
   Minus, Palette, Percent, Plus, Printer, QrCode, Scissors, ShieldCheck, Smartphone, Tag, TrendingUp, Users, Wallet,
 } from 'lucide-react';
 import { Comparativa, Etiqueta, Foto, Precios, SigueBajando, TarjetaVip } from '../landing/PortadaCinematica';
@@ -39,8 +39,20 @@ function useMeta(titulo: string, descripcion: string) {
   }, [titulo, descripcion]);
 }
 
+// ─── Migas de pan: siempre hay un camino de vuelta a la portada ──────────────
+export const Migas: React.FC<{ seccion?: string; actual: string; oscuro?: boolean }> = ({ seccion, actual, oscuro }) => (
+  <nav aria-label="Estás en" className={`flex flex-wrap items-center gap-1.5 text-[13px] font-semibold ${oscuro ? 'text-white/60' : 'text-[#6E6478]'}`}>
+    <a href="/" className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ${oscuro ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-[#1A1020] ring-1 ring-[#1A1020]/10 hover:bg-[#F4F0EA]'}`}>
+      <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} /> Inicio
+    </a>
+    {seccion && <><span aria-hidden="true">/</span><span>{seccion}</span></>}
+    <span aria-hidden="true">/</span>
+    <span aria-current="page" className={oscuro ? 'text-[#E7CF9C]' : 'text-[#7D6438]'}>{actual}</span>
+  </nav>
+);
+
 // ─── Cabecera de página: foto a sangre con parallax ──────────────────────────
-const CabeceraPagina: React.FC<{ etiqueta: string; titulo: string; acento: string; subtitulo: string; foto: string; onPlaza: () => void }> = ({ etiqueta, titulo, acento, subtitulo, foto, onPlaza }) => {
+const CabeceraPagina: React.FC<{ etiqueta: string; titulo: string; acento: string; subtitulo: string; foto: string; onPlaza: () => void; seccion?: string; actual: string }> = ({ etiqueta, titulo, acento, subtitulo, foto, onPlaza, seccion, actual }) => {
   const reducir = useReducedMotion();
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
@@ -56,7 +68,8 @@ const CabeceraPagina: React.FC<{ etiqueta: string; titulo: string; acento: strin
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-14 pt-32 sm:px-8 lg:py-32">
         <div className="max-w-xl">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: CURVA }}>
-            <Etiqueta oscuro>{etiqueta}</Etiqueta>
+            <Migas seccion={seccion} actual={actual} oscuro />
+            <div className="mt-6"><Etiqueta oscuro>{etiqueta}</Etiqueta></div>
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.9, ease: CURVA }} className="mt-5 font-lujo text-[40px] font-medium leading-[1.02] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
             {titulo} <span className="italic font-light text-[#E7CF9C]">{acento}</span>
@@ -257,7 +270,7 @@ const PaginaSolucion: React.FC<{ c: PaginaContenido; onPlaza: () => void }> = ({
   useMeta(c.menu, c.meta);
   return (
     <>
-      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} />
+      <CabeceraPagina etiqueta={c.etiqueta} titulo={c.titulo} acento={c.acento} subtitulo={c.subtitulo} foto={c.foto} onPlaza={onPlaza} seccion={c.ruta.startsWith('/para/') ? 'Oficios' : 'Funciones'} actual={c.menu} />
       <Dolores dolores={c.dolores} />
       <Pasos pasos={c.pasos} foto={c.fotoBanda} />
       <Incluye puntos={c.incluye} />
@@ -283,7 +296,7 @@ const PaginaPrecios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
   useMeta('Precios', 'Esencial: 19 $ al mes o 171 $ al año, sin comisiones ni permanencia. Montaje de fundadora a 49 $. Plan Atelier con marketing con IA, muy pronto.');
   return (
     <>
-      <div className="h-24 bg-[#FBFAFC]" />
+      <div className="bg-[#FBFAFC] px-5 pt-28 sm:px-8 sm:pt-32"><div className="mx-auto max-w-6xl"><Migas actual="Precios" /></div></div>
       <Precios onPlaza={onPlaza} />
       <Comparativa />
       <PreguntasPagina
@@ -319,7 +332,7 @@ const PaginaFundadoras: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
   ];
   return (
     <>
-      <CabeceraPagina etiqueta="100 plazas de fundadora" titulo="Las primeras cien," acento="con tu estudio montado por nosotras." subtitulo="Montaje completo por 49 $ en lugar de 150 $. Te lo dejamos todo listo y tienes 14 días para probarlo con tus clientas." foto="cejas-laminado" onPlaza={onPlaza} />
+      <CabeceraPagina actual="Fundadoras" etiqueta="100 plazas de fundadora" titulo="Las primeras cien," acento="con tu estudio montado por nosotras." subtitulo="Montaje completo por 49 $ en lugar de 150 $. Te lo dejamos todo listo y tienes 14 días para probarlo con tus clientas." foto="cejas-laminado" onPlaza={onPlaza} />
       <section className="bg-[#FBFAFC] px-5 py-24 sm:px-8 sm:py-32">
         <div className="mx-auto max-w-6xl">
           <Etiqueta>Qué incluye tu montaje</Etiqueta>
@@ -358,6 +371,7 @@ const PaginaLegal: React.FC<{ id: string }> = ({ id }) => {
   return (
     <section className="bg-[#FBFAFC] px-5 pb-24 pt-32 sm:px-8 sm:pt-40">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[240px_1fr]">
+        <div className="lg:col-span-2"><Migas seccion="Legal" actual={doc.titulo} /></div>
         <nav aria-label="Documentos legales" className="lg:sticky lg:top-28 lg:self-start">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7D6438]">Legal</p>
           <ul className="mt-4 flex flex-wrap gap-2 lg:flex-col">
