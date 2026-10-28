@@ -10,7 +10,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Award, BellRing, CalendarCheck, Check, ChevronDown, Gift, Lock, MessageCircle, Minus, Percent, Plus, QrCode, Sparkles, Users, Wallet, X } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Award, BellRing, CalendarCheck, Check, ChevronDown, Gift, Lock, MessageCircle, Minus, Percent, Plus, QrCode, Palette, Users, Wallet, X } from 'lucide-react';
 import { AgendaSemanal, PantallaAEscala, PantallaQr, PantallaReserva, PantallaWhatsapp } from './EfectosPremium';
 
 /*
@@ -765,7 +765,7 @@ const COLUMNAS_COMPARA = ['Apps de reservas', 'Instagram y WhatsApp a mano', 'VA
 const FILAS_COMPARA: { t: string; icono: React.ElementType; v: [string, string, string]; pronto?: boolean }[] = [
   { t: 'Comisión por tus clientas', icono: Percent, v: ['Por cada clienta nueva', 'Ninguna', 'Nunca. Cuota fija'] },
   { t: 'De quién son tus clientas', icono: Users, v: ['Del directorio, junto a tu competencia', 'Tuyas, perdidas entre chats', 'Tuyas, con su historial y sus sellos'] },
-  { t: 'Tu marca', icono: Sparkles, v: ['Plantilla igual para todas', 'Tu perfil, sin carta', 'Carta con tus colores, letras y fotos'] },
+  { t: 'Tu marca', icono: Palette, v: ['Plantilla igual para todas', 'Tu perfil, sin carta', 'Carta con tus colores, letras y fotos'] },
   { t: 'Reservas a cualquier hora', icono: CalendarCheck, v: ['Sí', 'Solo cuando contestas', 'Sí, con tus huecos reales y sin cruces'] },
   { t: 'Precios en $ y Bs', icono: Wallet, v: ['No', 'Rehaces el PDF cada día', 'Al día y al instante'] },
   { t: 'Tu equipo', icono: Lock, v: ['Pagas por cada una', 'Un solo móvil para todas', 'Agenda y clave por especialista'] },
