@@ -196,7 +196,7 @@ export const TallerPasaporte: React.FC = () => {
           </div>
           <span className="font-lujo text-[22px] italic text-[#E7CF9C]">#001</span>
         </div>
-        <div className="relative mt-8 grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(meta, 4)}, minmax(0, 1fr))` }}>
+        <div className="relative mt-8 grid gap-3" style={{ gridTemplateColumns: `repeat(${meta <= 5 ? meta : Math.ceil(meta / 2)}, minmax(0, 1fr))` }}>
           {Array.from({ length: meta }, (_, i) => {
             const puesto = i < sellos;
             return (
@@ -715,6 +715,9 @@ export const AgendaSinCruces: React.FC = () => {
         ))}
       </div>
       <div className="mt-6 rounded-[26px] border border-white/10 bg-white/[0.03] p-4 sm:p-6">
+        {/* En el móvil la tarde se desliza en horizontal para que cada bloque se lea entero. */}
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+        <div className="min-w-[560px]">
         <p className="flex justify-between pl-[92px] text-[11px] text-white/40"><span>14:00</span><span>16:00</span><span>18:00</span><span>19:00</span></p>
         <div className="mt-2 space-y-2">
           {CARRILES.map((c, ci) => (
@@ -729,6 +732,8 @@ export const AgendaSinCruces: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+        </div>
         </div>
         <AnimatePresence mode="wait">
           <motion.p key={String(con)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`mt-5 rounded-xl px-4 py-3 text-[14px] ${con ? 'bg-[#C9A45C]/12 text-white' : 'bg-[#E58A8A]/15 text-[#F5C4C4]'}`}>
