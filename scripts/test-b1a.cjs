@@ -156,6 +156,8 @@ async function limpiar() {
   await sql`DELETE FROM "member" WHERE "userId" IN (SELECT id FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO})`;
   await sql`DELETE FROM "account" WHERE "userId" IN (SELECT id FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO})`;
   await sql`DELETE FROM "user" WHERE email LIKE ${'ci-' + RUN + '-%@' + DOMINIO}`;
+  await sql`DELETE FROM public.whatsapp_mensajes WHERE mensaje_id LIKE ${'ci-' + RUN + '%'}`;
+  if (creados.whatsapp) await sql`DELETE FROM public.whatsapp_conexiones WHERE tenant_id = 'capra-studio'`;
   if (creados.bookings.length) await sql`DELETE FROM public.bookings WHERE id = ANY(${creados.bookings})`;
   await sql`DELETE FROM public.bookings WHERE client_name LIKE ${'CI ' + RUN + '%'}`;
   if (creados.services.length) await sql`DELETE FROM public.services WHERE id = ANY(${creados.services})`;
@@ -641,6 +643,54 @@ async function main() {
     tarjStaff.status === 403 && tarj.status === 201 && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codigoTarj) && enLista?.codigoFinal === codigoTarj.slice(-4) && sinCodigo
       && resTarj.status === 201 && resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago === pago && sinSaldo.status === 400 && borraRes.status === 200 && saldoDevuelto === 5,
     `staff ${tarjStaff.status}, emite ${tarj.status}, lista ${enLista ? enLista.codigoFinal : 'NO'} (código oculto ${sinCodigo ? 'sí' : 'NO'}), reserva ${resTarj.status} pago ${resTarj.json?.booking?.desglose?.tarjetaRegalo?.pago}, sin saldo ${sinSaldo.status}, borrar ${borraRes.status}, saldo ${saldoDevuelto}`);
+
+  // ── W. WhatsApp del salón con la API de Meta (C-01) ──
+  const waDatos = { phoneNumberId: '100000000000001', wabaId: '200000000000002', token: `EAAci${RUN.replace(/\W/g, '')}`.padEnd(60, 'x'), appSecret: 'a1b2c3d4e5f60718293a4b5c6d7e8f90' };
+  const waSin = await api('/api/salon', { method: 'POST', body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos } });
+  const waStaff = await api('/api/salon', { method: 'POST', token: stToken, body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos } });
+  const waMal = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos, phoneNumberId: 'abc' } });
+  comprobar('W1', 'WhatsApp: conectar sin sesión 401, staff 403 y datos mal formados 400', waSin.status === 401 && waStaff.status === 403 && waMal.status === 400,
+    `sin ${waSin.status}, staff ${waStaff.status}, mal ${waMal.status}`);
+
+  const waCon = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'whatsapp_conectar', tenantId: 'capra-studio', ...waDatos } });
+  creados.whatsapp = true;
+  const waGet = await api('/api/salon?tenant=capra-studio', { token: owToken });
+  const verifyToken = waGet.json?.whatsapp?.verifyToken || '';
+  const sinSecretos = !waGet.texto.includes(waDatos.token) && !waGet.texto.includes(waDatos.appSecret) && !waCon.texto.includes(waDatos.token);
+  const fila = (await sql`SELECT token_cifrado, app_secret_cifrado, estado FROM public.whatsapp_conexiones WHERE tenant_id = 'capra-studio'`)[0];
+  const cifrado = fila && fila.token_cifrado.startsWith('v1:') && !fila.token_cifrado.includes(waDatos.token) && fila.app_secret_cifrado.startsWith('v1:');
+  comprobar('W2', 'WhatsApp: datos falsos → Meta los rechaza (400, estado «error»), se guardan cifrados y el panel nunca devuelve token ni secreto',
+    waCon.status === 400 && waGet.json?.whatsapp?.estado === 'error' && verifyToken.length >= 24 && sinSecretos && cifrado,
+    `conectar ${waCon.status}, estado ${waGet.json?.whatsapp?.estado}, verifyToken ${verifyToken ? 'sí' : 'NO'}, sin secretos ${sinSecretos ? 'sí' : 'NO'}, cifrado ${cifrado ? 'sí' : 'NO'}`);
+
+  const hdrWa = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : {};
+  const verMal = await fetch(`${BASE}/api/whatsapp/capra-studio?hub.mode=subscribe&hub.verify_token=incorrecto&hub.challenge=123`, { headers: hdrWa });
+  const verOk = await fetch(`${BASE}/api/whatsapp/capra-studio?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(verifyToken)}&hub.challenge=reto-${RUN}`, { headers: hdrWa });
+  const reto = await verOk.text();
+  comprobar('W3', 'Webhook: verificación de Meta con token erróneo 403 y con el bueno devuelve el reto', verMal.status === 403 && verOk.status === 200 && reto === `reto-${RUN}`,
+    `erróneo ${verMal.status}, bueno ${verOk.status} (${reto === `reto-${RUN}` ? 'reto ok' : 'reto MAL'})`);
+
+  // Cuerpo como lo envía Meta: no ASCII escapado (\uXXXX) y barra escapada (\/).
+  const mensajeId = `ci-${RUN}-wamid`;
+  const carga = { object: 'whatsapp_business_account', entry: [{ id: waDatos.wabaId, changes: [{ field: 'messages', value: { messaging_product: 'whatsapp', metadata: { phone_number_id: waDatos.phoneNumberId }, messages: [{ from: '584141234567', id: mensajeId, type: 'text', text: { body: '¿Cuánto cuesta el lifting? https://x.y/z' } }] } }] }] };
+  const crudo = JSON.stringify(carga).replace(/[\u007f-￿]/g, (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, '0')}`).replace(/\//g, '\\/');
+  const firma = 'sha256=' + crypto.createHmac('sha256', waDatos.appSecret).update(crudo, 'utf8').digest('hex');
+  const postWa = (f) => fetch(`${BASE}/api/whatsapp/capra-studio`, { method: 'POST', headers: { ...hdrWa, 'Content-Type': 'application/json', ...(f ? { 'X-Hub-Signature-256': f } : {}) }, body: crudo });
+  const sinFirma = await postWa(null);
+  const firmaMala = await postWa('sha256=' + '0'.repeat(64));
+  const bueno1 = await postWa(firma);
+  const bueno2 = await postWa(firma);
+  const filasMsg = (await sql`SELECT count(*)::int n FROM public.whatsapp_mensajes WHERE tenant_id = 'capra-studio' AND mensaje_id = ${mensajeId}`)[0].n;
+  const tema = (await sql`SELECT tema FROM public.whatsapp_mensajes WHERE tenant_id = 'capra-studio' AND mensaje_id = ${mensajeId}`)[0]?.tema;
+  comprobar('W4', 'Webhook: sin firma 401, firma falsa 401, firma de Meta 200; el mensaje repetido se guarda una sola vez y se clasifica (precio → servicios)',
+    sinFirma.status === 401 && firmaMala.status === 401 && bueno1.status === 200 && bueno2.status === 200 && filasMsg === 1 && tema === 'servicios',
+    `sin ${sinFirma.status}, falsa ${firmaMala.status}, buena ${bueno1.status}/${bueno2.status}, filas ${filasMsg}, tema ${tema}`);
+
+  const waDesc = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'whatsapp_desconectar', tenantId: 'capra-studio' } });
+  const quedan = (await sql`SELECT count(*)::int n FROM public.whatsapp_conexiones WHERE tenant_id = 'capra-studio'`)[0].n;
+  const otroSalon = await api('/api/salon', { method: 'POST', token: owToken, body: { action: 'whatsapp_conectar', tenantId: 'andrea-nails', ...waDatos } });
+  comprobar('W5', 'WhatsApp: la dueña desconecta (0 filas) y no puede conectar el de otro salón (403)', waDesc.status === 200 && quedan === 0 && otroSalon.status === 403,
+    `desconectar ${waDesc.status}, filas ${quedan}, otro salón ${otroSalon.status}`);
 
   // ── G. Cron ──
   const cronSin = await api('/api/cron-reminders');

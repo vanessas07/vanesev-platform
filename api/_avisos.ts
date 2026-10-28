@@ -2,6 +2,7 @@
 // Cada aviso se «reclama» en public.avisos_enviados antes de enviarse: nunca sale dos veces,
 // aunque el cron se ejecute a la vez desde Vercel y desde GitHub.
 import { enviarCorreo } from './_correo.js';
+import { avisarPorWhatsapp } from './_whatsapp.js';
 
 export type TipoAviso =
   | 'solicitud'
@@ -230,11 +231,17 @@ async function correosDuena(sql: any, tenantId: string): Promise<string[]> {
 }
 
 /**
- * Envía un aviso una sola vez. Devuelve cuántos correos salieron.
+ * Envía un aviso una sola vez, por WhatsApp y por correo. Devuelve cuántos mensajes salieron.
  * Nunca lanza: un fallo de correo no puede romper una reserva ni el cron.
  * `clave` distingue avisos del mismo tipo para fechas distintas (cita cambiada, recordatorio de otra fecha).
  */
 export async function enviarAviso(sql: any, tipo: TipoAviso, cita: CitaAviso, clave = ''): Promise<number> {
+  // WhatsApp (C-01) va por su propio interruptor, en la conexión del salón; el correo, por «Avisos por correo».
+  const porWhatsapp = await avisarPorWhatsapp(sql, tipo, cita, clave);
+  return porWhatsapp + (await avisarPorCorreo(sql, tipo, cita, clave));
+}
+
+async function avisarPorCorreo(sql: any, tipo: TipoAviso, cita: CitaAviso, clave = ''): Promise<number> {
   try {
     if (!cita.avisosActivos) return 0;
     const destinos = tipo === 'nueva_reserva' ? await correosDuena(sql, cita.tenantId) : cita.clientaEmail ? [cita.clientaEmail] : [];
