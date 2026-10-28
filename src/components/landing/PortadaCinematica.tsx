@@ -782,7 +782,7 @@ const MODOS_HOY: { id: ModoHoy; corto: string; largo: string }[] = [
   { id: 'app', corto: 'Uso una app de reservas', largo: 'con una app de reservas' },
   { id: 'mano', corto: 'Lo llevo por Instagram y WhatsApp', largo: 'por Instagram y WhatsApp' },
 ];
-const FILAS_COMPARA: { t: string; icono: React.ElementType; app: [Estado, string]; mano: [Estado, string]; vanesev: string; pronto?: string }[] = [
+const FILAS_COMPARA: { t: string; icono: React.ElementType; app: [Estado, string]; mano: [Estado, string]; vanesev: string }[] = [
   { t: 'Comisión', icono: Percent, app: ['mal', 'Te cobran por cada clienta nueva'], mano: ['bien', 'Ninguna'], vanesev: 'Nunca. Pagas una cuota fija' },
   { t: 'Tus clientas', icono: Users, app: ['mal', 'En su directorio, junto a tu competencia'], mano: ['regular', 'Tuyas, pero perdidas entre chats'], vanesev: 'Tuyas, con su historial y sus sellos' },
   { t: 'Tu marca', icono: Palette, app: ['mal', 'La misma plantilla para todas'], mano: ['regular', 'Tu perfil, pero sin carta'], vanesev: 'Tu carta con tus colores, letras y fotos' },
@@ -791,7 +791,7 @@ const FILAS_COMPARA: { t: string; icono: React.ElementType; app: [Estado, string
   { t: 'Tu equipo', icono: Lock, app: ['regular', 'Pagas por cada especialista'], mano: ['mal', 'Un solo móvil para todas'], vanesev: 'Agenda y clave para cada una' },
   { t: 'Ofertas y tarjetas regalo', icono: Gift, app: ['regular', 'Limitadas'], mano: ['mal', 'A mano y con errores'], vanesev: 'Precio exacto y saldo automático' },
   { t: 'Motivo para volver', icono: Award, app: ['mal', 'Ninguno'], mano: ['regular', 'Una tarjeta de cartulina'], vanesev: 'Su Pasaporte VIP en el móvil' },
-  { t: 'Recordatorios de cita', icono: BellRing, app: ['bien', 'Sí'], mano: ['mal', 'Tú, una a una'], vanesev: 'Solos: el día antes y 2 h antes, por correo', pronto: 'Por WhatsApp, muy pronto' },
+  { t: 'Recordatorios de cita', icono: BellRing, app: ['bien', 'Sí'], mano: ['mal', 'Tú, una a una'], vanesev: 'Solos: el día antes y 2 h antes, por WhatsApp y correo' },
 ];
 
 const IconoEstado: React.FC<{ e: Estado }> = ({ e }) =>
@@ -866,7 +866,6 @@ const DueloComparativa: React.FC = () => {
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#E7CF9C]" strokeWidth={2.6} />
                 <span>
                   {f.vanesev}
-                  {f.pronto && <span className="mt-1.5 block w-fit rounded-full border border-[#E7CF9C]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[#E7CF9C]">{f.pronto}</span>}
                 </span>
               </p>
             </div>
@@ -1116,12 +1115,12 @@ export const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
             </div>
           </motion.div>
 
-          {/* Atelier, muy pronto (G-052) */}
+          {/* Atelier (G-052), disponible (G-061) */}
           <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.8, delay: 0.1, ease: CURVA }} className="relative overflow-hidden rounded-[32px] text-white">
             <Foto src="pestanas-mirada" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(20,11,25,0.55), rgba(20,11,25,0.95) 60%)' }} />
             <div className="relative p-7 sm:p-10">
-              <span className="rounded-full border border-[#E7CF9C]/60 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E7CF9C]">Muy pronto</span>
+              <span className="rounded-full border border-[#E7CF9C]/60 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E7CF9C]">Para crecer</span>
               <h3 className="mt-5 font-lujo text-[34px] font-medium">Atelier</h3>
               <p className="mt-1 text-[15px] text-white/70">Tu marca crece sola: contenido listo cada semana, sin pasarte las noches creándolo.</p>
               <p className="mt-5 font-lujo text-[56px] font-medium leading-none">
@@ -1143,8 +1142,8 @@ export const Precios: React.FC<{ onPlaza: () => void }> = ({ onPlaza }) => {
                   </li>
                 ))}
               </ul>
-              <a href={`${WHATSAPP}?text=${encodeURIComponent('Hola, avisadme cuando esté el plan Atelier de VANESEV.')}`} target="_blank" rel="noopener noreferrer" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-white/30 py-4 text-[15px] font-bold hover:border-white/70">
-                Avísame cuando esté <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
+              <a href={`${WHATSAPP}?text=${encodeURIComponent('Hola, quiero el plan Atelier de VANESEV para mi estudio.')}`} target="_blank" rel="noopener noreferrer" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-white/30 py-4 text-[15px] font-bold hover:border-white/70">
+                Quiero Atelier <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
               </a>
             </div>
           </motion.div>

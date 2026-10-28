@@ -95,7 +95,7 @@ export const LEGALES: DocumentoLegal[] = [
     resumen: 'Las reglas de uso de VANESEV para los estudios: planes, pagos, datos y responsabilidades.',
     secciones: [
       ['El servicio', [
-        'VANESEV ofrece a los estudios de belleza una carta digital con reservas, agenda por especialista y zona, Pasaporte VIP de fidelidad, ofertas, cupones, tarjetas regalo, códigos QR y un panel de gestión. Las funciones marcadas «muy pronto» en la web aún no están disponibles.',
+        'VANESEV ofrece a los estudios de belleza una carta digital con reservas, agenda por especialista y zona, Pasaporte VIP de fidelidad, ofertas, cupones, tarjetas regalo, códigos QR y un panel de gestión.',
       ]],
       ['Planes y pagos', [
         'El plan Esencial cuesta 19 $ al mes o 171 $ al año, e incluye 3 personas y 3 zonas; cada profesional adicional cuesta 3 $ al mes. El montaje de fundadora cuesta 49 $ para las 100 primeras plazas. Los precios pueden pagarse por los medios que se indiquen al dar de alta el estudio.',
