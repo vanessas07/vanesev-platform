@@ -1,9 +1,11 @@
 name: VANESEV Evidencias Verificables por Máquina
 
 on:
+  # Nunca en `main` (G-070): allí «la vista previa del commit» es el despliegue de PRODUCCIÓN
+  # y la suite escribía filas de prueba en la base real. A `main` solo se llega desde `staging`, ya probado.
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      - main
   workflow_dispatch:
 
 # Una sola ejecución a la vez por rama: dos suites en paralelo se pisan en la base de staging.
